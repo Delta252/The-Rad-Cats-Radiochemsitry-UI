@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<head>
+	<title>
+		Command List
+	</title>
+	<Monitor>
+		<div id="current">{{Current}}</div><br>
+		<div id="N1">{{N1}}</div><br>
+		<div id="N2">{{N2}}</div><br>
+		<div id="N3">{{N3}}</div><br>
+		<div id="N4">{{N4}}</div><br>
+		<div id="temp">{{temp}}</div>
+	</Monitor>
+</head>
+
+<footer class="footer">
+	<p style="float: left; font-size: small; padding-left: 30px; text-align: center;">Copyright © 2023 Arcadius. All
+		Rights Reserved.</p>
+	<a class="email" href="mailto:arcadius.uom@gmail.com">Arcadius.UOM@gmail.com</a>
+</footer>
+
+</html>
+
+<script>
+	var el = document.getElementById("N1");
+	var i = 0;
+
+	function counter() {
+		el.innerHTML = i++;
+		if (i <= 100) {
+			setTimeout(counter, 1000);
+		}
+	}
+
+	counter();
+</script>

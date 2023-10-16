@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+
+<body>
+  <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+
+  <div id='temp'>test</div><br>
+  <div id='m1'>test</div><br>
+  <div id='m2'>test</div><br>
+
+  <script>
+
+    var xyValues = [
+    ];
+    var display_interval = 600;
+    var refresh_rate = 1000;
+    var offset = 10;
+
+    var min_val = 300;
+    var max_val = -100;
+
+    var t;
+    var index = 0;
+
+    function graph_update() {
+      $(document).ready(function () {
+        $.ajax({
+          url: '/command',
+          success: function (data) {
+            //$('#temp').html($(data).find("#temp"));
+            t = $(data).find("#temp").html();
+            $('#temp').html(t);
+            xyValues = xyValues.concat({ x: index++, y: t });
+            //xyValues = xyValues.concat(t);
+          },
+          error: function () {
+            $("#Dialog").dialog('open');
+          }
+        });
+      });
+      setTimeout(graph_update, refresh_rate);
+
+      var max_x = xyValues.length - 1;
+      var min_x = 0;
+      if (max_x > display_interval) {
+        max_x = index - 1;
+        xyValues.splice(0, 1);
+        min_x = max_x - display_interval;
+      }
+
+      if (t < min_val) {
+        min_val = t;
+      }
+      if (t > max_val) {
+        max_val = t;
+      }
+      var max_y = Math.round(max_val) + offset;
+      var min_y = Math.round(min_val) - offset;
+      $('#m1').html(max_y);
+      $('#m2').html(min_y);
+
+      new Chart("myChart", {
+        type: "scatter",
+        data: {
+          datasets: [{
+            pointRadius: 2,
+            pointBackgroundColor: "rgb(0,0,255)",
+            data: xyValues
+          }]
+        },
+        options: {
+          animation: false,
+          legend: { display: false },
+          scales: {
+            xAxes: [{
+              ticks: {
+                min: min_x,
+                max: max_x
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Time (s)'
+              },
+            }],
+            yAxes: [{
+              ticks: {
+                min: min_y,
+                max: max_y
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Temperature (degrees celcius)'
+              },
+            }],
+            plugins: {
+              title: {
+                display: true,
+                text: 'Reactor Temperature',
+                position: 'bottom',
+              }
+            }
+          }
+        }
+      });
+    }
+    graph_update();
+  </script>
+
+</body>
+
+</html>
