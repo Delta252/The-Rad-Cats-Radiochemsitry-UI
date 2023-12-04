@@ -1,0 +1,72 @@
+/*navbar styling*/
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    border: none;
+    outline: none;
+    scroll-behavior: smooth;
+    font-family: 'Century Gothic', sans-serif;
+}
+
+:root {
+    --bg-dark-color: #3F2060;
+    --bg-light-color: #F1F0EA;
+    --top-color: #8AA4F4;
+    --white-color: #F1F0EA;
+    --light-text-color: #ECEBE4;
+}
+
+html {
+    font-size: 100%;
+    overflow-x: hidden;
+}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    padding: 2rem;
+    background: var(--bg-dark-color);
+    display: flex;
+    align-items: center;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 2.5rem;
+    color: var(--light-text-color);
+    font-weight: 600;
+    cursor: default;
+    margin-right: auto;
+}
+
+.navbar a {
+    font-size: 1.7rem;
+    font-weight: 500;
+    margin-right: 1.7rem;
+}
+
+.navbar-dark a {
+    color: var(--light-text-color);
+    text-decoration: underline 2px solid var(--bg-dark-color);
+    transition: text-decoration-color 300ms;
+}
+
+.navbar-dark a:hover {
+    text-decoration-color: var(--light-text-color);
+}
+
+.navbar i {
+    font-size: 20px;
+}
+
+.navbar .icon-dark-theme{
+    content: url('../icons/moon.png');
+    height: 20px;
+    width: auto;
+}
