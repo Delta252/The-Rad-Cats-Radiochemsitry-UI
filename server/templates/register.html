@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcadius Login</title>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/login.css') }}">
+</head>
+
+<body>
+
+  <div class="wrapper">
+
+    {% from "includes/_formhelpers.html" import render_field %}
+
+    <form method="POST" action="">
+      
+      <h1>Register</h1>
+
+      <div class="input-box">
+        {{render_field(form.user, class_="formbox")}}
+      </div>
+
+      <div class="input-box">
+        {{render_field(form.pswd, class_="formbox")}}
+      </div>
+
+      <div class="input-box">
+        {{render_field(form.confirm, class_="formbox")}}
+      </div>
+
+      <button type="submit" class="register-solid btn">Register</button>
+
+    </form>
+
+  </div>
+  
+</body>
+
+</html>

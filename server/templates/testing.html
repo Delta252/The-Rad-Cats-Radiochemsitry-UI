@@ -1,0 +1,109 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<div class="body-dark">
+
+    <div class="column">
+        <div class="card">
+
+            <h1>Valves</h1>
+
+            <div class="select">
+                <select name="valve" id="valve">
+                    <option selected disabled>Choose a valve.</option>
+                    <option value="valve1">Valve 1</option>
+                    <option value="valve2">Valve 2</option>
+                    <option value="valve3">Valve 3</option>
+                    <option value="valve4">Valve 4</option>
+                    <option value="valve5">Valve 5</option>
+                </select>
+            </div>
+
+            <div class="optns">
+                <button type="valve-open" class="optn-btn ui-btn">Open</button>
+                <button type="valve-close" class="optn-btn ui-btn">Close</button>
+                <button type="valve-mid" class="optn-btn ui-btn">Middle</button>
+            </div>
+            
+
+        </div>
+
+        <div class="card">
+
+            <h1>Shutter</h1>
+
+            <div class="optns">
+                <button type="shutter-open" class="optn-btn ui-btn">Open</button>
+                <button type="shutter-close" class="optn-btn ui-btn">Close</button>
+                <button type="shutter-mid" class="optn-btn ui-btn">Middle</button>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="card ">
+          
+            <h1>Pumps</h1>
+
+            <div class="select">
+                <select name="valve" id="valve">
+                    <option selected disabled>Choose a pump.</option>
+                    <option value="pump1">Pump 1</option>
+                    <option value="pump2">Pump 2</option>
+                    <option value="pump3">Pump 3</option>
+                    <option value="pump4">Pump 4</option>
+                    <option value="pump5">Pump 5</option>
+                </select>
+            </div>
+
+            <div class="input-box">
+                <input type="number" inputmode="decimal" required="required">
+                <span>Enter a volume (mL).</span>
+            </div>
+            
+            <div class="optns">
+                <button type="pump-start" class="ui-btn start-stop-btn start-btn">Start</button>
+            </div>
+
+        </div>  
+
+    </div>
+
+    <div class="column">
+        <div class="card">
+            <h1>Reactor</h1>
+            
+            <div class="optns">
+                <button type="pump-slow" class="optn-btn ui-btn">Slow</button>
+                <button type="pump-medium" class="optn-btn ui-btn">Medium</button>
+                <button type="pump-fast" class="optn-btn ui-btn">Fast</button>
+            </div>
+
+            <div class="optns">
+                <button type="reactor-stop" class="ui-btn start-stop-btn stop-btn">Stop</button>
+            </div>
+
+        </div>
+
+        <div class="card">
+            <h1>Extractor</h1>
+            
+            <div class="select">
+                <select name="extraction" id="extraction">
+                    <option selected disabled>Choose an extraction slot.</option>
+                    <option value="slot1">Slot 1</option>
+                    <option value="slot2">Slot 2</option>
+                    <option value="slot3">Slot 3</option>
+                    <option value="slot4">Slot 4</option>
+                    <option value="slot5">Slot 5</option>
+                </select>
+            </div>
+            
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}
