@@ -1,3 +1,8 @@
+# Socket.IO server-side functions
+# This file handles commands received from user input in the webpages and forwards 
+# required actions to corresponding destinations
+# The creation of the Socket.IO server-side object is handled in `app.py`
+
 from __main__ import socketio, comms
 
 #SocketIO
@@ -26,6 +31,7 @@ def toggle_comms():
     socketio.emit('send_comms_status', data=(result))
     socketio.emit('toggle_comms', {'data':result})
 
+# Following commands are demo-specific placeholders, and will be replaced
 @socketio.on('pull-syringe')
 def get_comms_status():
     command = '[sID1000 rID1008 PK3 Y1 S2000 D1]'
