@@ -1,0 +1,154 @@
+/*navbar styling*/
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    border: none;
+    outline: none;
+    scroll-behavior: smooth;
+    font-family: 'Century Gothic', sans-serif;
+}
+
+html {
+    font-size: 100%;
+    overflow-x: hidden;
+}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    padding: 2rem;
+    background: var(--background);
+    display: flex;
+    align-items: center;
+    z-index: 100;
+    border-bottom: 2px solid var(--accent);
+}
+
+.logo {
+    font-size: 2.5rem;
+    color: var(--text);
+    font-weight: 600;
+    cursor: default;
+    margin-right: auto;
+}
+
+.beacon {
+    border-radius: 25%;
+    background-color: var(--red);
+    padding: 5px;
+    height: 20px;
+    width: 20px;
+    margin-right: 10px;
+}
+
+.navbar a {
+    font-size: 1.7rem;
+    font-weight: 500;
+    margin-right: 1.7rem;
+}
+
+.navbar-dark a {
+    color: var(--text);
+}
+
+.navbar-dark a:hover {
+    text-decoration-color: var(--text);
+}
+
+.navbar i {
+    font-size: 20px;
+}
+
+.navbar .icon-dark-theme{
+    content: url('../icons/moon.png');
+    height: 20px;
+    width: auto;
+}
+.navlink {
+    font-weight: bold;
+    text-decoration: none;
+    color: var(--text);
+    padding: 10px 0px;
+    margin: 0px 10px;
+    display: inline-block;
+    position: relative;
+    opacity: 0.75;
+}
+
+.active {
+    text-decoration: underline;
+    text-decoration-thickness: 5px;
+    text-decoration-skip-ink: none;
+    opacity: 1;
+}
+
+.navlink:hover {
+    opacity: 1;
+  }
+  
+.navlink::before {
+    transition: 300ms;
+    height: 5px;
+    content: "";
+    position: absolute;
+    background-color: var(--text);
+}
+
+.navlink-ltr::before {
+    width: 0%;
+    bottom: 10px;
+}
+
+.navlink-ltr:hover::before {
+    width: 100%;
+}
+
+.theme-select {
+    position: relative;
+    opacity: 0;
+}
+
+.label {
+	background-color: var(--background);
+    padding: 3px;
+	border-radius: 50px;
+    border: 2px solid var(--accent);
+	cursor: pointer;
+    display: inline-flex;
+    justify-content: space-between;
+	align-items: center;
+	position: relative;
+	height: 25px;
+	width: 50px;
+	transform: scale(1.5);
+}
+
+.label .ball {
+	background-color: var(--white);
+	border-radius: 50%;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 21px;
+	width: 21px;
+	transform: translateX(0px);
+	transition: transform 0.2s linear;
+}
+
+.theme-select:checked + .label{
+    background-color: var(--white);
+}
+
+.theme-select:checked + .label .ball {
+	transform: translateX(25px);
+    transition: transform 0.2s ease;
+    background-color: var(--dark-purple);
+}
+
+
