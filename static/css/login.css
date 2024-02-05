@@ -133,12 +133,12 @@ body{
 }
 
 .input-box .icon-password{
-  content: url('../icons/lock-solid.png');
+  content: url('../icons/lock.png');
   filter: invert(100%);
 }
 
 .input-box .icon-username{
-  content: url('../icons/user-pin.png');
+  content: url('../icons/user.png');
   filter: invert(100%);
 }
 
