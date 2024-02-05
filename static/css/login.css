@@ -1,0 +1,180 @@
+/*generic page*/
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+  height: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-image: url('../img/plasma.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.wrapper{
+  width: 420px;
+  background: #1E0F5E;
+  border: 2px solid #C6D4FF;
+  backdrop-filter: blur(20px);
+  border-radius: 10px;
+  padding: 30px 40px;
+}
+
+.wrapper h1{
+  font-size: 36px;
+  text-align: center;
+  color: #ECEBE4;
+}
+
+.wrapper .input-box{
+  position: relative;
+  width: 100%;
+  height: 50px;
+  margin: 30px 0;
+}
+
+.input-box{
+  width: 100%;
+  height: 50px;
+  background: transparent;
+  margin: 30px, 0;
+}
+
+.input-box input{
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  border: 2px solid #ECEBE4;
+  border-radius: 40px;
+  font-size: 16px;
+  color: #ECEBE4;
+  padding: 20px 45px 20px 20px;
+}
+
+.input-box input::placeholder{
+  color: #ECEBE4;
+}
+
+.input-box i{
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+}
+
+.wrapper .btn{
+  width: 100%;
+  height: 45px;
+  background: #EA526F;
+  border-radius: 40px;
+  outline: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #ECEBE4;
+  font-weight: 600;
+  margin: 20px 0px 0px 0px;
+}
+
+.wrapper .login{
+  background: #C6D4FF;
+  border: none;
+  color: #3F2060;
+}
+
+.wrapper .login:hover{
+  background: #8AA4F4;
+}
+
+.wrapper a.btn {
+  appearance: button;
+  text-decoration: none;
+  color: #C6D4FF;
+  text-align: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  padding-top: 10px;
+  text-transform: none;
+}
+
+.wrapper .register{
+  background: transparent;
+  border: 3px solid #C6D4FF;
+}
+
+.wrapper .register-solid{
+  background: #C6D4FF;
+  border: none;
+  color: #3F2060;
+}
+
+.wrapper .register:hover{
+  background: #8AA4F4;
+  border: 3px solid #8AA4F4;
+  color: #3F2060;
+  font-weight: 600;
+  font-size: 16px;
+  padding-top: 10px;
+}
+
+.wrapper .register-solid:hover{
+  background: #8AA4F4;
+}
+
+.input-box .icon-password{
+  content: url('../icons/lock.png');
+  filter: invert(100%);
+}
+
+.input-box .icon-username{
+  content: url('../icons/user.png');
+  filter: invert(100%);
+}
+
+input[type=password]::-ms-reveal,
+input[type=password]::-ms-clear
+{
+  display: none;
+}
+
+.help-inline {
+  margin-top: 5px;
+  width: 100%;
+  background: #AB2346;
+  border: 1px solid #AB2346;
+  border-radius: 0.25em;
+  color: #ECEBE4;
+}
+
+.alert {
+  margin-top: 0.5em;
+  width: 100%;
+  align-items: center;
+  padding: 0.5em;
+  text-align: center;
+  border-radius: 0.5em;
+  font-weight: 400;
+}
+
+.alert-danger {
+  background: #AB2346;
+  border: 3px solid #AB2346;
+  color: #ECEBE4;
+}
+
+.alert-success {
+  background: #226F54;
+  border: 3px solid #226F54;
+  color: #ECEBE4;
+}
