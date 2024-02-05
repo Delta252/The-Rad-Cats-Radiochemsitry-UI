@@ -15,15 +15,8 @@ uh = UserHandler() # Create object to handle user profiles
 
 comms = Comms()
 
-@socketio.on('connect')
-def handle_connect():
-    print('Connection established!')
-    socketio.emit('after_connect', {'data':'Test connection'})
+from dependencies.socket import *
 
-@socketio.on('ping')
-def test_ping():
-    print('Ping received!')
-    socketio.emit('send_ping', {'data':'Test connection'})
 # Page routing
 
 # Landing page; todo: determine what page appears depending on logged in status
