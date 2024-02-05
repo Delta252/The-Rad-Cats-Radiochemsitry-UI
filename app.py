@@ -85,7 +85,7 @@ class RegisterForm(Form):
 def main():
     app.secret_key = os.urandom(12).hex() # For sending cookies; required for Flask to run
     # Below runs as HTTP, ssl_context required to run as HTTPS
-    socketio.run(app, debug=True) #ssl_context=('server.crt', 'server.key')
+    socketio.run(app, debug=True) #ssl_context=('dependencies/ssl/server.crt', 'dependencies/ssl/server.key')
 
 # Core function call
 if __name__ == '__main__':
