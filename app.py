@@ -15,7 +15,7 @@ uh = UserHandler() # Create object to handle user profiles
 
 comms = Comms()
 
-from dependencies.socket import *
+from dependencies.sockets import *
 
 # Page routing
 
