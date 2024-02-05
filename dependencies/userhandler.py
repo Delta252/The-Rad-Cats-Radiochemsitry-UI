@@ -1,9 +1,10 @@
-### Interactions with user database
+# Interactions with user database
 
 import os
 import sqlite3
 from argon2 import PasswordHasher
 
+# Creates an object to handle user information
 class UserHandler:
 
     def __init__(self):

@@ -6,11 +6,13 @@
 import serial
 import serial.tools.list_ports
 
+# Creates a Serial object to handle the protocol implementation
 class Serial:
     def __init__(self):
-        self.currentCommand = ''
-        self.comPort = ''
+        self.currentCommand = '' # Stores next command
+        self.comPort = '' # Stores the discovered COM port that a device is connected to
 
+    # Find which system COM port the chamber is connected to
     def FIND_COM_PORT(self):
         ports = self.AVAILABLE_PORTS()
         for port in ports:
@@ -25,6 +27,7 @@ class Serial:
                 return False
         return False 
 
+    # List all currently available COM ports
     def AVAILABLE_PORTS(self):
         ports = []
         for port in ['COM%s' % (i+1) for i in range(256)]:
@@ -37,6 +40,8 @@ class Serial:
                 pass
         return ports       
 
+    # Test COM port to see if component is connected
+    # Todo: Establish a discrete handshake command 
     def TEST_PORT(self, port):
         try:
             print('Testing connection on port ',port)
@@ -69,10 +74,11 @@ class Serial:
                 
         except(OSError,serial.SerialException,ValueError):
             return -1
-        
+
+    # Open a connection on a desired port 
     def OPEN_SERIAL_PORT(self, port):
         try:
-            self.connection = serial.Serial(port=port,baudrate=115200,write_timeout=1,timeout=1)
+            self.connection = serial.Serial(port=port,baudrate=115200,write_timeout=1,timeout=1) # Serial setup; should not be modified
             self.connection.isOpen()
         except IOError:
             self.connection.close()
@@ -80,13 +86,16 @@ class Serial:
         except (OSError,serial.SerialException,ValueError):
             return None
 
+    # Close COM port
+    # This protects the system from receiving rogue commands
     def CLOSE_SERIAL_PORT(self):
         try:
             self.connection.close()
             print('Closed connection on port',self.comPort)
         except:
             pass
-
+    
+    # Send a command and ensure success
     def RUN_COMMAND(self, command):
         try:
             writeSuccss = self.WRITE(command)
@@ -101,10 +110,11 @@ class Serial:
             print('Error:',error)
             return False
 
+    # Underlying method to send a command via serial
     def WRITE(self, command):
         try:
             print('Sending command to serial:',command,flush=True)
-            self.connection.write(command.encode('utf-8'))
+            self.connection.write(command.encode('utf-8')) # Required encoding for a serial connection
             return True
         except TimeoutError:
             print('Write operation timed out')
@@ -114,10 +124,11 @@ class Serial:
             print('Error:',error)
             return False
 
+    # Underlying method to receive a response
     def READ(self):
         try:
             data = self.connection.read(128)
-            response = self.PARSE_LINE(data.decode('utf-8'))
+            response = self.PARSE_LINE(data.decode('utf-8')) # Required encoding for a serial connection
             print('Response:',response)
             return response
         except Exception as error:
@@ -125,6 +136,8 @@ class Serial:
             print('Error:',error)
             return False
 
+    # Parsing method
+    # Identifies content within a response; further action not currently implemented
     def PARSE_LINE(self, s):
         result = s[s.find('['):s.find(']')+1]
         if result == None:
