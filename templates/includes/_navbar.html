@@ -1,0 +1,19 @@
+
+<header class="header">
+    <button class="beacon" id="connect-beacon"></button>
+    <a href="#" class="logo">Arcadius.</a>
+
+    <nav class="navbar">
+        <a class="navlink {% if '/home' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-home">Home</a>
+        <a class="navlink {% if '/auto' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-auto">Auto</a>
+        <a class="navlink {% if '/manual' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-manual">Manual</a>
+        <a class="navlink {% if '/testing' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-testing">Testing</a>
+        <a class="navlink {% if '/setup' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-setup">Setup</a>
+        <input type="checkbox" class="theme-select" id="chk" />
+        <label class="label light-toggle" for="chk">
+            <i class="icon icon-sun"></i>
+            <i class="icon icon-moon"></i>
+            <div class="ball"></div>
+        </label>
+    </nav>
+</header>

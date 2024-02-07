@@ -100,3 +100,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# VS Code settings
+.vscode
+
+# Security certicates
+dependencies/ssl/*
