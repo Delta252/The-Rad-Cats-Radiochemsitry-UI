@@ -49,7 +49,7 @@ def login():
             return redirect(url_for('testing'))
             
         else:
-            flash('Username and password combination not found.', 'error')
+            flash('Username and password combination not found.', 'danger')
             return redirect(url_for('login'))
         
     return render_template('login.html')
