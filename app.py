@@ -71,7 +71,7 @@ def register():
     return render_template('register.html', form=form)
 
 # Custom validator to check if password is part of the 100k pwned list
-def PasswordNotExists(field):
+def PasswordNotExists(self, field):
     with open('dependencies/100k-pswd.txt', encoding='utf-8') as myfile:
         if field.data in myfile.read():
                 raise validators.ValidationError('Password is too common.')

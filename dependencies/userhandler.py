@@ -9,7 +9,7 @@ class UserHandler:
 
     def __init__(self):
         # Config user database handling
-        userdataFilepath = os.path.abspath('userdata.db')
+        userdataFilepath = os.path.abspath('dependencies/userdata.db')
         self.connect = sqlite3.connect(userdataFilepath, check_same_thread=False)
 
         cursor= self.connect.cursor()
