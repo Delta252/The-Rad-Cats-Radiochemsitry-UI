@@ -2,16 +2,16 @@
 # This file handles commands received from user input in the webpages and forwards 
 # required actions to corresponding destinations
 # The creation of the Socket.IO server-side object is handled in `app.py`
-
+import json
 from __main__ import socketio, comms, sys
 
 #SocketIO
 @socketio.on('connect')
 def handle_connect():
     print('Connection established!')
-
     sys.updateFromDB()
-    socketio.emit('after_connect', {'data':sys.define()})
+    socketio.emit('after_connect')
+    socketio.emit('update_cards', {'data':sys.define()})
 
 @socketio.on('ping')
 def test_ping():
@@ -32,6 +32,11 @@ def toggle_comms():
         result = comms.start()
     socketio.emit('send_comms_status', data=(result))
     socketio.emit('toggle_comms', {'data':result})
+
+@socketio.on('remove-device')
+def remove_device(data):
+    sys.removeFromDB(data)
+    socketio.emit('update_cards', {'data':sys.define()})
 
 # Following commands are demo-specific placeholders, and will be replaced
 @socketio.on('pull-syringe')
