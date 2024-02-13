@@ -17,12 +17,12 @@ class UserHandler:
         # Create user database if one does not exist
         # Usernames and passwords cannot be repeated (UNIQUE qualifier)
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS userdata (
-            username VARCHAR(255) NOT NULL,
-            password VARCHAR(255) NOT NULL, 
-            UNIQUE(username, password)
-            )
-        """)
+            CREATE TABLE IF NOT EXISTS userdata (
+                username VARCHAR(255) NOT NULL,
+                password VARCHAR(255) NOT NULL, 
+                UNIQUE(username, password)
+                )
+            """)
 
         self.connect.commit()
 
@@ -35,7 +35,9 @@ class UserHandler:
         cursor = self.connect.cursor()
 
         # Find user and extract password
-        cursor.execute(f"SELECT password FROM userdata WHERE username='{userCandidate}'")
+        cursor.execute(f"""
+            SELECT password FROM userdata WHERE username='{userCandidate}'
+            """)
         
         found = cursor.fetchone()
 
@@ -58,8 +60,8 @@ class UserHandler:
 
         # User/password combination only inserted if both are unique to the existing table
         cursor.execute("""
-                       INSERT OR IGNORE INTO userdata(username, password) VALUES(?, ?)
-                       """, (userCandidate, pswdHash))
+            INSERT OR IGNORE INTO userdata(username, password) VALUES(?, ?)
+            """, (userCandidate, pswdHash))
         
         self.connect.commit()
 
