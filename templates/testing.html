@@ -37,8 +37,10 @@
 
                 <a id="close-device-popup" href="#"><i class="icon icon-close"></i></a>
 
-                <div class="select">
-                    <select name="valve" id="valve">
+                <h3 id="device-message"></h3>
+
+                <div class="popup-select select">
+                    <select name="device-type" id="new-device-type">
                         <option selected disabled>Select Module Type</option>
                         <option value="pump-peristaltic">Peristaltic Pump</option>
                         <option value="pump-syringe">Syringe Pump</option>
@@ -50,12 +52,12 @@
                 </div>
 
                 <div class="input-box">
-                    <input type="number" inputmode="integer" required="required">
+                    <input id="new-device-id" type="number" inputmode="integer">
                     <span>Device ID</span>
                 </div>
 
                 <div>
-                    <button id="add-device" class="device-btn single-btn">Add Device</button>
+                    <button id="add-device" type="submit" class="device-btn single-btn">Add Device</button>
                 </div>
             </div>
         </div>
@@ -211,6 +213,16 @@
 
         $("#plus-device").click(function(){
             $("#device-popup").toggle();
+        });
+
+        $("#add-device").click(function(){
+            type = $("#new-device-type").find(':selected').text();
+            id = $("#new-device-id").val();
+            if((type=='Select Module Type')||id==''){
+                $("#device-message").html('Please fill out all fields.');
+                return;
+            }
+            socket.emit('add-device', (id, type));           
         });
 
         var Card = function(id, name, content) { 
