@@ -26,6 +26,40 @@
         <div id="column2" class="column-container"></div>
 
         <div id="column3" class="column-container"></div>
+
+        <a href="#" id="plus-device" class="float-add">
+        <div class="add-devices"><h2>+</h2></div>
+        </a>
+
+        <div id="device-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Add A Device</h1>
+
+                <a id="close-device-popup" href="#"><i class="icon icon-close"></i></a>
+
+                <div class="select">
+                    <select name="valve" id="valve">
+                        <option selected disabled>Select Module Type</option>
+                        <option value="pump-peristaltic">Peristaltic Pump</option>
+                        <option value="pump-syringe">Syringe Pump</option>
+                        <option value="mixer">Mixer</option>
+                        <option value="shutter">Shutter</option>
+                        <option value="extract">Extraction</option>
+                        <option value="valve">Valve</option>
+                    </select>
+                </div>
+
+                <div class="input-box">
+                    <input type="number" inputmode="integer" required="required">
+                    <span>Device ID</span>
+                </div>
+
+                <div>
+                    <button id="add-device" class="device-btn single-btn">Add Device</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="console">
@@ -79,15 +113,24 @@
             }
         }
 
+        $(".content").on("click", ".delete-card", function(){
+            parent = $(this).closest("div.card");
+            id = parseInt(parent.attr('id').match(/\d+/));
+            parent.remove();
+            socket.emit('remove-device', id);
+        });
+
         $("#set-extract").click(function(){
+            document.getElementById("p").textContent += ("\nDeleting card");
             socket.emit('ping');
         });
 
         socket.on('after_connect', function(msg) {
             document.getElementById("p").textContent += ("Socket Connection successful\n");
-            for(entry in msg.data) {
-                document.getElementById("p").textContent += ("\n"+msg.data[entry][1]);
-            }
+        });
+
+        socket.on('update_cards', function(msg) {
+            $("div.card").remove();
             generateCards(msg.data);
         });
 
@@ -160,6 +203,14 @@
             $(this).prop("disabled",true);
             socket.emit('comms-status');
             socket.emit('toggle-comms');
+        });
+
+        $("#close-device-popup").click(function(){
+            $("#device-popup").toggle();
+        });
+
+        $("#plus-device").click(function(){
+            $("#device-popup").toggle();
         });
 
         var Card = function(id, name, content) { 
