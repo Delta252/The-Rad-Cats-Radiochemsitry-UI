@@ -106,3 +106,6 @@ $RECYCLE.BIN/
 
 # Security certicates
 dependencies/ssl/*
+
+# Database logs
+*.db-journal
