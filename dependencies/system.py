@@ -49,6 +49,16 @@ class System:
         for i in self.devices:
             print(f'Device {i.type} at ID {i.id}\n')
 
+    def define(self):
+        # Method used for serializing data to send over sockets
+        # Method addresses problems with devices list not being JSON serializeable
+        data = []
+
+        for i in self.devices:
+            data.append((i.id, i.type))
+
+        return data
+
 class Component:
     def __init__(self, id, descriptor):
         self.status = -1
