@@ -21,129 +21,16 @@
             </div>
         </div>
 
-        <div class="column-container">
-            <div class="card">
-                <h1>Valves</h1>
-
-                <div class="input-box">
-                    <input type="number" inputmode="integer" required="required">
-                    <span>Device ID</span>
-                </div>
-
-                <div class="select">
-                    <select name="valve" id="valve">
-                        <option selected disabled>Choose a valve.</option>
-                        <option value="valve1">Valve 1</option>
-                        <option value="valve2">Valve 2</option>
-                        <option value="valve3">Valve 3</option>
-                        <option value="valve4">Valve 4</option>
-                        <option value="valve5">Valve 5</option>
-                    </select>
-                </div>
-
-                <div class="optns">
-                    <button type="valve-open" class="optn-btn ui-btn">Open</button>
-                    <button type="valve-close" class="optn-btn ui-btn">Close</button>
-                    <button type="valve-mid" class="optn-btn ui-btn">Middle</button>
-                </div>
-            </div>
-            <div class="card">
-                <h1>Shutter</h1>
-
-                <div class="input-box">
-                    <input type="number" inputmode="integer" required="required">
-                    <span>Device ID</span>
-                </div>
-
-                <div class="optns">
-                    <button type="shutter-open" class="optn-btn ui-btn">Open</button>
-                    <button type="shutter-close" class="optn-btn ui-btn">Close</button>
-                    <button type="shutter-mid" class="optn-btn ui-btn">Middle</button>
-                </div>
-            </div>
+        <div id="column1" class="column-container">
+            
         </div>
-        <div class="column-container">
-            <div class="card">
-                <h1>Peristaltic Pump</h1>
 
-                <div class="input-box">
-                    <input id="pump-id" type="number" inputmode="integer" required="required">
-                    <span>Device ID</span>
-                </div>
+        <div id="column2" class="column-container">
 
-                <div class="input-box">
-                    <input id="pump-vol" type="number" inputmode="decimal" required="required">
-                    <span>Enter a volume (mL).</span>
-                </div>
-                
-                <div class="optns">
-                    <button id="start-pump" class="ui-btn single-btn">Start</button>
-                </div>
-
-                <div class="optns">
-                    <button type="reactor-stop" class="ui-btn single-btn">Stop</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <h1>Syringe Pump</h1>
-
-                <div class="input-box">
-                    <input id="syringe-pump-id" type="number" inputmode="integer" required="required">
-                    <span>Device ID</span>
-                </div>
-                
-                <div class="optns">
-                    <button id="pull-syringe" class="ui-btn single-btn">Pull</button>
-                </div>
-
-                <div class="optns">
-                    <button id="push-syringe" class="ui-btn single-btn">Push</button>
-                </div>
-            </div>
         </div>
-        <div class="column-container">
-            <div class="card">
-                <h1>Reactor</h1>
-    
-                <div class="input-box">
-                    <input type="number" inputmode="integer" required="required">
-                    <span>Device ID</span>
-                </div>
 
-                <div class="optns">
-                    <button type="pump-slow" class="optn-btn ui-btn">Slow</button>
-                    <button type="pump-medium" class="optn-btn ui-btn">Medium</button>
-                    <button type="pump-fast" class="optn-btn ui-btn">Fast</button>
-                </div>
+        <div id="column3" class="column-container">
 
-                <div class="optns">
-                    <button onclick="connect_fctn()" type="reactor-stop" class="ui-btn single-btn">Stop</button>
-                </div>
-            </div>
-            <div class="card">
-                <h1>Extractor</h1>
-    
-                <div class="input-box">
-                    <input type="number" inputmode="integer" required="required">
-                    <span>Device ID</span>
-                </div>
-
-                <div class="select">
-                    <select name="extraction" id="extraction">
-                        <option selected disabled>Choose an extraction slot.</option>
-                        <option value="slot1">Slot 1</option>
-                        <option value="slot2">Slot 2</option>
-                        <option value="slot3">Slot 3</option>
-                        <option value="slot4">Slot 4</option>
-                        <option value="slot5">Slot 5</option>
-                    </select>
-                </div>
-
-                <div class="optns">
-                    <button id="set-extract" class="ui-btn single-btn">Apply</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -239,6 +126,115 @@
             socket.emit('comms-status');
             socket.emit('toggle-comms');
         });
+
+        var Card = function(id, name, content) { 
+            return `
+            <div id="card-${id}" class="card">
+                <h1>${name}</h1>
+
+                <a class="delete-card" href="#"><i class="icon icon-close"></i></a>
+
+                <div class="input-box">
+                    <input type="number" inputmode="integer" required="required" value="${id}" readonly>
+                    <span id="device-id">Device ID</span>
+                </div>
+
+                ${content}
+            </div>`;
+        };
+
+        var Valve = function(id, type) {
+            content = `
+            <div class="select">
+                <select name="valve" id="valve">
+                    <option selected disabled>Choose a valve.</option>
+                    <option value="valve1">Valve 1</option>
+                    <option value="valve2">Valve 2</option>
+                    <option value="valve3">Valve 3</option>
+                    <option value="valve4">Valve 4</option>
+                    <option value="valve5">Valve 5</option>
+                </select>
+            </div>
+
+            <div class="optns">
+                <button type="valve-open" class="optn-btn ui-btn">Open</button>
+                <button type="valve-close" class="optn-btn ui-btn">Close</button>
+                <button type="valve-mid" class="optn-btn ui-btn">Middle</button>
+            </div>`;
+            return Card(id, type, content);
+        };
+
+        var Shutter = function(id, type) {
+            content = `
+            <div class="optns">
+                <button type="shutter-open" class="optn-btn ui-btn">Open</button>
+                <button type="shutter-close" class="optn-btn ui-btn">Close</button>
+                <button type="shutter-mid" class="optn-btn ui-btn">Middle</button>
+            </div>`;
+            return Card(id, type, content);
+        }
+
+        var PeristalticPump = function(id, type) {
+            content = `
+            <div class="input-box">
+                <input id="pump-vol" type="number" inputmode="decimal" required="required">
+                <span>Enter a volume (mL).</span>
+            </div>
+            
+            <div class="optns">
+                <button id="start-pump" class="ui-btn single-btn">Start</button>
+            </div>
+
+            <div class="optns">
+                <button type="reactor-stop" class="ui-btn single-btn">Stop</button>
+            </div>`;
+            return Card(id, type, content);
+        }
+
+        var SyringePump = function(id, type){
+            content = `
+            <div class="optns">
+                <button id="pull-syringe" class="ui-btn single-btn">Pull</button>
+            </div>
+
+            <div class="optns">
+                <button id="push-syringe" class="ui-btn single-btn">Push</button>
+            </div>`;
+            return Card(id, type, content);
+        }
+
+        var Mixer = function(id, type) {
+            content = `
+            <div class="optns">
+                <button type="pump-slow" class="optn-btn ui-btn">Slow</button>
+                <button type="pump-medium" class="optn-btn ui-btn">Medium</button>
+                <button type="pump-fast" class="optn-btn ui-btn">Fast</button>
+            </div>
+
+            <div class="optns">
+                <button onclick="connect_fctn()" type="reactor-stop" class="ui-btn single-btn">Stop</button>
+            </div>`;
+            return Card(id, type, content);
+        }
+
+        var Extractor = function(id, type) {
+            content = `
+            <div class="select">
+                <select name="extraction" id="extraction">
+                    <option selected disabled>Choose an extraction slot.</option>
+                    <option value="slot1">Slot 1</option>
+                    <option value="slot2">Slot 2</option>
+                    <option value="slot3">Slot 3</option>
+                    <option value="slot4">Slot 4</option>
+                    <option value="slot5">Slot 5</option>
+                </select>
+            </div>
+
+            <div class="optns">
+                <button id="set-extract" class="ui-btn single-btn">Apply</button>
+            </div>`;
+            return Card(id, type, content);
+        }
     });
 </script>
 
