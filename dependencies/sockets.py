@@ -3,13 +3,15 @@
 # required actions to corresponding destinations
 # The creation of the Socket.IO server-side object is handled in `app.py`
 
-from __main__ import socketio, comms
+from __main__ import socketio, comms, sys
 
 #SocketIO
 @socketio.on('connect')
 def handle_connect():
     print('Connection established!')
-    socketio.emit('after_connect', {'data':'Test connection'})
+
+    sys.updateFromDB()
+    socketio.emit('after_connect', {'data':sys.define()})
 
 @socketio.on('ping')
 def test_ping():
