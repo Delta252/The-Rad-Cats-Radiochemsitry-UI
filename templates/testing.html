@@ -41,7 +41,7 @@
 
                 <div class="popup-select select">
                     <select name="device-type" id="new-device-type">
-                        <option selected disabled>Select Module Type</option>
+                        <option selected disabled value="">Select Module Type</option>
                         <option value="pump-peristaltic">Peristaltic Pump</option>
                         <option value="pump-syringe">Syringe Pump</option>
                         <option value="mixer">Mixer</option>
@@ -216,13 +216,13 @@
         });
 
         $("#add-device").click(function(){
-            type = $("#new-device-type").find(':selected').text();
-            id = $("#new-device-id").val();
-            if((type=='Select Module Type')||id==''){
+            type = $("#new-device-type").find(':selected').val();
+            id = parseInt($("#new-device-id").val());
+            if((type=='')||id==''){
                 $("#device-message").html('Please fill out all fields.');
                 return;
             }
-            socket.emit('add-device', (id, type));           
+            socket.emit('add-device', [id, type]);           
         });
 
         var Card = function(id, name, content) { 
