@@ -46,14 +46,55 @@
     $(document).ready(function() {
         var socket = io.connect('http://127.0.0.1:5000');
         var comms = false;
-        socket.emit('get-comms-status')
+        socket.emit('get-comms-status');
+
+        function generateCards(data) {
+            for(entry in data){
+                type = data[entry][1];
+                columnID = "#column1"; /* by default */
+                
+                switch(type){
+                    case 'pump-peristaltic':
+                        $(columnID).append(PeristalticPump(data[entry][0], type));
+                        break;
+                    case 'pump-syringe':
+                        $(columnID).append(SyringePump(data[entry][0], type));
+                        break;
+                    case 'mixer':
+                        columnID = "#column2";
+                        $(columnID).append(Mixer(data[entry][0], type));
+                        break;
+                    case 'shutter':
+                        columnID = "#column2";
+                        $(columnID).append(Shutter(data[entry][0], type));
+                        break;
+                    case 'extract':
+                        columnID = "#column3";
+                        $(columnID).append(Extractor(data[entry][0], type));
+                        break;
+                    case 'valve':
+                        columnID = "#column3";
+                        $(columnID).append(Valve(data[entry][0], type));
+                        break;
+                    case 'server':
+                        break;
+                    default:
+                        $(columnID).append(Card("0000", "Invalid Module", ""));
+                        break;
+                }
+            }
+        }
 
         $("#set-extract").click(function(){
             socket.emit('ping');
         });
 
         socket.on('after_connect', function(msg) {
-            document.getElementById("p").textContent += ("Socket Connection successful");
+            document.getElementById("p").textContent += ("Socket Connection successful\n");
+            for(entry in msg.data) {
+                document.getElementById("p").textContent += ("\n"+msg.data[entry][1]);
+            }
+            generateCards(msg.data);
         });
 
         socket.on('send_ping', function(){
