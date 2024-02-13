@@ -5,6 +5,7 @@ from flask_socketio import SocketIO, emit
 from wtforms import Form, StringField, TextAreaField, PasswordField, SelectField, validators
 from dependencies.userhandler import UserHandler
 from dependencies.comms import Comms
+from dependencies.system import System
 import os
 
 app = Flask(__name__) # Create Flask app
@@ -14,6 +15,7 @@ socketio = SocketIO(app)
 uh = UserHandler() # Create object to handle user profiles
 
 comms = Comms()
+sys = System()
 
 from dependencies.sockets import *
 
