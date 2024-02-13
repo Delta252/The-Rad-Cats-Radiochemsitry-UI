@@ -193,10 +193,19 @@
   flex-direction: column;
   padding: 10px 0px 10px 0px;
   margin-top: 10px;
+  position: relative;
 }
 
 .card h1 {
   color: var(--text);
+  text-transform: capitalize;
+}
+
+.delete-card {
+  padding: 10px;
+  align-items: right;
+  display: block;
+  z-index: 1;
 }
 
 .input-box {
@@ -239,6 +248,18 @@ margin: 0;
 
 .input-box input:valid ~ span, 
 .input-box input:focus ~ span {
+  color: var(--text);
+  transform: translateX(10px) translateY(-7px);
+  font-size: 0.85em;
+  font-weight: 600;
+  padding: 0 10px;
+  background: var(--body);
+  border-left: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  letter-spacing: 0.2em;
+}
+
+#device-id {
   color: var(--text);
   transform: translateX(10px) translateY(-7px);
   font-size: 0.85em;
@@ -360,11 +381,11 @@ select::-ms-expand{
   content: url("../icons/close.png");
   height: 25px;
   width: 25px;
-  align-items: right;
   right: 10px;
   top: 10px;
   position: absolute;
 }
+
 
 .popup {
   height: 350px;
