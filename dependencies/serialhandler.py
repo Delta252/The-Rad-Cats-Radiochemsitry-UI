@@ -139,8 +139,11 @@ class Serial:
 
     # Parsing method
     # Identifies content within a response; further action not currently implemented
-    def PARSE_LINE(self, s):
-        result = s[s.find('['):s.find(']')+1]
-        if result == None:
-            return s
-        return result
+    def PARSE_LINES(self, s):
+        lines = s.splitlines()
+        for entry in lines:
+            result = entry[entry.find('['):entry.find(']')+1]
+            if result == None:
+                result = entry
+            print('Response:',result)
+            return result
