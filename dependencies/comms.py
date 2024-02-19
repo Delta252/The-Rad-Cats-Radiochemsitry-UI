@@ -19,17 +19,15 @@ class Comms:
     def start(self):
         try:
             print('Initializing comms process...') 
-            self.openPort('COM15') # This is a placeholder and will be replaced by scanning all available ports
-            return True
-#            result = self.findPort()
-#            if result:
-#                print('Opened ',self.s.comPort, ' port')
-#                self.openPort()
-#                self.isConnected = True
-#                return True
-#            else:
-#                print('Encountered an issue, unable to start comms')
-#                return False
+            result = self.findPort()
+            if result:
+                print('Opened ',self.s.comPort, ' port')
+                self.openPort()
+                self.isConnected = True
+                return True
+            else:
+                print('Encountered an issue, unable to start comms')
+                return False
                        
         except Exception as error:
             print('Encountered an error during startup')
