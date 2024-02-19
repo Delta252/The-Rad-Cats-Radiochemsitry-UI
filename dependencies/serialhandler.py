@@ -10,7 +10,6 @@ import serial.tools.list_ports
 class Serial:
     def __init__(self):
         self.currentCommand = '' # Stores next command
-        self.comPort = '' # Stores the discovered COM port that a device is connected to
 
     # Find which system COM port the chamber is connected to
     def FIND_COM_PORT(self):
@@ -19,13 +18,13 @@ class Serial:
             try:
                 result = self.TEST_PORT(port)
                 if result:
-                    print('COM Port found:',self.comPort)
-                    return True
+                    print('COM Port found:',port)
+                    return port
             except Exception as error:
                 print('Operation failed, please try again')
                 print('Error:',error)
-                return False
-        return False 
+                return -1
+        return -1
 
     # List all currently available COM ports
     def AVAILABLE_PORTS(self):
@@ -129,8 +128,7 @@ class Serial:
     def READ(self):
         try:
             data = self.connection.read(128)
-            response = self.PARSE_LINE(data.decode('utf-8')) # Required encoding for a serial connection
-            print('Response:',response)
+            response = self.PARSE_LINES(data.decode('utf-8')) # Required encoding for a serial connection
             return response
         except Exception as error:
             print('Failed to read response')
