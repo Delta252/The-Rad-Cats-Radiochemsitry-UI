@@ -47,14 +47,15 @@ class Serial:
             print('Testing connection on port ',port)
             self.OPEN_SERIAL_PORT(port)
             if self.connection.isOpen():
+                self.READ()
                 try:
                     # Following command is incorrect! 
                     # Command has been modified for demo purposes
-                    command = '[sID1000 rID1008 PK3 Y1 S2000 D1]'
+                    command = 'C'
                     writeSuccess = self.WRITE(command)
                     if writeSuccess != True:
                         return False
-                    print('Sent to serial ==> ', command)
+                    print('Sent handshake to serial ==> ', command)
                 except Exception as error:
                     print('Error:',error)
                     self.connection.close()
@@ -63,7 +64,7 @@ class Serial:
                 try:
                     response = self.READ()
                     # Following requires update after handshake command is defined
-                    if response.__contains__('FREE'):
+                    if response.__contains__('CONF'):
                         print('Device recognized on port',port)
                         self.comPort = port
                         self.CLOSE_SERIAL_PORT()
