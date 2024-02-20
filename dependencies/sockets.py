@@ -3,7 +3,7 @@
 # required actions to corresponding destinations
 # The creation of the Socket.IO server-side object is handled in `app.py`
 import json
-from __main__ import socketio, comms, sys
+from __main__ import socketio, comms, sys, uh
 
 #SocketIO
 @socketio.on('connect')
@@ -12,6 +12,18 @@ def handle_connect():
     sys.updateFromDB()
     socketio.emit('after_connect')
     socketio.emit('update_cards', {'data':sys.define()})
+
+@socketio.on('get-theme')
+def get_theme():
+    theme = uh.getUserTheme()
+    print(theme)
+    socketio.emit('update_theme', {'data':theme})
+
+@socketio.on('send-theme')
+def send_theme(data):
+    theme = data[0]
+    uh.updateUserTheme(theme)
+    socketio.emit('update_theme', {'data':theme})
 
 @socketio.on('ping')
 def test_ping():
