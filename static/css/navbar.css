@@ -74,18 +74,21 @@ html {
     font-weight: bold;
     text-decoration: none;
     color: var(--text);
-    padding: 10px 0px;
+    padding: 12px 0px;
     margin: 0px 10px;
-    display: inline-block;
+    display: block;
     position: relative;
+    font-size: 22px;
     opacity: 0.75;
 }
 
 .active {
-    text-decoration: underline;
-    text-decoration-thickness: 5px;
-    text-decoration-skip-ink: none;
     opacity: 1;
+}
+
+.active::before {
+    width: 100%;
+    bottom: 10px;
 }
 
 .navlink:hover {
@@ -94,7 +97,7 @@ html {
   
 .navlink::before {
     transition: 300ms;
-    height: 5px;
+    height: 3px;
     content: "";
     position: absolute;
     background-color: var(--text);
@@ -151,4 +154,186 @@ html {
     background-color: var(--dark-purple);
 }
 
+/* New Addition */
 
+#menuToggle
+{
+    width: 100%;
+    display: block;
+    position: relative;
+    z-index: 1;
+    color: var(--background);
+}
+
+#menuToggle input
+{
+  display: block;
+  width: 40px;
+  height: 32px;
+  position: absolute;
+  top: -7px;
+  right: -5px;
+  cursor: pointer;
+  opacity: 0; /* hide this */
+  z-index: 2; /* and place it over the hamburger */
+  -webkit-touch-callout: none;
+}
+
+#menuToggle span
+{
+  display: block;
+  width: 33px;
+  height: 4px;
+  margin-bottom: 5px;
+  position: relative;
+  background: var(--text);
+  border-radius: 3px;
+  z-index: 1;
+  transform-origin: 4px 0px;
+  transition: transform 0.5s cubic-bezier(0.77,0.2,0.05,1.0),
+              background 0.5s cubic-bezier(0.77,0.2,0.05,1.0),
+              opacity 0.55s ease;
+}
+
+#menuToggle span:first-child
+{
+  transform-origin: 0% 0%;
+}
+
+#menuToggle span:nth-last-child(2)
+{
+  transform-origin: 0% 100%;
+}
+
+#menuToggle input:checked ~ span
+{
+  opacity: 1;
+  transform: rotate(45deg) translate(-2px, -1px);
+  background: var(--text);
+}
+
+#menuToggle input:checked ~ span:nth-last-child(3)
+{
+  opacity: 0;
+  transform: rotate(0deg) scale(0.2, 0.2);
+}
+
+#menuToggle input:checked ~ span:nth-last-child(2)
+{
+  transform: rotate(-45deg) translate(0, -1px);
+}
+
+@media (max-width: 737px) {
+    #menu {
+        margin: -80px 0 0 0px;
+        padding: 50px;
+        padding-top: 125px;
+        position: fixed;
+        right: 0;
+        width: 100vw;
+        height: 110vh;
+        transform: translate(100%, 0%);
+        background: var(--body);
+        list-style-type: none;
+        -webkit-font-smoothing: antialiased;
+        transform-origin: 0% 0%;
+        transition: transform 0.5s cubic-bezier(0.77,0.2,0.05,1.0);
+        overflow: scroll;
+    }
+
+    #menu::-webkit-scrollbar {
+        display: none;
+    }
+      
+    #menuToggle input:checked ~ ul
+    {
+        transform: none;
+    }
+}
+  
+@media (min-width: 738px) {
+    #menu {
+        margin: -80px 0 0 0px;
+        padding: 50px;
+        padding-top: 125px;
+        position: fixed;
+        right: 0;
+        width: 430px;
+        height: 110vh;
+        transform: translate(100%, 0%);
+        background: var(--body);
+        list-style-type: none;
+        -webkit-font-smoothing: antialiased;
+        transform-origin: 0% 0%;
+        transition: transform 0.5s cubic-bezier(0.77,0.2,0.05,1.0);
+        overflow: scroll;
+    }
+
+    #menu::-webkit-scrollbar {
+        display: none;
+    }
+      
+    #menuToggle input:checked ~ ul
+    {
+        transform: none;
+    }
+}
+
+.menu-label{
+    padding: 12px 0px 0px 0px;
+    margin: 0px 10px;
+    font-style: italic;
+    color: var(--text);
+    background-color: var(--body);
+}
+
+select {
+    appearance: none;
+    outline: 0;
+    box-shadow: none;
+    background: var(--body);
+    background-image: none;
+    border: 0!important;
+    flex: 1;
+    padding: 0 0.5em;
+    margin: 0.5em 0;
+    font-size: 1em;
+    color: var(--text);  
+    font-weight: 600;
+    cursor: pointer;
+}
+  
+select::-ms-expand{
+    display: none;
+}
+  
+.menu-select {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 3em;
+    line-height: 3;
+    background: transparent;
+    overflow: hidden;
+    outline: 3px solid;
+    outline-color: var(--accent);
+    border-radius: .5em;
+    margin-top: 0.5em;
+    margin-bottom: 1.5em; 
+}
+  
+.menu-select::after {
+    content: '\25BC';
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0 1em;
+    background: var(--accent);
+    cursor: pointer;
+    pointer-events: none;
+    transition: .25s all ease;
+}
+  
+.menu-select:hover::after {
+    color: var(--white);
+}
