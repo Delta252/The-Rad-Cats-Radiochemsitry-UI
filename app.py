@@ -5,6 +5,7 @@ from flask_socketio import SocketIO, emit
 from wtforms import Form, StringField, TextAreaField, PasswordField, SelectField, validators
 from dependencies.userhandler import UserHandler
 from dependencies.comms import Comms
+from dependencies.system import System
 import os
 
 app = Flask(__name__) # Create Flask app
@@ -14,6 +15,7 @@ socketio = SocketIO(app)
 uh = UserHandler() # Create object to handle user profiles
 
 comms = Comms()
+sys = System()
 
 from dependencies.sockets import *
 
@@ -49,7 +51,7 @@ def login():
             return redirect(url_for('testing'))
             
         else:
-            flash('Username and password combination not found.', 'error')
+            flash('Username and password combination not found.', 'danger')
             return redirect(url_for('login'))
         
     return render_template('login.html')
@@ -71,7 +73,7 @@ def register():
     return render_template('register.html', form=form)
 
 # Custom validator to check if password is part of the 100k pwned list
-def PasswordNotExists(field):
+def PasswordNotExists(self, field):
     with open('dependencies/100k-pswd.txt', encoding='utf-8') as myfile:
         if field.data in myfile.read():
                 raise validators.ValidationError('Password is too common.')
