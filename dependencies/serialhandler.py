@@ -10,7 +10,6 @@ import serial.tools.list_ports
 class Serial:
     def __init__(self):
         self.currentCommand = '' # Stores next command
-        self.comPort = '' # Stores the discovered COM port that a device is connected to
 
     # Find which system COM port the chamber is connected to
     def FIND_COM_PORT(self):
@@ -19,13 +18,13 @@ class Serial:
             try:
                 result = self.TEST_PORT(port)
                 if result:
-                    print('COM Port found:',self.comPort)
-                    return True
+                    print('COM Port found:',port)
+                    return port
             except Exception as error:
                 print('Operation failed, please try again')
                 print('Error:',error)
-                return False
-        return False 
+                return -1
+        return -1
 
     # List all currently available COM ports
     def AVAILABLE_PORTS(self):
@@ -47,14 +46,15 @@ class Serial:
             print('Testing connection on port ',port)
             self.OPEN_SERIAL_PORT(port)
             if self.connection.isOpen():
+                self.READ()
                 try:
                     # Following command is incorrect! 
                     # Command has been modified for demo purposes
-                    command = '[sID1000 rID1008 PK3 Y1 S2000 D1]'
+                    command = 'C'
                     writeSuccess = self.WRITE(command)
                     if writeSuccess != True:
                         return False
-                    print('Sent to serial ==> ', command)
+                    print('Sent handshake to serial ==> ', command)
                 except Exception as error:
                     print('Error:',error)
                     self.connection.close()
@@ -63,7 +63,7 @@ class Serial:
                 try:
                     response = self.READ()
                     # Following requires update after handshake command is defined
-                    if response.__contains__('FREE'):
+                    if response.__contains__('CONF'):
                         print('Device recognized on port',port)
                         self.comPort = port
                         self.CLOSE_SERIAL_PORT()
@@ -128,8 +128,7 @@ class Serial:
     def READ(self):
         try:
             data = self.connection.read(128)
-            response = self.PARSE_LINE(data.decode('utf-8')) # Required encoding for a serial connection
-            print('Response:',response)
+            response = self.PARSE_LINES(data.decode('utf-8')) # Required encoding for a serial connection
             return response
         except Exception as error:
             print('Failed to read response')
@@ -138,8 +137,11 @@ class Serial:
 
     # Parsing method
     # Identifies content within a response; further action not currently implemented
-    def PARSE_LINE(self, s):
-        result = s[s.find('['):s.find(']')+1]
-        if result == None:
-            return s
-        return result
+    def PARSE_LINES(self, s):
+        lines = s.splitlines()
+        for entry in lines:
+            result = entry[entry.find('['):entry.find(']')+1]
+            if result == None:
+                result = entry
+            print('Response:',result)
+            return result

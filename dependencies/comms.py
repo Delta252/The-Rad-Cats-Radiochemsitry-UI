@@ -19,17 +19,15 @@ class Comms:
     def start(self):
         try:
             print('Initializing comms process...') 
-            self.openPort('COM15') # This is a placeholder and will be replaced by scanning all available ports
-            return True
-#            result = self.findPort()
-#            if result:
-#                print('Opened ',self.s.comPort, ' port')
-#                self.openPort()
-#                self.isConnected = True
-#                return True
-#            else:
-#                print('Encountered an issue, unable to start comms')
-#                return False
+            result = self.findPort()
+            if result:
+                print('Opened ',self.s.comPort, ' port')
+                self.openPort()
+                self.isConnected = True
+                return True
+            else:
+                print('Encountered an issue, unable to start comms')
+                return False
                        
         except Exception as error:
             print('Encountered an error during startup')
@@ -59,8 +57,8 @@ class Comms:
 
     # Discover which COM port a system is connected on
     def findPort(self):
-        success = self.s.FIND_COM_PORT()
-        if success:
+        self.comport = self.s.FIND_COM_PORT()
+        if self.comport != -1:
             print('Eligible COM port found')
             return True
         else:
@@ -69,8 +67,8 @@ class Comms:
             return False
 
     # Underlying wrapper method to connect to a COM port  
-    def openPort(self, port):
-        self.s.OPEN_SERIAL_PORT(port)
+    def openPort(self):
+        self.s.OPEN_SERIAL_PORT(self.comport)
 
     # Underlying wrapper method to close a current connection
     def closePort(self):
