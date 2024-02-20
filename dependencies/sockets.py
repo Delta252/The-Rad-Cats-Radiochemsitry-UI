@@ -13,10 +13,15 @@ def handle_connect():
     socketio.emit('after_connect')
     socketio.emit('update_cards', {'data':sys.define()})
 
+@socketio.on('get-user')
+def get_user():
+    username = uh.getUsername()
+    print(username)
+    socketio.emit('set_user', {'data':username})
+
 @socketio.on('get-theme')
 def get_theme():
     theme = uh.getUserTheme()
-    print(theme)
     socketio.emit('update_theme', {'data':theme})
 
 @socketio.on('send-theme')
@@ -33,7 +38,7 @@ def test_ping():
 @socketio.on('get-comms-status')
 def get_comms_status():
     result = comms.isConnected
-    socketio.emit('send_comms_status', data=(result))
+    socketio.emit('set_comms', data=(result))
 
 @socketio.on('toggle-comms')
 def toggle_comms():
@@ -42,8 +47,7 @@ def toggle_comms():
         result = comms.stop()
     else:
         result = comms.start()
-    socketio.emit('send_comms_status', data=(result))
-    socketio.emit('toggle_comms', {'data':result})
+    socketio.emit('set_comms', data=(result))
 
 @socketio.on('remove-device')
 def remove_device(data):

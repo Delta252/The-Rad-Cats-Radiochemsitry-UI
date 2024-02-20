@@ -78,6 +78,20 @@ class UserHandler:
 
         cursor.close()
 
+    def getUsername(self):
+        cursor = self.connect.cursor()
+
+        # User/password combination only inserted if both are unique to the existing table
+        cursor.execute(f"""
+            SELECT username FROM userdata WHERE status='active'
+            """)
+        
+        found = cursor.fetchone()
+
+        cursor.close()
+
+        return found
+
     def getUserTheme(self):
         cursor = self.connect.cursor()
 

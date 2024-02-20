@@ -31,6 +31,10 @@ def landing():
 def testing():
     return render_template('testing.html')
 
+@app.route('/profile', methods=['GET','POST'])
+def profile():
+    return render_template('profile.html')
+
 # User login
 @app.route('/login', methods=['GET', 'POST'])
 def login():

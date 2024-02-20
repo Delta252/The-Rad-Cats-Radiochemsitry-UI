@@ -26,12 +26,12 @@
             but hey, it's pure CSS magic.
             -->
             <ul id="menu">
-                <a class="navlink {% if '/home' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-home">Home</a>
-                <a class="navlink {% if '/auto' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-auto">Auto</a>
-                <a class="navlink {% if '/manual' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-manual">Manual</a>
-                <a class="navlink {% if '/testing' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-testing">Testing</a>
-                <a class="navlink {% if '/setup' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-setup">Setup</a>
-                <a class="navlink {% if '/profile' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-profile">Profile</a>
+                <a class="navlink {% if '/home' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/home">Home</a>
+                <a class="navlink {% if '/auto' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/auto">Auto</a>
+                <a class="navlink {% if '/manual' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/manual">Manual</a>
+                <a class="navlink {% if '/testing' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/testing">Testing</a>
+                <a class="navlink {% if '/setup' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/setup">Setup</a>
+                <a class="navlink {% if '/profile' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/profile">Profile</a>
                 
                 <div>
                     <h4 class="menu-label">Select a Theme</h4>
