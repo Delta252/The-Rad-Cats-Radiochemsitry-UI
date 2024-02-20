@@ -44,10 +44,11 @@ def get_comms_status():
 def toggle_comms():
     connection = comms.isConnected
     if connection:
-        result = comms.stop()
+        comms.stop()
     else:
-        result = comms.start()
-    socketio.emit('set_comms', data=(result))
+        comms.start()
+    connection = comms.isConnected
+    socketio.emit('set_comms', data=(connection))
 
 @socketio.on('remove-device')
 def remove_device(data):
