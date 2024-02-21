@@ -3,7 +3,7 @@
 # required actions to corresponding destinations
 # The creation of the Socket.IO server-side object is handled in `app.py`
 import json
-from __main__ import socketio, comms, sys
+from __main__ import socketio, comms, sys, uh
 
 #SocketIO
 @socketio.on('connect')
@@ -13,6 +13,35 @@ def handle_connect():
     socketio.emit('after_connect')
     socketio.emit('update_cards', {'data':sys.define()})
 
+@socketio.on('get-user')
+def get_user():
+    username = uh.getUsername()
+    socketio.emit('set_user', {'data':username})
+
+@socketio.on('update-username')
+def update_user(data):
+    oldUsername = data[0]
+    newUsername = data[1]
+    uh.updateUsername(oldUsername, newUsername)
+    username = uh.getUsername()
+    socketio.emit('set_user', {'data':username})
+
+@socketio.on('log-off')
+def log_off(data):
+    username = data[0]
+    uh.logOff(username)
+
+@socketio.on('get-theme')
+def get_theme():
+    theme = uh.getUserTheme()
+    socketio.emit('update_theme', {'data':theme})
+
+@socketio.on('send-theme')
+def send_theme(data):
+    theme = data[0]
+    uh.updateUserTheme(theme)
+    socketio.emit('update_theme', {'data':theme})
+
 @socketio.on('ping')
 def test_ping():
     print('Ping received!')
@@ -21,17 +50,17 @@ def test_ping():
 @socketio.on('get-comms-status')
 def get_comms_status():
     result = comms.isConnected
-    socketio.emit('send_comms_status', data=(result))
+    socketio.emit('set_comms', data=(result))
 
 @socketio.on('toggle-comms')
 def toggle_comms():
     connection = comms.isConnected
     if connection:
-        result = comms.stop()
+        comms.stop()
     else:
-        result = comms.start()
-    socketio.emit('send_comms_status', data=(result))
-    socketio.emit('toggle_comms', {'data':result})
+        comms.start()
+    connection = comms.isConnected
+    socketio.emit('set_comms', data=(connection))
 
 @socketio.on('remove-device')
 def remove_device(data):

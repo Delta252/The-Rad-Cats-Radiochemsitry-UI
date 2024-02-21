@@ -5,32 +5,56 @@
 :root {
   --black: #0B2027;
   --white: #ECEBE4;
-  --grey: #E1E6E1;  
-  --dark-purple: #120026;
-  --purple: #2B0938;
-  --burgundy: #610f7f;
-  --cardinal: #CA334E;
-  --red: #DF2935;
-  --green: #1EE266;
-
-  --background: var(--dark-purple);
-  --body: var(--purple);
-  --text: var(--white);
-  --accent: var(--cardinal);
+  --red: #b81520;
+  --green: #0A9D47;
 }
 
-:root.day {
-  --background: var(--white);
-  --body: var(--grey);
-  --text: var(--dark-purple);
-  --accent: var(--burgundy);
+:root.theme1 {
+  --background: #d1d0cc;
+  --body: #e4dcdc;
+  --text: #2C2C2C;
+  --accent: #4e3c69;
+  --button-text: #ECEBE4;
 }
 
-:root.night {
-  --background: var(--dark-purple);
-  --body: var(--purple);
-  --text: var(--white);
-  --accent: var(--cardinal);
+:root.theme2 {
+  --background: #17232B;
+  --body: #21323d;
+  --text: #E1E6E1;
+  --accent: #2471A1;
+  --button-text: #ECEBE4;
+}
+
+:root.theme3 {
+  --background: #051B29;
+  --body: #09334E;
+  --text: #a7d9ec;
+  --accent: #48a3db;
+  --button-text: #051B29;
+}
+
+:root.theme4 {
+  --background: #0F032B;
+  --body: #251C38;
+  --text: #E1E6E1;
+  --accent: #da4a5f;
+  --button-text: #ECEBE4;
+}
+
+:root.theme5 {
+  --background: #FFFFFF;
+  --body: #f3f8fc;
+  --text: #20252C;
+  --accent: #0f4a85;
+  --button-text: #ECEBE4;
+}
+
+:root.theme6 {
+  --background: #000000;
+  --body: #0C141F;
+  --text: #F2F2F2;
+  --accent: #6FC3DF;
+  --button-text: #0C141F;
 }
 
 .alert {
@@ -44,15 +68,15 @@
 }
 
 .alert-danger {
-  background: #AB2346;
-  border: 3px solid #AB2346;
-  color: #ECEBE4;
+  background: var(--red);
+  border: 3px solid var(--red);
+  color: var(--white);
 }
 
 .alert-success {
-  background: #226F54;
-  border: 3px solid #226F54;
-  color: #ECEBE4;
+  background: var(--green);
+  border: 3px solid var(--green);
+  color: var(--white);
 }
 
 .body-container {
@@ -196,6 +220,7 @@
 
 .card h1 {
   color: var(--text);
+  padding: 15px 0px;
   text-transform: capitalize;
 }
 
@@ -210,7 +235,7 @@
   display: block;
   width: 20em;
   flex: 1;
-  margin: 10px;
+  margin: 20px 10px 0px 10px;
 }
 
 .input-box input {
@@ -338,7 +363,7 @@ select::-ms-expand{
   outline: none;
   cursor: pointer;
   font-size: 16px;
-  color: var(--white);
+  color: var(--button-text);
   font-weight: 600;
   margin: 0.5em ;
 }
@@ -354,7 +379,7 @@ select::-ms-expand{
   outline: none;
   cursor: pointer;
   font-size: 16px;
-  color: var(--white);
+  color: var(--button-text);
   font-weight: 600;
   margin: 0.5em ;
 }
@@ -425,7 +450,7 @@ select::-ms-expand{
 
 .comms-btn {
   background-color: var(--accent);
-  color: var(--white);
+  color: var(--button-text);
   text-align: center;
   align-items: center;
   padding: 10px;
@@ -470,7 +495,7 @@ select::-ms-expand{
 
 .device-btn {
   background-color: var(--accent);
-  color: var(--white);
+  color: var(--button-text);
   text-align: center;
   align-items: center;
   padding: 10px;
@@ -487,7 +512,7 @@ select::-ms-expand{
 	bottom: 18%;
 	right: 20px;
 	background-color: var(--accent);
-	color: var(--white);
+	color: var(--button-text);
 	border-radius: 2.5em;
 	text-align: center;
   align-items: center;
@@ -507,4 +532,40 @@ select::-ms-expand{
 .popup h3 {
   color: var(--text);
   margin-bottom: 0.6em;
+}
+
+.profile {
+  position: relative;
+  margin: auto;
+  width: 30%;
+  min-width: 430px;
+}
+
+#username-span {
+  color: var(--text);
+  transform: translateX(10px) translateY(-7px);
+  font-size: 0.85em;
+  font-weight: 600;
+  padding: 0 10px;
+  background: var(--body);
+  border-left: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  letter-spacing: 0.2em;
+}
+
+#update-user {
+  margin-bottom: 35px;
+}
+
+#log-off {
+  padding-top: 15px;
+  background-color: var(--red);
+  opacity: 75%;
+}
+
+.profile-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }

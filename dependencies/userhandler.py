@@ -19,7 +19,9 @@ class UserHandler:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS userdata (
                 username VARCHAR(255) NOT NULL,
-                password VARCHAR(255) NOT NULL, 
+                password VARCHAR(255) NOT NULL,
+                status VARCHAR(7) NOT NULL,
+                theme VARCHAR(7) NOT NULL, 
                 UNIQUE(username, password)
                 )
             """)
@@ -46,12 +48,32 @@ class UserHandler:
                 self.argon2Hasher.verify(found[0], pswdCandidate) # Verify entered password validity
             except:
                 # Argon2ID verify method throws exception if password is not correct
+                cursor.close()
                 return False
+            
+            cursor.execute(f"""
+            UPDATE userdata SET status='active' WHERE username='{userCandidate}'
+            """)
+            
+            self.connect.commit()
+
             cursor.close()
             return True
         else:
             cursor.close()
             return False
+        
+    def logOff(self, user):
+        cursor = self.connect.cursor()
+
+        # Set user status accordingly (requires future updates)
+        cursor.execute(f"""
+            UPDATE userdata SET status='offline' WHERE username='{user}'
+            """)
+        
+        self.connect.commit()
+
+        cursor.close()
         
     def attemptRegister(self, userCandidate, pswdCandidate):
         cursor = self.connect.cursor()
@@ -60,8 +82,97 @@ class UserHandler:
 
         # User/password combination only inserted if both are unique to the existing table
         cursor.execute("""
-            INSERT OR IGNORE INTO userdata(username, password) VALUES(?, ?)
-            """, (userCandidate, pswdHash))
+            INSERT OR IGNORE INTO userdata(username, password, status, theme) VALUES(?, ?, ?, ?)
+            """, (userCandidate, pswdHash, 'offline', 'theme1'))
+        
+        self.connect.commit()
+
+        cursor.close()
+
+    def getUsername(self):
+        cursor = self.connect.cursor()
+
+        # Return single active user (requires rework for multiple users)
+        cursor.execute(f"""
+            SELECT username FROM userdata WHERE status='active'
+            """)
+        
+        found = cursor.fetchone()
+
+        cursor.close()
+
+        return found
+    
+    def updateUsername(self, oldUsername, newUsername):
+        cursor = self.connect.cursor()
+
+        # Update username to new value
+        cursor.execute(f"""
+            UPDATE userdata SET username='{newUsername}' WHERE username='{oldUsername}'
+            """)
+        
+        self.connect.commit()
+
+        cursor.close()
+
+    def verifyUser(self, username, pswd):
+        cursor = self.connect.cursor()
+
+        cursor.execute(f"""
+                SELECT password FROM userdata WHERE username='{username}'
+                """)
+            
+        found = cursor.fetchone()
+
+        if found:
+            try:
+                self.argon2Hasher.verify(found[0], pswd) # Verify entered password validity
+            except:
+                # Argon2ID verify method throws exception if password is not correct
+                cursor.close()
+                return False
+            
+            cursor.close()
+            return True
+        else:
+            cursor.close()
+            return False
+        
+    def updatePassword(self, username, pswd):
+        cursor = self.connect.cursor()
+
+        pswdHash = self.argon2Hasher.hash(pswd)
+ 
+        # Update username to new value
+        cursor.execute(f"""
+            UPDATE userdata SET password='{pswdHash}' WHERE username='{username}'
+            """)
+        
+        self.connect.commit()
+
+        cursor.close()
+
+    def getUserTheme(self):
+        cursor = self.connect.cursor()
+
+        # User/password combination only inserted if both are unique to the existing table
+        cursor.execute(f"""
+            SELECT theme FROM userdata WHERE status='active'
+            """)
+        
+        found = cursor.fetchone()
+
+        cursor.close()
+
+        return found
+    
+    def updateUserTheme(self, newTheme):
+        cursor = self.connect.cursor()
+
+        # User/password combination only inserted if both are unique to the existing table
+        cursor.execute(f"""
+            UPDATE userdata SET theme='{newTheme}' WHERE status='active'
+            """)
         
         self.connect.commit()
 

@@ -3,17 +3,53 @@
     <button class="beacon" id="connect-beacon"></button>
     <a href="#" class="logo">Arcadius.</a>
 
-    <nav class="navbar">
-        <a class="navlink {% if '/home' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-home">Home</a>
-        <a class="navlink {% if '/auto' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-auto">Auto</a>
-        <a class="navlink {% if '/manual' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-manual">Manual</a>
-        <a class="navlink {% if '/testing' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-testing">Testing</a>
-        <a class="navlink {% if '/setup' in request.path%} active {% else %} navlink-ltr {% endif %}" href="nav-setup">Setup</a>
-        <input type="checkbox" class="theme-select" id="chk" />
-        <label class="label light-toggle" for="chk">
-            <i class="icon icon-sun"></i>
-            <i class="icon icon-moon"></i>
-            <div class="ball"></div>
-        </label>
+    <nav>
+        <div id="menuToggle">
+            <!--
+            A fake / hidden checkbox is used as click reciever,
+            so you can use the :checked selector on it.
+            -->
+            <input type="checkbox" />
+            
+            <!--
+            Some spans to act as a hamburger.
+            
+            They are acting like a real hamburger,
+            not that McDonalds stuff.
+            -->
+            <span></span>
+            <span></span>
+            <span></span>
+            
+            <!--
+            Too bad the menu has to be inside of the button
+            but hey, it's pure CSS magic.
+            -->
+            <ul id="menu">
+                <a class="navlink {% if '/home' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/home">Home</a>
+                <a class="navlink {% if '/auto' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/auto">Auto</a>
+                <a class="navlink {% if '/manual' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/manual">Manual</a>
+                <a class="navlink {% if '/testing' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/testing">Testing</a>
+                <a class="navlink {% if '/setup' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/setup">Setup</a>
+                <a class="navlink {% if '/profile' in request.path%} active {% else %} navlink-ltr {% endif %}" href="/profile">Profile</a>
+                
+                <div>
+                    <h4 class="menu-label">Select a Theme</h4>
+                    <div class="menu-select">
+                        <select name="theme" id="theme">
+                            <option value="theme1">Pure Light</option>
+                            <option value="theme2">Pure Dark</option>
+                            <option value="theme3">Azure</option>
+                            <option value="theme4">Mulberry</option>
+                            <option value="theme5">High Contrast Light</option>
+                            <option value="theme6">High Contrast Dark</option>
+                        </select>
+                    </div>
+                </div>
+            </ul>
+        </div>
     </nav>
+
+    <script src="{{url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{url_for('static', filename='js/nav.js')}}"></script>
 </header>
