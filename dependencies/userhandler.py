@@ -18,7 +18,6 @@ class UserHandler:
         # Usernames and passwords cannot be repeated (UNIQUE qualifier)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS userdata (
-                id IDENTITY(1,1) PRIMARY KEY,
                 username VARCHAR(255) NOT NULL,
                 password VARCHAR(255) NOT NULL,
                 status VARCHAR(7) NOT NULL,
@@ -63,6 +62,18 @@ class UserHandler:
         else:
             cursor.close()
             return False
+        
+    def logOff(self, user):
+        cursor = self.connect.cursor()
+
+        # Set user status accordingly (requires future updates)
+        cursor.execute(f"""
+            UPDATE userdata SET status='offline' WHERE username='{user}'
+            """)
+        
+        self.connect.commit()
+
+        cursor.close()
         
     def attemptRegister(self, userCandidate, pswdCandidate):
         cursor = self.connect.cursor()

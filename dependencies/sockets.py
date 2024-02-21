@@ -26,6 +26,11 @@ def update_user(data):
     username = uh.getUsername()
     socketio.emit('set_user', {'data':username})
 
+@socketio.on('log-off')
+def log_off(data):
+    username = data[0]
+    uh.logOff(username)
+
 @socketio.on('get-theme')
 def get_theme():
     theme = uh.getUserTheme()

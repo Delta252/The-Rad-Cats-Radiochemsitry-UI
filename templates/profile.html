@@ -131,6 +131,12 @@ jQuery(function() {
         newUsername = $("#new-username").val();
         socket.emit('update-username', [oldUsername, newUsername]);
     });
+
+    $("#log-off").click(function(){
+        username = $("#username").val();
+        socket.emit('log-off', username);
+        location.href = "/login";
+    });
 });
 </script>
 
