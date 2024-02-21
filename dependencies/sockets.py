@@ -16,7 +16,14 @@ def handle_connect():
 @socketio.on('get-user')
 def get_user():
     username = uh.getUsername()
-    print(username)
+    socketio.emit('set_user', {'data':username})
+
+@socketio.on('update-username')
+def update_user(data):
+    oldUsername = data[0]
+    newUsername = data[1]
+    uh.updateUsername(oldUsername, newUsername)
+    username = uh.getUsername()
     socketio.emit('set_user', {'data':username})
 
 @socketio.on('get-theme')

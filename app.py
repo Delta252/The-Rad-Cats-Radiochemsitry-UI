@@ -33,6 +33,27 @@ def testing():
 
 @app.route('/profile', methods=['GET','POST'])
 def profile():
+    if request.method == 'POST':
+        user = request.form['username']
+        pswd_verification = request.form['oldPassword']
+        pswd_candidate = request.form['newPassword']
+        pswd_confirm = request.form['confPassword']
+
+        if pswd_candidate != pswd_confirm:
+            flash('New password does not match confirmation. Please try again.', 'danger')
+            return redirect(url_for('profile'))
+
+        success = uh.verifyUser(user, pswd_verification)
+
+        if not success:
+            # No success
+            flash('Existing username and password combination not found.', 'danger')
+            return redirect(url_for('profile'))
+        
+        uh.updatePassword(user, pswd_candidate)
+        flash('Password successfully updated.', 'success')
+        return redirect(url_for('profile'))
+
     return render_template('profile.html')
 
 # User login
