@@ -1,0 +1,349 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<div class="body" onload="load_fctn()">
+    {% set active_page = 'nav-testing' %}
+    {% include 'includes/_messages.html' %}
+    <div class="content">
+        <div id="comms-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Comms Status</h1>
+                <a id="close-comms" href="#"><i class="icon icon-close"></i></a>
+                <div class="popup-message">
+                    <h4>The system comms to the chamber are currently</h4> 
+                    <h2 id="comms-status" class="status"></h2>
+                    <h4 id="status-update">Please click below to toggle this value.</h4>
+                </div>
+                <div>
+                    <button id="toggle-comms" class="comms-btn single-btn">Enable Comms</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="column1" class="column-container half-screen">
+
+            <div class="log">
+
+            </div>
+            <div id="webcam">
+
+            </div>
+        </div>
+
+        <div id="column2" class="column-container half-screen"></div>
+
+        <a href="#" id="plus-device" class="float-add">
+        <div class="add-devices"><h2>+</h2></div>
+        </a>
+
+        <div id="device-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Add A Device</h1>
+
+                <a id="close-device-popup" href="#"><i class="icon icon-close"></i></a>
+
+                <h3 id="device-message"></h3>
+
+                <div class="popup-select select">
+                    <select name="device-type" id="new-device-type">
+                        <option selected disabled value="">Select Module Type</option>
+                        <option value="pump-peristaltic">Peristaltic Pump</option>
+                        <option value="pump-syringe">Syringe Pump</option>
+                        <option value="mixer">Mixer</option>
+                        <option value="shutter">Shutter</option>
+                        <option value="extract">Extraction</option>
+                        <option value="valve">Valve</option>
+                    </select>
+                </div>
+
+                <div class="input-box">
+                    <input id="new-device-id" type="number" inputmode="integer">
+                    <span>Device ID</span>
+                </div>
+
+                <div>
+                    <button id="add-device" type="submit" class="device-btn single-btn">Add Device</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="console">
+        <textarea id="p" readonly></textarea>
+    </div>
+
+</div>
+
+
+<script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+<script>
+    jQuery(function() {
+        var socket = io.connect('http://127.0.0.1:5000');
+        var comms = false;
+        socket.emit('get-comms-status');
+        adjustScroll();
+
+        function adjustScroll() {
+            if($(window).width() < 1201) {
+                $("#column2").removeClass('scrollable');
+                $(".content").addClass('scrollable');
+            }
+            else {
+                $("#column2").addClass('scrollable');
+                $(".content").removeClass('scrollable');
+            }
+        }
+
+        $(window).on('resize', function(){
+            adjustScroll();
+        });
+        
+        function generateCards(data) {
+            for(entry in data){
+                type = data[entry][1];
+                columnID = "#column2"; /* by default */
+                
+                switch(type){
+                    case 'pump-peristaltic':
+                        $(columnID).append(PeristalticPump(data[entry][0], type));
+                        break;
+                    case 'pump-syringe':
+                        $(columnID).append(SyringePump(data[entry][0], type));
+                        break;
+                    case 'mixer':
+                        $(columnID).append(Mixer(data[entry][0], type));
+                        break;
+                    case 'shutter':
+                        $(columnID).append(Shutter(data[entry][0], type));
+                        break;
+                    case 'extract':
+                        $(columnID).append(Extractor(data[entry][0], type));
+                        break;
+                    case 'valve':
+                        $(columnID).append(Valve(data[entry][0], type));
+                        break;
+                    case 'server':
+                        break;
+                    default:
+                        $(columnID).append(Card("0000", "Invalid Module", ""));
+                        break;
+                }
+            }
+        }
+
+        $(".content").on("click", ".delete-card", function(){
+            parent = $(this).closest("div.card");
+            id = parseInt(parent.attr('id').match(/\d+/));
+            parent.remove();
+            socket.emit('remove-device', id);
+        });
+
+        $("#set-extract").click(function(){
+            document.getElementById("p").textContent += ("\nDeleting card");
+            socket.emit('ping');
+        });
+
+        socket.on('after_connect', function(msg) {
+            document.getElementById("p").textContent += ("Socket Connection successful\n");
+        });
+
+        socket.on('update_cards', function(msg) {
+            $("div.card").remove();
+            generateCards(msg.data);
+        });
+
+        socket.on('send_ping', function(){
+            document.getElementById("p").textContent += ("\nPing received.");
+        });
+
+        socket.on('send_comms_status', (data) => {
+            success = data;
+            if (success){
+                comms = !comms;
+            }
+            document.getElementById("p").textContent += ("\nComms status: " + comms);
+        });
+
+        socket.on('set_comms', (data) => {
+            success = data;
+            if (success){
+                comms=true;
+                $("#comms-status").text("Enabled");
+                $("#comms-status").css("color", "var(--green)");
+                $("#toggle-comms").text("Disable Comms");
+                $("#connect-beacon").css("background-color", "green");
+            }
+            else {
+                comms=false;
+                $("#comms-status").text("Disabled");
+                $("#comms-status").css("color", "var(--red)");
+                $("#toggle-comms").text("Enable Comms");
+                $("#connect-beacon").css("background-color", "red");
+            }
+            $("#toggle-comms").prop("disabled",false);
+        });
+
+        $("#pull-syringe").click(function(){
+            socket.emit("pull-syringe");
+        });
+
+        $("#push-syringe").click(function(){
+            socket.emit("push-syringe");
+        });
+
+        $("#connect-beacon").click(function(){
+            if(comms) {
+                $("#comms-status").text("Enabled");
+                $("#comms-status").css("color", "var(--green)");
+                $("#toggle-comms").text("Disable Comms");
+            }
+            else {
+                $("#comms-status").text("Disabled");
+                $("#comms-status").css("color", "var(--red)");
+                $("#toggle-comms").text("Enable Comms");
+            }
+            $("#comms-popup").toggle();
+        });
+
+        $("#close-comms").click(function(){
+            $("#comms-popup").toggle();
+        });
+
+        $("#toggle-comms").click(function(){
+            $(this).prop("disabled",true);
+            socket.emit('comms-status');
+            socket.emit('toggle-comms');
+        });
+
+        $("#close-device-popup").click(function(){
+            $("#device-popup").toggle();
+        });
+
+        $("#plus-device").click(function(){
+            $("#device-popup").toggle();
+        });
+
+        $("#add-device").click(function(){
+            type = $("#new-device-type").find(':selected').val();
+            id = parseInt($("#new-device-id").val());
+            if((type=='')||id==''){
+                $("#device-message").html('Please fill out all fields.');
+                return;
+            }
+            socket.emit('add-device', [id, type]);           
+        });
+
+        var Card = function(id, name, content) { 
+            return `
+            <div id="card-${id}" class="card">
+                <h1>${name}</h1>
+
+                <a class="delete-card" href="#"><i class="icon icon-close"></i></a>
+
+                <div class="input-box id-box">
+                    <input type="number" inputmode="integer" required="required" value="${id}" readonly>
+                    <span id="device-id">Device ID</span>
+                </div>
+
+                ${content}
+            </div>`;
+        };
+
+        var Valve = function(id, type) {
+            content = `
+            <div class="select">
+                <select name="valve" id="valve">
+                    <option selected disabled>Choose a valve.</option>
+                    <option value="valve1">Valve 1</option>
+                    <option value="valve2">Valve 2</option>
+                    <option value="valve3">Valve 3</option>
+                    <option value="valve4">Valve 4</option>
+                    <option value="valve5">Valve 5</option>
+                </select>
+            </div>
+
+            <div class="optns">
+                <button type="valve-open" class="optn-btn ui-btn">Open</button>
+                <button type="valve-close" class="optn-btn ui-btn">Close</button>
+                <button type="valve-mid" class="optn-btn ui-btn">Middle</button>
+            </div>`;
+            return Card(id, type, content);
+        };
+
+        var Shutter = function(id, type) {
+            content = `
+            <div class="optns">
+                <button type="shutter-open" class="optn-btn ui-btn">Open</button>
+                <button type="shutter-close" class="optn-btn ui-btn">Close</button>
+                <button type="shutter-mid" class="optn-btn ui-btn">Middle</button>
+            </div>`;
+            return Card(id, type, content);
+        }
+
+        var PeristalticPump = function(id, type) {
+            content = `
+            <div class="input-box">
+                <input id="pump-vol" type="number" inputmode="decimal" required="required">
+                <span>Enter a volume (mL).</span>
+            </div>
+            
+            <div class="optns">
+                <button id="start-pump" class="ui-btn single-btn">Start</button>
+            </div>
+
+            <div class="optns">
+                <button type="reactor-stop" class="ui-btn single-btn">Stop</button>
+            </div>`;
+            return Card(id, type, content);
+        }
+
+        var SyringePump = function(id, type){
+            content = `
+            <div class="optns">
+                <button id="pull-syringe" class="ui-btn single-btn">Pull</button>
+            </div>
+
+            <div class="optns">
+                <button id="push-syringe" class="ui-btn single-btn">Push</button>
+            </div>`;
+            return Card(id, type, content);
+        }
+
+        var Mixer = function(id, type) {
+            content = `
+            <div class="optns">
+                <button type="pump-slow" class="optn-btn ui-btn">Slow</button>
+                <button type="pump-medium" class="optn-btn ui-btn">Medium</button>
+                <button type="pump-fast" class="optn-btn ui-btn">Fast</button>
+            </div>
+
+            <div class="optns">
+                <button onclick="connect_fctn()" type="reactor-stop" class="ui-btn single-btn">Stop</button>
+            </div>`;
+            return Card(id, type, content);
+        }
+
+        var Extractor = function(id, type) {
+            content = `
+            <div class="select">
+                <select name="extraction" id="extraction">
+                    <option selected disabled>Choose an extraction slot.</option>
+                    <option value="slot1">Slot 1</option>
+                    <option value="slot2">Slot 2</option>
+                    <option value="slot3">Slot 3</option>
+                    <option value="slot4">Slot 4</option>
+                    <option value="slot5">Slot 5</option>
+                </select>
+            </div>
+
+            <div class="optns">
+                <button id="set-extract" class="ui-btn single-btn">Apply</button>
+            </div>`;
+            return Card(id, type, content);
+        }
+    });
+</script>
+
+{% endblock %}

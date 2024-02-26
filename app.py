@@ -31,6 +31,10 @@ def landing():
 def testing():
     return render_template('testing.html')
 
+@app.route('/manual', methods=['GET','POST'])
+def manual():
+    return render_template('manual.html')
+
 @app.route('/profile', methods=['GET','POST'])
 def profile():
     if request.method == 'POST':
