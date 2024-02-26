@@ -192,7 +192,7 @@
   }
 }
 
-@media screen and (min-width: 1200px) {
+@media screen and (min-width: 1201px) {
   .content {
       display: flex;
       flex-wrap: wrap;
@@ -369,7 +369,7 @@ select::-ms-expand{
 }
 
 .optn-btn {
-  width: 25%;
+  width: 30%;
 }
 
 .single-btn {
