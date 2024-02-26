@@ -101,20 +101,23 @@
 
 .content {
   width: 100%;
-  overflow-y: auto;
   height: 80%;
 }
 
-.content::-webkit-scrollbar {
+.scrollable {
+  overflow-y: auto;
+}
+
+.scrollable::-webkit-scrollbar {
   width: 20px;
 }
 
-.content::-webkit-scrollbar-track {
+.scrollable::-webkit-scrollbar-track {
   background: var(--background); 
   border: 5px solid transparent;
 }
  
-.content::-webkit-scrollbar-thumb {
+.scrollable::-webkit-scrollbar-thumb {
   background: var(--accent); 
   width: 10px;
   border-radius: 0.75em;
@@ -127,7 +130,7 @@
   -webkit-transition: all 0.4s;
 }
 
-.content::-webkit-scrollbar-thumb:hover {
+.scrollable::-webkit-scrollbar-thumb:hover {
   border-radius: 5px solid var(--accent);
 }
 
@@ -189,6 +192,7 @@
   .column-container {
     width: 90%;
     min-width: 90%;
+    height: auto;
   }
 
   .half-screen {
@@ -207,6 +211,7 @@
 
   .column-container {
     width: 30%;
+    height: 100%;
   }
 
   .half-screen {
@@ -579,4 +584,18 @@ select::-ms-expand{
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.log {
+  background-color: var(--body);
+  border-radius: 5px;
+  border: 2px solid var(--accent);
+  width: 95%;
+  height: 40vh;
+  text-align: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin: 15px 0px 15px 20px;
+  position: relative;
 }
