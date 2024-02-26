@@ -180,28 +180,37 @@
 
 @media screen and (max-width: 1200px) {
   .content {
-      width: 100%;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .column-container {
-      width: 90%;
-      min-width: 90%;
+    width: 90%;
+    min-width: 90%;
+  }
+
+  .half-screen {
+    width: 90%;
+    min-width: 90%;
   }
 }
 
 @media screen and (min-width: 1201px) {
   .content {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      word-wrap: break-word;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    word-wrap: break-word;
   }
 
   .column-container {
-      width: 30%;
+    width: 30%;
+  }
+
+  .half-screen {
+    width: 48%;
   }
 }
 
@@ -220,12 +229,12 @@
 
 .card h1 {
   color: var(--text);
-  padding: 15px 0px;
+  padding: 15px 0px 10px 0px;
   text-transform: capitalize;
 }
 
 .delete-card {
-  padding: 10px;
+  padding: 10px 10px 0px 10px;
   align-items: right;
   display: block;
 }
@@ -235,7 +244,11 @@
   display: block;
   width: 20em;
   flex: 1;
-  margin: 20px 10px 0px 10px;
+  margin: 10px ;
+}
+
+.id-box {
+  margin: 0px 10px 10px 10px;
 }
 
 .input-box input {
@@ -352,8 +365,6 @@ select::-ms-expand{
   line-height: 3;
   background: transparent;
   padding: 0.5em;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
 }
 
 .ui-btn {
