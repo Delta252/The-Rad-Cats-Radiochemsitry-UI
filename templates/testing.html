@@ -246,20 +246,34 @@
                 </select>
             </div>
 
+            <div class="select">
+                <select name="shutter" id="shutter">
+                    <option selected disabled>Choose a valve position.</option>
+                    <option value="closed">Closed</option>
+                    <option value="open">Open</option>
+                    <option value="Middle">Middle</option>
+                </select>
+            </div>
+            
             <div class="optns">
-                <button type="valve-open" class="optn-btn ui-btn">Open</button>
-                <button type="valve-close" class="optn-btn ui-btn">Close</button>
-                <button type="valve-mid" class="optn-btn ui-btn">Middle</button>
+                <button class="ui-btn single-btn apply-action">Set Valve</button>
             </div>`;
             return Card(id, type, content);
         };
 
         var Shutter = function(id, type) {
             content = `
+            <div class="select">
+                <select name="shutter" id="shutter">
+                    <option selected disabled>Choose a shutter position.</option>
+                    <option value="closed">Closed</option>
+                    <option value="open">Open</option>
+                    <option value="partial">Partial</option>
+                </select>
+            </div>
+            
             <div class="optns">
-                <button type="shutter-open" class="optn-btn ui-btn">Open</button>
-                <button type="shutter-close" class="optn-btn ui-btn">Close</button>
-                <button type="shutter-mid" class="optn-btn ui-btn">Middle</button>
+                <button class="ui-btn single-btn apply-action">Set Shutter</button>
             </div>`;
             return Card(id, type, content);
         }
@@ -272,37 +286,46 @@
             </div>
             
             <div class="optns">
-                <button id="start-pump" class="ui-btn single-btn">Start</button>
-            </div>
-
-            <div class="optns">
-                <button type="reactor-stop" class="ui-btn single-btn">Stop</button>
+                <button class="ui-btn single-btn apply-action">Start Pump</button>
             </div>`;
             return Card(id, type, content);
         }
 
         var SyringePump = function(id, type){
             content = `
-            <div class="optns">
-                <button id="pull-syringe" class="ui-btn single-btn">Pull</button>
+            <div class="input-box">
+                <input id="pump-vol" type="number" inputmode="decimal" required="required">
+                <span>Enter a volume (mL).</span>
+            </div>
+
+            <div class="select">
+                <select name="pump-syringe" id="pump-syringe">
+                    <option selected disabled>Choose a direction.</option>
+                    <option value="fill">Inflow</option>
+                    <option value="empty">Outflow</option>
+                </select>
             </div>
 
             <div class="optns">
-                <button id="push-syringe" class="ui-btn single-btn">Push</button>
+                <button class="ui-btn single-btn apply-action">Start Pump</button>
             </div>`;
             return Card(id, type, content);
         }
 
         var Mixer = function(id, type) {
             content = `
-            <div class="optns">
-                <button type="pump-slow" class="optn-btn ui-btn">Slow</button>
-                <button type="pump-medium" class="optn-btn ui-btn">Medium</button>
-                <button type="pump-fast" class="optn-btn ui-btn">Fast</button>
+            <div class="select">
+                <select name="mixer" id="mixer">
+                    <option selected disabled>Choose a mixer speed.</option>
+                    <option value="stop">Stop</option>
+                    <option value="slow">Slow</option>
+                    <option value="medium">Medium</option>
+                    <option value="fast">Fast</option>
+                </select>
             </div>
 
             <div class="optns">
-                <button onclick="connect_fctn()" type="reactor-stop" class="ui-btn single-btn">Stop</button>
+                <button class="ui-btn single-btn apply-action">Set Speed</button>
             </div>`;
             return Card(id, type, content);
         }
@@ -321,7 +344,7 @@
             </div>
 
             <div class="optns">
-                <button id="set-extract" class="ui-btn single-btn">Apply</button>
+                <button class="ui-btn single-btn apply-action">Set Slot</button>
             </div>`;
             return Card(id, type, content);
         }
