@@ -27,7 +27,7 @@
                 <h1>Command Log</h1>
 
                 <div class="log-box scrollable">
-                    <p id="log-text "></p>
+                    <textarea id="log-text" readonly></textarea>
                 </div>
             </div>
 
@@ -159,7 +159,7 @@
 
         /* Socket Functions */
         socket.on('after_connect', function(msg) {
-            document.getElementById("console").textContent += ("Socket Connection successful\n");
+            document.getElementById("console").textContent += ("\nSocket Connection successful");
         });
 
         socket.on('update_cards', function(msg) {
@@ -200,6 +200,15 @@
             id = parseInt(parent.attr('id').match(/\d+/));
             parent.remove();
             socket.emit('remove-device', id);
+        });
+
+        $(".content").on("click", ".apply-action", function(){
+            parent = $(this).closest("div.card");
+            var result = [];
+            inputs = parent.find('input, select').each(function(){
+                result.push($(this).val());
+            });
+            document.getElementById("log-text").textContent += ("Registered button press " + result + "\n");
         });
 
         $("#connect-beacon").click(function(){
@@ -263,24 +272,29 @@
 
         var Valve = function(id, type) {
             content = `
-            <div class="select">
-                <select name="valve" id="valve">
-                    <option selected disabled>Choose a valve.</option>
-                    <option value="valve1">Valve 1</option>
-                    <option value="valve2">Valve 2</option>
-                    <option value="valve3">Valve 3</option>
-                    <option value="valve4">Valve 4</option>
-                    <option value="valve5">Valve 5</option>
-                </select>
+            <div class="input-box">
+                <span class="select-label">Select a valve</span>
+                <div class="select">
+                    <select name="valve" id="valve">
+                        <option selected value="valve1">Valve 1</option>
+                        <option value="valve2">Valve 2</option>
+                        <option value="valve3">Valve 3</option>
+                        <option value="valve4">Valve 4</option>
+                        <option value="valve5">Valve 5</option>
+                    </select>
+                </div>
+                
             </div>
 
-            <div class="select">
-                <select name="shutter" id="shutter">
-                    <option selected disabled>Choose a valve position.</option>
-                    <option value="closed">Closed</option>
-                    <option value="open">Open</option>
-                    <option value="Middle">Middle</option>
-                </select>
+            <div class="input-box">
+                <span class="select-label">Select a position</span>
+                <div class="select">
+                    <select name="valve-positon" id="valve-positon">
+                        <option selected value="closed">Closed</option>
+                        <option value="open">Open</option>
+                        <option value="middle">Middle</option>
+                    </select>
+                </div>
             </div>
             
             <div class="optns">
@@ -291,13 +305,15 @@
 
         var Shutter = function(id, type) {
             content = `
-            <div class="select">
-                <select name="shutter" id="shutter">
-                    <option selected disabled>Choose a shutter position.</option>
-                    <option value="closed">Closed</option>
-                    <option value="open">Open</option>
-                    <option value="partial">Partial</option>
-                </select>
+            <div class="input-box">
+                <span class="select-label">Select a position</span>
+                <div class="select">
+                    <select name="shutter" id="shutter">
+                        <option selected value="closed">Closed</option>
+                        <option value="open">Open</option>
+                        <option value="partial">Partial</option>
+                    </select>
+                </div>
             </div>
             
             <div class="optns">
@@ -309,8 +325,8 @@
         var PeristalticPump = function(id, type) {
             content = `
             <div class="input-box">
-                <input id="pump-vol" type="number" inputmode="decimal" required="required">
-                <span>Enter a volume (mL).</span>
+                <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
+                <span class="input-label">Enter a volume (mL).</span>
             </div>
             
             <div class="optns">
@@ -322,16 +338,18 @@
         var SyringePump = function(id, type){
             content = `
             <div class="input-box">
-                <input id="pump-vol" type="number" inputmode="decimal" required="required">
-                <span>Enter a volume (mL).</span>
+                <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
+                <span class="input-label">Enter a volume (mL).</span>
             </div>
 
-            <div class="select">
-                <select name="pump-syringe" id="pump-syringe">
-                    <option selected disabled>Choose a direction.</option>
-                    <option value="fill">Inflow</option>
-                    <option value="empty">Outflow</option>
-                </select>
+            <div class="input-box">
+                <span class="select-label">Select a direction</span>
+                <div class="select">
+                    <select name="pump-syringe" id="pump-syringe">
+                        <option selected value="fill">Inflow</option>
+                        <option value="empty">Outflow</option>
+                    </select>
+                </div>
             </div>
 
             <div class="optns">
@@ -342,14 +360,16 @@
 
         var Mixer = function(id, type) {
             content = `
-            <div class="select">
-                <select name="mixer" id="mixer">
-                    <option selected disabled>Choose a mixer speed.</option>
-                    <option value="stop">Stop</option>
-                    <option value="slow">Slow</option>
-                    <option value="medium">Medium</option>
-                    <option value="fast">Fast</option>
-                </select>
+            <div class="input-box">
+                <span class="select-label">Select a speed</span>
+                <div class="select">
+                    <select name="mixer" id="mixer">
+                        <option selected value="stop">Stop</option>
+                        <option value="slow">Slow</option>
+                        <option value="medium">Medium</option>
+                        <option value="fast">Fast</option>
+                    </select>
+                </div>
             </div>
 
             <div class="optns">
@@ -360,15 +380,17 @@
 
         var Extractor = function(id, type) {
             content = `
-            <div class="select">
-                <select name="extraction" id="extraction">
-                    <option selected disabled>Choose an extraction slot.</option>
-                    <option value="slot1">Slot 1</option>
-                    <option value="slot2">Slot 2</option>
-                    <option value="slot3">Slot 3</option>
-                    <option value="slot4">Slot 4</option>
-                    <option value="slot5">Slot 5</option>
-                </select>
+            <div class="input-box">
+                <span class="select-label">Select a slot</span>
+                <div class="select">
+                    <select name="extraction" id="extraction">
+                        <option selected value="slot1">Slot 1</option>
+                        <option value="slot2">Slot 2</option>
+                        <option value="slot3">Slot 3</option>
+                        <option value="slot4">Slot 4</option>
+                        <option value="slot5">Slot 5</option>
+                    </select>
+                </div>
             </div>
 
             <div class="optns">
