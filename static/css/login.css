@@ -14,7 +14,7 @@ body{
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-image: url('../img/plasma.jpg');
+  background-image: url('../img/plasma.png');
   background-size: cover;
   background-position: center;
 }
