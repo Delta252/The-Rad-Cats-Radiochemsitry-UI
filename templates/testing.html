@@ -65,7 +65,7 @@
     </div>
 
     <div class="console">
-        <textarea id="p" readonly></textarea>
+        <textarea id="console" readonly></textarea>
     </div>
 
 </div>
@@ -122,13 +122,8 @@
             socket.emit('remove-device', id);
         });
 
-        $("#set-extract").click(function(){
-            document.getElementById("p").textContent += ("\nDeleting card");
-            socket.emit('ping');
-        });
-
         socket.on('after_connect', function(msg) {
-            document.getElementById("p").textContent += ("Socket Connection successful\n");
+            document.getElementById("console").textContent += ("Socket Connection successful\n");
         });
 
         socket.on('update_cards', function(msg) {
@@ -136,16 +131,12 @@
             generateCards(msg.data);
         });
 
-        socket.on('send_ping', function(){
-            document.getElementById("p").textContent += ("\nPing received.");
-        });
-
         socket.on('send_comms_status', (data) => {
             success = data;
             if (success){
                 comms = !comms;
             }
-            document.getElementById("p").textContent += ("\nComms status: " + comms);
+            document.getElementById("console").textContent += ("\nComms status: " + comms);
         });
 
         socket.on('set_comms', (data) => {
@@ -165,14 +156,6 @@
                 $("#connect-beacon").css("background-color", "red");
             }
             $("#toggle-comms").prop("disabled",false);
-        });
-
-        $("#pull-syringe").click(function(){
-            socket.emit("pull-syringe");
-        });
-
-        $("#push-syringe").click(function(){
-            socket.emit("push-syringe");
         });
 
         $("#connect-beacon").click(function(){

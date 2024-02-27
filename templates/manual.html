@@ -81,7 +81,7 @@
     </div>
 
     <div class="console">
-        <textarea id="p" readonly></textarea>
+        <textarea id="console" readonly></textarea>
     </div>
 
 </div>
@@ -164,7 +164,7 @@
         });
 
         socket.on('after_connect', function(msg) {
-            document.getElementById("p").textContent += ("Socket Connection successful\n");
+            document.getElementById("console").textContent += ("Socket Connection successful\n");
         });
 
         socket.on('update_cards', function(msg) {
@@ -177,7 +177,7 @@
             if (success){
                 comms = !comms;
             }
-            document.getElementById("p").textContent += ("\nComms status: " + comms);
+            document.getElementById("console").textContent += ("\nComms status: " + comms);
         });
 
         socket.on('set_comms', (data) => {
