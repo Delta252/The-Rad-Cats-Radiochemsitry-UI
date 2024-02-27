@@ -74,10 +74,12 @@
 <script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
 <script>
     jQuery(function() {
+        /* Global vars and page startup */
+        const video = document.querySelector('#camera');
         var socket = io.connect('http://127.0.0.1:5000');
         var comms = false;
         socket.emit('get-comms-status');
-        
+                
         function generateCards(data) {
             for(entry in data){
                 type = data[entry][1];
@@ -115,13 +117,19 @@
             }
         }
 
-        $(".content").on("click", ".delete-card", function(){
-            parent = $(this).closest("div.card");
-            id = parseInt(parent.attr('id').match(/\d+/));
-            parent.remove();
-            socket.emit('remove-device', id);
+        window.navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.onloadedmetadata = (e) => {
+                    video.play();
+                };
+            })
+            .catch( () => {
+                $("#camera-box").append(`<img id="no-camera"></img>`);
+                $("#camera").remove();
         });
 
+        /* Socket Functions */
         socket.on('after_connect', function(msg) {
             document.getElementById("console").textContent += ("Socket Connection successful\n");
         });
@@ -156,6 +164,14 @@
                 $("#connect-beacon").css("background-color", "red");
             }
             $("#toggle-comms").prop("disabled",false);
+        });
+
+        /* UI interactions */
+        $(".content").on("click", ".delete-card", function(){
+            parent = $(this).closest("div.card");
+            id = parseInt(parent.attr('id').match(/\d+/));
+            parent.remove();
+            socket.emit('remove-device', id);
         });
 
         $("#connect-beacon").click(function(){
@@ -200,6 +216,7 @@
             socket.emit('add-device', [id, type]);           
         });
 
+        /* Element generation */
         var Card = function(id, name, content) { 
             return `
             <div id="card-${id}" class="card">
