@@ -586,16 +586,61 @@ select::-ms-expand{
   align-items: center;
 }
 
-.log {
+.info-container {
   background-color: var(--body);
   border-radius: 5px;
   border: 2px solid var(--accent);
   width: 95%;
-  height: 40vh;
-  text-align: center;
+  text-align: left;
   align-items: center;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   margin: 15px 0px 15px 20px;
   position: relative;
+  padding: 20px;
+}
+
+.info-container h1 {
+  color: var(--text);
+}
+
+.log {
+  height: 40vh;
+}
+
+.log-box {
+  background-color: var(--background);
+  border: 2px solid var(--accent);
+  border-radius: 5px;
+  height: 100%;
+  width: 100%;
+  margin: 10px 10px 10px 50px;
+  padding: 20px;
+}
+
+.log-box p {
+  color: var(--text);
+  font-size: 15pt;
+}
+
+.webcam {
+  height: 30vh;
+}
+
+#camera-box {
+  height: 100%;
+  width: 100%;
+  margin: 10px 10px 10px 50px;
+  text-align: center;
+  align-items: center;
+}
+
+#no-camera {
+  height: 100%;
+  content: url("../img/nocamera.png");
+}
+
+#camera {
+  height: 100%;
+  aspect-ratio: 4/3;
 }
