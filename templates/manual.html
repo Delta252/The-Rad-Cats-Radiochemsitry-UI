@@ -209,6 +209,7 @@
                 result.push($(this).val());
             });
             document.getElementById("log-text").textContent += ("Registered button press " + result + "\n");
+            socket.emit('generate-command', result)
         });
 
         $("#connect-beacon").click(function(){
