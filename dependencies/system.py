@@ -1,5 +1,6 @@
 import os 
 import sqlite3
+import warnings
 
 class System:
     def __init__(self):
@@ -17,7 +18,24 @@ class System:
         found = self.cursor.fetchall()
 
         for i in found:
-            dev = Component(i[0], i[1])
+            match i[1]:
+                case 'server':
+                    dev = Server(i[0], i[1])
+                case 'pump-syringe':
+                    dev = SyringePump(i[0], i[1])
+                case 'pump-peristaltic':
+                    dev = PeristalticPump(i[0], i[1])
+                case 'mixer':
+                    dev = Mixer(i[0], i[1])
+                case 'shutter':
+                    dev = Shutter(i[0], i[1])
+                case 'extract':
+                    dev = Extraction(i[0], i[1])
+                case 'valve':
+                    dev = Valve(i[0], i[1])
+                case _:
+                    warnings.warn('Unrecognized device in database.')
+
             self.devices.append(dev)
 
 
@@ -58,9 +76,77 @@ class System:
             data.append((i.id, i.type))
 
         return data
+    
+    def generateCommand(self, data):
+        id = int(data[0])
+
+        for device in self.devices:
+            if id == device.id:
+                device.parseCommand(data)
+                break
+        else:
+            warnings.warn('Unrecognized device request.')
+        return 
 
 class Component:
     def __init__(self, id, descriptor):
         self.status = -1
         self.id = id
         self.type = descriptor
+        #self.command = 
+
+class Server(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+
+    def parseCommand(self, data):
+        return
+
+class SyringePump(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+
+    def parseCommand(self, data):
+        return
+
+class PeristalticPump(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+    
+    def parseCommand(self, data):
+        return
+
+class Mixer(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+
+    def parseCommand(self, data):
+        return
+
+class Shutter(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+
+    def parseCommand(self, data):
+        return
+
+class Extraction(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+    
+    def parseCommand(self, data):
+        return
+
+class Valve(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+    
+    def parseCommand(self, data):
+        return
+
+class Spectrometer(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+    
+    def parseCommand(self, data):
+        return
