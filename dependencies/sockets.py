@@ -72,6 +72,10 @@ def remove_device(data):
     sys.addToDB(data[0], data[1])
     socketio.emit('update_cards', {'data':sys.define()})
 
+@socketio.on('generate-command')
+def generate_command(data):
+    sys.generateCommand(data)
+
 # Following commands are demo-specific placeholders, and will be replaced
 @socketio.on('pull-syringe')
 def get_comms_status():
