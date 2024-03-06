@@ -69,7 +69,7 @@
 
                 <div class="input-box">
                     <input id="new-device-id" type="number" inputmode="integer">
-                    <span>Device ID</span>
+                    <span id="device-id">Device ID</span>
                 </div>
 
                 <div>
@@ -137,6 +137,7 @@
                         $(columnID).append(Valve(data[entry][0], type));
                         break;
                     case 'server':
+                        $("#server-id").val(data[entry][0])
                         break;
                     default:
                         $(columnID).append(Card("0000", "Invalid Module", ""));
@@ -194,6 +195,14 @@
             $("#toggle-comms").prop("disabled",false);
         });
 
+        socket.on('log_command', (msg) => {
+            data = msg.data;
+            cmd = data[0];
+            transcript = data[1];
+            document.getElementById("console").textContent += ("\nSent to Serial >> "+ cmd);
+            document.getElementById("log-text").textContent += (transcript + "\n");
+        });
+
         /* UI interactions */
         $(".content").on("click", ".delete-card", function(){
             parent = $(this).closest("div.card");
@@ -205,10 +214,10 @@
         $(".content").on("click", ".apply-action", function(){
             parent = $(this).closest("div.card");
             var result = [];
+            result.push($("#server-id").val())
             inputs = parent.find('input, select').each(function(){
                 result.push($(this).val());
             });
-            document.getElementById("log-text").textContent += ("Registered button press " + result + "\n");
             socket.emit('generate-command', result)
         });
 
@@ -284,14 +293,13 @@
                         <option value="valve5">Valve 5</option>
                     </select>
                 </div>
-                
             </div>
 
             <div class="input-box">
                 <span class="select-label">Select a position</span>
                 <div class="select">
                     <select name="valve-positon" id="valve-positon">
-                        <option selected value="closed">Closed</option>
+                        <option selected value="close">Closed</option>
                         <option value="open">Open</option>
                         <option value="middle">Middle</option>
                     </select>
@@ -385,17 +393,22 @@
                 <span class="select-label">Select a slot</span>
                 <div class="select">
                     <select name="extraction" id="extraction">
-                        <option selected value="slot1">Slot 1</option>
-                        <option value="slot2">Slot 2</option>
-                        <option value="slot3">Slot 3</option>
-                        <option value="slot4">Slot 4</option>
-                        <option value="slot5">Slot 5</option>
+                        <option selected value="1">Slot 1</option>
+                        <option value="2">Slot 2</option>
+                        <option value="3">Slot 3</option>
+                        <option value="4">Slot 4</option>
+                        <option value="5">Slot 5</option>
                     </select>
                 </div>
             </div>
 
+            <div class="input-box">
+                <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
+                <span class="input-label">Enter a volume (mL).</span>
+            </div>
+
             <div class="optns">
-                <button class="ui-btn single-btn apply-action">Set Slot</button>
+                <button class="ui-btn single-btn apply-action">Start Extraction</button>
             </div>`;
             return Card(id, type, content);
         }

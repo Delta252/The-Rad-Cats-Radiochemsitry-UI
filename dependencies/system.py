@@ -6,11 +6,11 @@ class System:
     def __init__(self):
         self.systemdataFilepath = os.path.abspath('dependencies/systemdata.db')
         self.connect = sqlite3.connect(self.systemdataFilepath, check_same_thread=False)
-        self.cursor = self.connect.cursor()
         self.devices = []
 
     def updateFromDB(self):
         self.devices = []
+        self.cursor = self.connect.cursor()
         self.cursor.execute("""
             SELECT * FROM systemdata                            
             """)
@@ -100,15 +100,15 @@ class System:
         return data
     
     def generateCommand(self, data):
-        id = int(data[0])
-
+        id = int(data[1])
+        result = 'No Valid Command'
         for device in self.devices:
             if id == device.id:
-                device.parseCommand(data)
+                result = device.parseCommand(data)
                 break
         else:
             warnings.warn('Unrecognized device request.')
-        return 
+        return result
 
 class Component:
     def __init__(self, id, descriptor):
@@ -157,14 +157,20 @@ class Extraction(Component):
         super().__init__(id, descriptor)
     
     def parseCommand(self, data):
-        return
+        print(data)
+        transcript = f'Server ({data[0]}) requests Extractor ({data[1]}) set to position {data[2]}'
+        angle = (int(data[2])-1)*(180/4)
+        cmd = f'[sID{data[0]} rID{data[1]} PK1 E1 S{angle}]'
+        return (cmd, transcript)
 
 class Valve(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
     
     def parseCommand(self, data):
-        return
+        print(data)
+        cmd = f'[sID{data[0]} rID{data[0]} PK1 E1 {data[0]}]'
+        return cmd
 
 class Spectrometer(Component):
     def __init__(self, id, descriptor):
