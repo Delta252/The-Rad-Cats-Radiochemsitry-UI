@@ -558,7 +558,7 @@ select::-ms-expand{
   min-width: 430px;
 }
 
-#username-span {
+.profile-span {
   color: var(--text);
   transform: translateX(10px) translateY(-7px);
   font-size: 0.85em;
