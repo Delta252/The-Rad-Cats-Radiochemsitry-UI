@@ -258,21 +258,21 @@
 }
 
 .input-box input {
-width: 85%;
-padding: 0.5em;
-border: 3px solid var(--accent);
-border-radius: 0.5em;
-outline: none;
-background: transparent;
-color: var(--text);
-font-weight: 600;
-font-size: 1.15em;
+  width: 85%;
+  padding: 0.5em;
+  border: 3px solid var(--accent);
+  border-radius: 0.5em;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 1.15em;
 }
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
--webkit-appearance: none;
-margin: 0;
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .input-box span {
