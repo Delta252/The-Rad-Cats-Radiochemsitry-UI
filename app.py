@@ -10,7 +10,7 @@ import os
 
 app = Flask(__name__) # Create Flask app
 
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*") #IMPORTANT! Required for university/corporate networks where origin is not identical to host
 
 uh = UserHandler() # Create object to handle user profiles
 
