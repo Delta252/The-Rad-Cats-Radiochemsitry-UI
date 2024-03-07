@@ -63,11 +63,12 @@ class Serial:
                 try:
                     response = self.READ()
                     # Following requires update after handshake command is defined
-                    if response.__contains__('CONF'):
-                        print('Device recognized on port',port)
-                        self.comPort = port
-                        self.CLOSE_SERIAL_PORT()
-                        return True
+                    for package in response:
+                        if 'CONF' in package:
+                            print('Device recognized on port',port)
+                            self.comPort = port
+                            self.CLOSE_SERIAL_PORT()
+                            return True
                 except:
                     self.connection.close()
                     return False
@@ -113,7 +114,6 @@ class Serial:
     # Underlying method to send a command via serial
     def WRITE(self, command):
         try:
-            print('Sending command to serial:',command,flush=True)
             self.connection.write(command.encode('utf-8')) # Required encoding for a serial connection
             return True
         except TimeoutError:
@@ -129,6 +129,7 @@ class Serial:
         try:
             data = self.connection.read(128)
             response = self.PARSE_LINES(data.decode('utf-8')) # Required encoding for a serial connection
+            self.connection.flush()
             return response
         except Exception as error:
             print('Failed to read response')
@@ -138,10 +139,10 @@ class Serial:
     # Parsing method
     # Identifies content within a response; further action not currently implemented
     def PARSE_LINES(self, s):
+        result = []
         lines = s.splitlines()
         for entry in lines:
-            result = entry[entry.find('['):entry.find(']')+1]
+            result.append(entry[entry.find('['):entry.find(']')+1])
             if result == None:
                 result = entry
-            print('Response:',result)
-            return result
+        return lines

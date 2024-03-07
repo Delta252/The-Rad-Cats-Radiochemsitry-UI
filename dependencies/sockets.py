@@ -80,7 +80,6 @@ def update_server(data):
 def generate_command(data):
     print(data)
     result = sys.generateCommand(data)
-    comms.runCommand(result[0])
     socketio.emit('log_command', {'data':result})
 
 # Following commands are demo-specific placeholders, and will be replaced

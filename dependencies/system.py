@@ -1,6 +1,7 @@
-import os 
+import os
 import sqlite3
 import warnings
+from queue import *
 
 class System:
     def __init__(self):
@@ -89,6 +90,15 @@ class System:
         for i in self.devices:
             print(f'Device {i.type} at ID {i.id}\n')
 
+    def findDeviceByID(self, id):
+        for i in self.devices:
+            if i.id == id:
+                return i
+
+    def setDeviceStatus(self, id, status):
+        device = self.findDeviceByID(id)
+        device.status = status
+
     def define(self):
         # Method used for serializing data to send over sockets
         # Method addresses problems with devices list not being JSON serializeable
@@ -100,7 +110,7 @@ class System:
         return data
     
     def generateCommand(self, data):
-        id = int(data[1])
+        id = int(data[2])
         result = 'No Valid Command'
         for device in self.devices:
             if id == device.id:
@@ -109,13 +119,32 @@ class System:
         else:
             warnings.warn('Unrecognized device request.')
         return result
+    
+    def handleQueues(self):
+        for component in self.devices:
+            if (component.q.qsize()>0) & (component.status == 'free'):
+                return component.q.get()
+        return ''
 
 class Component:
     def __init__(self, id, descriptor):
-        self.status = -1
+        self.status = 'free'
         self.id = id
         self.type = descriptor
-        #self.command = 
+        self.commandPacket = [] # Serial command and transcript
+        self.q = Queue(-1)
+    
+    def setCmdBase(self, senderDevice, senderID, receiverID):
+        cmd = f'[sID{senderID} rID{receiverID}'
+        transcript = f'{str(senderDevice).capitalize()} ({senderID}) requests {str(self.type).capitalize()} ({receiverID})'
+        self.commandPacket = [cmd, transcript]
+        return
+    
+    def setStatus(self, status):
+        self.status = status
+
+    def getStatus(self):
+        return self.status
 
 class Server(Component):
     def __init__(self, id, descriptor):
@@ -158,10 +187,26 @@ class Extraction(Component):
     
     def parseCommand(self, data):
         print(data)
-        transcript = f'Server ({data[0]}) requests Extractor ({data[1]}) set to position {data[2]}'
-        angle = (int(data[2])-1)*(180/4)
-        cmd = f'[sID{data[0]} rID{data[1]} PK1 E1 S{angle}]'
-        return (cmd, transcript)
+        slot = int(data[3])
+        volume = int(data[4])
+        self.setCmdBase(data[0], data[1], data[2]) # Cmd1
+        self.setAngle(slot)
+        self.q.put(self.commandPacket[0])
+        self.setCmdBase(data[0], data[1], data[2]) # Cmd2
+        self.pumpVolume(volume)
+        self.q.put(self.commandPacket[0])
+        return self.commandPacket
+    
+    def setAngle(self, slot):
+        angle = ((slot)-1)*(180/4)
+        self.commandPacket[0] += f' PK1 E1 S{angle}]'
+        self.commandPacket[1] += f' set to position {slot}'
+        return
+    
+    def pumpVolume(self, volume):
+        self.commandPacket[0] += f' PK2 P5 m{volume}]'
+        self.commandPacket[1] += f' extract {volume}ml'
+        return
 
 class Valve(Component):
     def __init__(self, id, descriptor):
