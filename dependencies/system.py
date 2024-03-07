@@ -29,7 +29,7 @@ class System:
                     dev = Mixer(i[0], i[1])
                 case 'shutter':
                     dev = Shutter(i[0], i[1])
-                case 'extract':
+                case 'extraction':
                     dev = Extraction(i[0], i[1])
                 case 'valve':
                     dev = Valve(i[0], i[1])
