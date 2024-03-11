@@ -293,7 +293,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .select-label {
-  transform: translateX(-15px) translateY(15px);
+  transform: translateX(-15px) translateY(-2px);
 }
 
 .input-label {
@@ -343,8 +343,8 @@ select::-ms-expand{
   outline: 3px solid;
   outline-color: var(--accent);
   border-radius: .5em;
-  margin-top: 1.5em;
-  margin-bottom: 1.5em; 
+  margin-top: 0.5em;
+  margin-bottom: 0.5em; 
 }
 
 .select::after {

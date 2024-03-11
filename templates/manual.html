@@ -168,6 +168,10 @@
             generateCards(msg.data);
         });
 
+        socket.on('serial_response', function(msg) {
+            document.getElementById("console").textContent += ("\nSerial Response >> " + msg.data);
+        });
+
         socket.on('send_comms_status', (data) => {
             success = data;
             if (success){
@@ -214,7 +218,8 @@
         $(".content").on("click", ".apply-action", function(){
             parent = $(this).closest("div.card");
             var result = [];
-            result.push($("#server-id").val())
+            result.push("server");
+            result.push($("#server-id").val());
             inputs = parent.find('input, select').each(function(){
                 result.push($(this).val());
             });
@@ -283,25 +288,14 @@
         var Valve = function(id, type) {
             content = `
             <div class="input-box">
-                <span class="select-label">Select a valve</span>
+                <span class="select-label">Select an output</span>
                 <div class="select">
                     <select name="valve" id="valve">
-                        <option selected value="valve1">Valve 1</option>
-                        <option value="valve2">Valve 2</option>
-                        <option value="valve3">Valve 3</option>
-                        <option value="valve4">Valve 4</option>
-                        <option value="valve5">Valve 5</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="input-box">
-                <span class="select-label">Select a position</span>
-                <div class="select">
-                    <select name="valve-positon" id="valve-positon">
-                        <option selected value="close">Closed</option>
-                        <option value="open">Open</option>
-                        <option value="middle">Middle</option>
+                        <option selected value="1">Output 1</option>
+                        <option value="2">Output 2</option>
+                        <option value="3">Output 3</option>
+                        <option value="4">Output 4</option>
+                        <option value="5">Output 5</option>
                     </select>
                 </div>
             </div>
@@ -314,6 +308,11 @@
 
         var Shutter = function(id, type) {
             content = `
+            <div class="input-box">
+                <input id="shutter-num" type="number" inputmode="integer" value=1 required="required">
+                <span class="input-label">Component number</span>
+            </div>
+
             <div class="input-box">
                 <span class="select-label">Select a position</span>
                 <div class="select">
@@ -334,8 +333,13 @@
         var PeristalticPump = function(id, type) {
             content = `
             <div class="input-box">
+                <input id="pump-num" type="number" inputmode="integer" value=1 required="required">
+                <span class="input-label">Component number</span>
+            </div>
+
+            <div class="input-box">
                 <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
-                <span class="input-label">Enter a volume (mL).</span>
+                <span class="input-label">Enter a volume (mL)</span>
             </div>
             
             <div class="optns">
@@ -347,16 +351,31 @@
         var SyringePump = function(id, type){
             content = `
             <div class="input-box">
+                <input id="syringe-num" type="number" inputmode="integer" value=1 required="required">
+                <span class="input-label">Component number</span>
+            </div>
+
+            <div class="input-box">
+                <input id="syringe-vol" type="number" inputmode="decimal" value=5 required="required">
+                <span class="input-label">Syringe volume (mL)</span>
+            </div>
+
+            <div class="input-box">
+                <input id="syringe-length" type="number" inputmode="decimal" value=45 required="required">
+                <span class="input-label">Syringe length (mm)</span>
+            </div>
+
+            <div class="input-box">
                 <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
-                <span class="input-label">Enter a volume (mL).</span>
+                <span class="input-label">Enter a volume (mL)</span>
             </div>
 
             <div class="input-box">
                 <span class="select-label">Select a direction</span>
                 <div class="select">
                     <select name="pump-syringe" id="pump-syringe">
-                        <option selected value="fill">Inflow</option>
-                        <option value="empty">Outflow</option>
+                        <option selected value="fill">Fill</option>
+                        <option value="empty">Empty</option>
                     </select>
                 </div>
             </div>
@@ -369,6 +388,11 @@
 
         var Mixer = function(id, type) {
             content = `
+            <div class="input-box">
+                <input id="mixer-num" type="number" inputmode="integer" value=1 required="required">
+                <span class="input-label">Component number</span>
+            </div>
+
             <div class="input-box">
                 <span class="select-label">Select a speed</span>
                 <div class="select">
@@ -390,6 +414,11 @@
         var Extractor = function(id, type) {
             content = `
             <div class="input-box">
+                <input id="extraction-vol" type="number" inputmode="integer" value=1 readonly required="required">
+                <span class="input-label">Component number</span>
+            </div>
+
+            <div class="input-box">
                 <span class="select-label">Select a slot</span>
                 <div class="select">
                     <select name="extraction" id="extraction">
@@ -404,7 +433,7 @@
 
             <div class="input-box">
                 <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
-                <span class="input-label">Enter a volume (mL).</span>
+                <span class="input-label">Enter a volume (mL)</span>
             </div>
 
             <div class="optns">
