@@ -79,8 +79,7 @@ def update_server(data):
 @socketio.on('generate-command')
 def generate_command(data):
     print(data)
-    result = sys.generateCommand(data)
-    socketio.emit('log_command', {'data':result})
+    sys.generateCommand(data)
 
 # Following commands are demo-specific placeholders, and will be replaced
 @socketio.on('pull-syringe')

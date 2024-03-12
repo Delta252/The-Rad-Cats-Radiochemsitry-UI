@@ -61,7 +61,8 @@ class Comms:
     
     # Run a created command and ensure success
     def runCommand(self, command):
-        self.s.WRITE(command) # This method will be replaced in order to receive success feedback
+        self.socket.emit('log_command', {'data':command})
+        self.s.WRITE(command[0]) # This method will be replaced in order to receive success feedback
         return
 
     def readResponse(self):
@@ -97,8 +98,8 @@ class Comms:
         try:
             run = True
             while run:
-                cmdSet = self.system.handleQueues()
-                for cmd in cmdSet:
+                cmd = self.system.handleQueues()
+                if cmd != None:
                     self.runCommand(cmd)
                 incoming = self.readResponse()
                 time.sleep(1)
