@@ -124,20 +124,34 @@ class System:
         for component in self.devices:
             if (component.q.qsize()>0) & (component.status == 'free'):
                 return component.q.get()
-        return ''
+        return None
 
 class Component:
     def __init__(self, id, descriptor):
         self.status = 'free'
         self.id = id
         self.type = descriptor
-        self.commandPacket = [] # Serial command and transcript
+        self.cmd = ''
+        self.transcript = ''
+        self.packets = [] # Flexible array of individual packet elements
+        self.commandPacket = () # Immutable serial command and transcript
         self.q = Queue(-1)
     
     def setCmdBase(self, senderDevice, senderID, receiverID):
-        cmd = f'[sID{senderID} rID{receiverID}'
-        transcript = f'{str(senderDevice).capitalize()} ({senderID}) requests {str(self.type).capitalize()} ({receiverID})'
-        self.commandPacket = [cmd, transcript]
+        self.cmd = f'[sID{senderID} rID{receiverID}'
+        self.transcript = f'{str(senderDevice).capitalize()} ({senderID}) requests {str(self.type).capitalize()} ({receiverID})'
+        return
+    
+    def assembleCmd(self):
+        numOfPackets = len(self.packets)
+        self.cmd += f' PK{numOfPackets}' # Automatic packet length
+        for entry in self.packets:
+            self.cmd += f' {entry}' # Add all packets
+        self.cmd += ']' # End command
+        self.commandPacket = (self.cmd, self.transcript) # Create immutable cmd/transcript pair
+        self.cmd = '' # Clear cmd
+        self.transcript = '' # Clear transcript
+        self.packets = [] # Empty packet array
         return
     
     def setStatus(self, status):
@@ -156,8 +170,24 @@ class Server(Component):
 class SyringePump(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
+        self.position = 0
+        self.requiredVolume = 0
 
     def parseCommand(self, data):
+        self.requiredVolume = int(data[6])
+        while self.requiredVolume>0: # Loop until full necessary volume is delivered
+            self.fill(data) # Fill full volume of syringe
+            self.empty(data) # Empty necessary volume of syringe
+        return self.commandPacket
+    
+    def fill(self, data):
+        self.packets.append(f'Y{int(data[3])}') # Pump module number
+        return
+    
+    def empty(self, data):
+        return
+    
+    def resetPosition(self):
         return
 
 class PeristalticPump(Component):
@@ -165,13 +195,51 @@ class PeristalticPump(Component):
         super().__init__(id, descriptor)
     
     def parseCommand(self, data):
+        self.pumpVolume(data)
+        self.q.put(self.commandPacket)
+        return self.commandPacket
+    
+    def pumpVolume(self, data):
+        self.packets.append(f'P{int(data[3])}') # Pump module number
+        volume = int(data[4])
+        self.packets.append(f'm{volume}') # Pump volume
+        self.setCmdBase(data[0], data[1], data[2]) # Cmd1
+        self.transcript += f' pump {volume}ml'
+        self.assembleCmd()
         return
 
 class Mixer(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
 
-    def parseCommand(self, data):
+    def parseCommand(self, data):        
+        self.setSpeed(data)
+        self.q.put(self.commandPacket)
+        return self.commandPacket
+    
+    def setSpeed(self, data):
+        self.packets.append(f'M{int(data[3])}') # Mixer module number
+        mode = data[4]
+        match mode:
+            case 'stop':
+                speed = 0
+            case 'slow':
+                speed = 45
+            case 'medium':
+                speed = 60
+            case 'fast':
+                speed = 200
+            case _:
+                speed = 0
+                mode = 'stop'
+                self.transcript = 'An unexpected mixer speed has been encountered; speed has been set to 0 and mixer' # First half of error transcript
+                return
+        self.packets.append(f'S{speed}') # Mixer speed
+        direction = 1 # Permanent direction
+        self.packets.append(f'D{direction}')
+        self.setCmdBase(data[0], data[1], data[2]) # Cmd1
+        self.transcript += f' set to {mode}' # Add to transcript
+        self.assembleCmd()
         return
 
 class Shutter(Component):
@@ -179,6 +247,29 @@ class Shutter(Component):
         super().__init__(id, descriptor)
 
     def parseCommand(self, data):
+        self.setPosition(data)
+        self.q.put(self.commandPacket)
+        return self.commandPacket
+    
+    def setPosition(self, data):
+        self.packets.append(f'I{int(data[3])}') # Shutter module number
+        position = data[4]
+        match position:
+            case 'closed':
+                posNum = 0
+            case 'open':
+                posNum = 1
+            case 'partial':
+                posNum = 2
+            case _:
+                posNum = 0
+                position = 'closed'
+                self.transcript = 'An unexpected shutter position has been encountered; shutter has been' # First half of error transcript
+                return
+        self.packets.append(f'S{posNum}')
+        self.setCmdBase(data[0], data[1], data[2]) # Cmd1
+        self.transcript += f' set to {position}' # Add to transcript
+        self.assembleCmd()
         return
 
 class Extraction(Component):
@@ -186,36 +277,58 @@ class Extraction(Component):
         super().__init__(id, descriptor)
     
     def parseCommand(self, data):
-        print(data)
-        slot = int(data[3])
-        volume = int(data[4])
-        self.setCmdBase(data[0], data[1], data[2]) # Cmd1
-        self.setAngle(slot)
-        self.q.put(self.commandPacket[0])
-        self.setCmdBase(data[0], data[1], data[2]) # Cmd2
-        self.pumpVolume(volume)
-        self.q.put(self.commandPacket[0])
+        self.setAngle(data)
+        self.q.put(self.commandPacket)
+        self.pumpVolume(data)
+        self.q.put(self.commandPacket)
         return self.commandPacket
     
-    def setAngle(self, slot):
+    def setAngle(self, data):
+        self.packets.append(f'E{int(data[3])}') # Extractor module number
+        slot = int(data[4])
         angle = ((slot)-1)*(180/4)
-        self.commandPacket[0] += f' PK1 E1 S{angle}]'
-        self.commandPacket[1] += f' set to position {slot}'
+        self.packets.append(f'S{angle}') # Extractor slot
+        self.setCmdBase(data[0], data[1], data[2]) # Cmd1
+        self.transcript += f' set to position {slot}' # Add to transcript
+        self.assembleCmd()
         return
     
-    def pumpVolume(self, volume):
-        self.commandPacket[0] += f' PK2 P5 m{volume}]'
-        self.commandPacket[1] += f' extract {volume}ml'
+    def pumpVolume(self, data):
+        self.packets.append(f'P5') # Extractor pump module number (static)
+        volume = int(data[5])
+        self.packets.append(f'm{volume}') # Pump volume
+        self.setCmdBase(data[0], data[1], data[2]) # Cmd2
+        self.transcript += f' extract {volume}ml' # Add to transcript
+        self.assembleCmd()
         return
 
 class Valve(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
+        self.numberOfValves = 5
     
     def parseCommand(self, data):
-        print(data)
-        cmd = f'[sID{data[0]} rID{data[0]} PK1 E1 {data[0]}]'
-        return cmd
+        self.setValves(data)
+        self.q.put(self.commandPacket)
+        return self.commandPacket
+    
+    def setValves(self, data):
+        for valve in range(0,self.numberOfValves):
+            self.packets.append(f'V{valve}') # Valve module number
+            output = int(data[3])
+            if valve<output:
+                self.transcript = None
+                status = 1
+            elif valve==output:
+                self.transcript += f' set output to {data[3]}' # Add to transcript
+                status = 0
+            else:
+                self.transcript = None
+                status = 2
+            self.packets.append(f'S{status}')
+            self.setCmdBase(data[0], data[1], data[2]) # Cmd2           
+            self.assembleCmd()
+        return
 
 class Spectrometer(Component):
     def __init__(self, id, descriptor):
