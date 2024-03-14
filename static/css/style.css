@@ -647,10 +647,6 @@ select::-ms-expand{
   height: 30vh;
 }
 
-.script-gen {
-  height: 85vh;
-}
-
 #camera-box {
   height: 100%;
   width: 100%;
@@ -666,6 +662,58 @@ select::-ms-expand{
 #camera {
   height: 100%;
   aspect-ratio: 4/3;
+}
+
+.script-gen {
+  background-color: var(--body);
+  border-radius: 5px;
+  border: 2px solid var(--accent);
+  width: 95%;
+  text-align: left;
+  align-items: center;
+  margin: 15px 0px 15px 20px;
+  position: relative;
+  padding: 20px;
+}
+
+.script-gen h1 {
+  color: var(--text);
+  margin: 10px;
+  text-align: center;
+}
+
+#cmd-list {
+  height: 100%;
+  width: 100%;
+  background-color: var(--background);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#cmd-list::-webkit-scrollbar {
+  width: 20px;
+}
+
+#cmd-list::-webkit-scrollbar-track {
+  background: var(--body); 
+  border: 5px solid transparent;
+}
+ 
+#cmd-list::-webkit-scrollbar-thumb {
+  background: var(--accent); 
+  width: 10px;
+  border-radius: 0.75em;
+  border: 5px solid transparent;
+  padding: 10px;
+  background-clip: padding-box;
+  margin: 5px;
+  transition: all 0.4s;
+  -moz-transition: all 0.4s;
+  -webkit-transition: all 0.4s;
+}
+
+#cmd-list::-webkit-scrollbar-thumb:hover {
+  border-radius: 5px solid var(--accent);
 }
 
 @media screen and (max-width: 1200px) {
@@ -684,6 +732,17 @@ select::-ms-expand{
 
   #camera {
     margin: 10px;
+  }
+
+  .script-gen {
+    display: flex;
+    flex-direction: column;
+    height: 65vh;
+    padding: 0px;
+  }
+
+  #cmd-list {
+    margin: 0px;
   }
 }
 
@@ -704,4 +763,85 @@ select::-ms-expand{
   #camera {
     margin: 10px 10px 10px 50px;
   }
+
+  .script-gen {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    padding: 5px;
+  }
+
+  #cmd-list {
+    margin: 10px 0px 10px 20px;
+  }
+}
+
+.cmd-entry {
+  padding: 10px;
+  background-color: var(--body);
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  margin: 5px;
+  border-radius: 5px;
+}
+
+.entry-info {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.entry-optns {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap ;
+}
+
+.cmd-number,
+.cmd-text,
+.cmd-hold,
+.cmd-remove{
+  color: var(--text);
+  font-weight: 600;
+  padding: 10px;
+  margin: 2px;
+  align-items: center;
+  justify-content: center;
+}
+
+.cmd-hold label {
+  float: left;
+  margin: 0px 5px 0px 0px;
+}
+
+.cmd-hold span {
+  display: block;
+  overflow: hidden;
+}
+
+.cmd-hold input {
+  background-color: var(--body);
+  color: var(--text);
+  font-size: 12pt;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  width: 100%;
+  padding: 0px 5px;
+}
+
+.remove-cmd {
+  background-color: var(--body);
+  padding: 0px;
+  margin: 0px;
+  color: var(--red);
+  font-size: 12pt;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.script-btn {
+  width: 100%;
 }
