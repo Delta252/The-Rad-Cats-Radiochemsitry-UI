@@ -36,7 +36,7 @@ def manual():
     return render_template('manual.html')
 
 @app.route('/auto', methods=['GET','POST'])
-def manual():
+def auto():
     return render_template('auto.html')
 
 @app.route('/profile', methods=['GET','POST'])
