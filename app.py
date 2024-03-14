@@ -1,7 +1,7 @@
 ### Entry file into the webserver
 
 from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 from wtforms import Form, StringField, TextAreaField, PasswordField, SelectField, validators
 from dependencies.userhandler import UserHandler
 from dependencies.comms import Comms
@@ -10,12 +10,12 @@ import os
 
 app = Flask(__name__) # Create Flask app
 
-socketio = SocketIO(app)
-
 uh = UserHandler() # Create object to handle user profiles
 
-comms = Comms()
+socketio = SocketIO(app, cors_allowed_origins="*") #IMPORTANT! Required for university/corporate networks where origin is not identical to host
+
 sys = System()
+comms = Comms(sys, socketio)
 
 from dependencies.sockets import *
 
@@ -30,6 +30,10 @@ def landing():
 @app.route('/testing', methods=['GET','POST'])
 def testing():
     return render_template('testing.html')
+
+@app.route('/manual', methods=['GET','POST'])
+def manual():
+    return render_template('manual.html')
 
 @app.route('/profile', methods=['GET','POST'])
 def profile():
