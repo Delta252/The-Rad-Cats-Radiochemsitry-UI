@@ -35,6 +35,10 @@ def testing():
 def manual():
     return render_template('manual.html')
 
+@app.route('/auto', methods=['GET','POST'])
+def manual():
+    return render_template('auto.html')
+
 @app.route('/profile', methods=['GET','POST'])
 def profile():
     if request.method == 'POST':

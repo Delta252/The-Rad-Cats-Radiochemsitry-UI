@@ -647,6 +647,10 @@ select::-ms-expand{
   height: 30vh;
 }
 
+.script-gen {
+  height: 85vh;
+}
+
 #camera-box {
   height: 100%;
   width: 100%;
