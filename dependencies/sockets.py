@@ -12,6 +12,7 @@ def handle_connect():
     sys.updateFromDB()
     socketio.emit('after_connect')
     socketio.emit('update_cards', {'data':sys.define()})
+    socketio.emit('update_cmd_list', {'data':sys.cmds})
 
 @socketio.on('get-user')
 def get_user():
@@ -76,10 +77,27 @@ def remove_device(data):
 def update_server(data):
     sys.updateServerID(data)
 
-@socketio.on('generate-command')
+@socketio.on('generate-run-command') # Necessary to protect order of operations for manual control
 def generate_command(data):
     print(data)
     sys.generateCommand(data)
+    sys.runCommands()
+
+@socketio.on('add-cmd-list')
+def add_cmds(data):
+    backlog = sys.generateCommand(data)
+    for element in backlog:
+        sys.cmds.append(element)
+    socketio.emit('update_cmd_list', {'data':sys.cmds})
+
+@socketio.on('remove-cmd-number')
+def remove_command(number):
+    sys.cmds.pop(number-1)
+    socketio.emit('update_cmd_list', {'data':sys.cmds})
+
+@socketio.on('run-commands')
+def run_commands():
+    sys.runCommands()
 
 # Following commands are demo-specific placeholders, and will be replaced
 @socketio.on('pull-syringe')

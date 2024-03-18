@@ -8,6 +8,7 @@ class System:
         self.systemdataFilepath = os.path.abspath('dependencies/systemdata.db')
         self.connect = sqlite3.connect(self.systemdataFilepath, check_same_thread=False)
         self.devices = []
+        self.cmds = []
 
     def updateFromDB(self):
         self.devices = []
@@ -120,10 +121,14 @@ class System:
             warnings.warn('Unrecognized device request.')
         return result
     
+    def runCommands(self):
+        for device in self.devices:
+            device.executeCmds()
+    
     def handleQueues(self):
-        for component in self.devices:
-            if (component.q.qsize()>0) & (component.status == 'free'):
-                return component.q.get()
+        for device in self.devices:
+            if (device.q.qsize()>0) & (device.status == 'free'):
+                return device.q.get()
         return None
 
 class Component:
@@ -135,6 +140,7 @@ class Component:
         self.transcript = ''
         self.packets = [] # Flexible array of individual packet elements
         self.commandPacket = () # Immutable serial command and transcript
+        self.backlog = [] # Stored commands pending execution
         self.q = Queue(-1)
     
     def setCmdBase(self, senderDevice, senderID, receiverID):
@@ -149,10 +155,15 @@ class Component:
             self.cmd += f' {entry}' # Add all packets
         self.cmd += ']' # End command
         self.commandPacket = (self.cmd, self.transcript) # Create immutable cmd/transcript pair
+        self.backlog.append(self.commandPacket) # Add packet to backlog
         self.cmd = '' # Clear cmd
         self.transcript = '' # Clear transcript
         self.packets = [] # Empty packet array
-        return
+        return self.backlog
+    
+    def executeCmds(self):
+        for entry in self.backlog:
+            self.q.put(entry)
     
     def setStatus(self, status):
         self.status = status
@@ -174,11 +185,12 @@ class SyringePump(Component):
         self.requiredVolume = 0
 
     def parseCommand(self, data):
+        self.backlog = [] # Clear backlog for new commands
         self.requiredVolume = int(data[5])
         while self.requiredVolume>0: # Loop until full necessary volume is delivered
             self.fill(data) # Fill full volume of syringe
             self.empty(data) # Empty necessary volume of syringe
-        return self.commandPacket
+        return self.backlog
     
     def fill(self, data):
         self.packets.append(f'Y1') # Pump module number
@@ -195,9 +207,9 @@ class PeristalticPump(Component):
         super().__init__(id, descriptor)
     
     def parseCommand(self, data):
+        self.backlog = [] # Clear backlog for new commands
         self.pumpVolume(data)
-        self.q.put(self.commandPacket)
-        return self.commandPacket
+        return self.backlog
     
     def pumpVolume(self, data):
         self.packets.append(f'P1') # Pump module number
@@ -212,10 +224,10 @@ class Mixer(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
 
-    def parseCommand(self, data):        
+    def parseCommand(self, data):
+        self.backlog = [] # Clear backlog for new commands        
         self.setSpeed(data)
-        self.q.put(self.commandPacket)
-        return self.commandPacket
+        return self.backlog
     
     def setSpeed(self, data):
         self.packets.append(f'M1') # Mixer module number
@@ -247,9 +259,9 @@ class Shutter(Component):
         super().__init__(id, descriptor)
 
     def parseCommand(self, data):
+        self.backlog = [] # Clear backlog for new commands
         self.setPosition(data)
-        self.q.put(self.commandPacket)
-        return self.commandPacket
+        return self.backlog
     
     def setPosition(self, data):
         self.packets.append(f'I1') # Shutter module number
@@ -277,11 +289,10 @@ class Extraction(Component):
         super().__init__(id, descriptor)
     
     def parseCommand(self, data):
+        self.backlog = [] # Clear backlog for new commands
         self.setAngle(data)
-        self.q.put(self.commandPacket)
         self.pumpVolume(data)
-        self.q.put(self.commandPacket)
-        return self.commandPacket
+        return self.backlog
     
     def setAngle(self, data):
         self.packets.append(f'E1') # Extractor module number
@@ -308,9 +319,9 @@ class Valve(Component):
         self.numberOfValves = 5
     
     def parseCommand(self, data):
+        self.backlog = [] # Clear backlog for new commands
         self.setValves(data)
-        self.q.put(self.commandPacket)
-        return self.commandPacket
+        return self.backlog
     
     def setValves(self, data):
         for valve in range(0,self.numberOfValves):
