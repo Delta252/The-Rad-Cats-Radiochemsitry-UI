@@ -174,14 +174,14 @@ class SyringePump(Component):
         self.requiredVolume = 0
 
     def parseCommand(self, data):
-        self.requiredVolume = int(data[6])
+        self.requiredVolume = int(data[5])
         while self.requiredVolume>0: # Loop until full necessary volume is delivered
             self.fill(data) # Fill full volume of syringe
             self.empty(data) # Empty necessary volume of syringe
         return self.commandPacket
     
     def fill(self, data):
-        self.packets.append(f'Y{int(data[3])}') # Pump module number
+        self.packets.append(f'Y1') # Pump module number
         return
     
     def empty(self, data):
@@ -200,8 +200,8 @@ class PeristalticPump(Component):
         return self.commandPacket
     
     def pumpVolume(self, data):
-        self.packets.append(f'P{int(data[3])}') # Pump module number
-        volume = int(data[4])
+        self.packets.append(f'P1') # Pump module number
+        volume = int(data[3])
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(data[0], data[1], data[2]) # Cmd1
         self.transcript += f' pump {volume}ml'
@@ -218,8 +218,8 @@ class Mixer(Component):
         return self.commandPacket
     
     def setSpeed(self, data):
-        self.packets.append(f'M{int(data[3])}') # Mixer module number
-        mode = data[4]
+        self.packets.append(f'M1') # Mixer module number
+        mode = data[3]
         match mode:
             case 'stop':
                 speed = 0
@@ -252,8 +252,8 @@ class Shutter(Component):
         return self.commandPacket
     
     def setPosition(self, data):
-        self.packets.append(f'I{int(data[3])}') # Shutter module number
-        position = data[4]
+        self.packets.append(f'I1') # Shutter module number
+        position = data[3]
         match position:
             case 'closed':
                 posNum = 0
@@ -284,8 +284,8 @@ class Extraction(Component):
         return self.commandPacket
     
     def setAngle(self, data):
-        self.packets.append(f'E{int(data[3])}') # Extractor module number
-        slot = int(data[4])
+        self.packets.append(f'E1') # Extractor module number
+        slot = int(data[3])
         angle = ((slot)-1)*(180/4)
         self.packets.append(f'S{angle}') # Extractor slot
         self.setCmdBase(data[0], data[1], data[2]) # Cmd1
@@ -295,7 +295,7 @@ class Extraction(Component):
     
     def pumpVolume(self, data):
         self.packets.append(f'P5') # Extractor pump module number (static)
-        volume = int(data[5])
+        volume = int(data[4])
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(data[0], data[1], data[2]) # Cmd2
         self.transcript += f' extract {volume}ml' # Add to transcript
@@ -314,7 +314,7 @@ class Valve(Component):
     
     def setValves(self, data):
         for valve in range(0,self.numberOfValves):
-            self.packets.append(f'V{valve}') # Valve module number
+            self.packets.append(f'V1') # Valve module number
             output = int(data[3])
             if valve<output:
                 self.transcript = None
