@@ -222,7 +222,7 @@
             inputs = parent.find('input, select').each(function(){
                 result.push($(this).val());
             });
-            socket.emit('generate-command', result)
+            socket.emit('generate-run-command', result)
         });
 
         $("#connect-beacon").click(function(){
