@@ -37,18 +37,18 @@
 
                 <div id="cmd-list">
                     <div class="cmd-entry">
-                        <div class="entry-info">
-                            <div class="cmd-number">[000]</div>
-                            <div class="cmd-text"> Test Command </div>
-                        </div>
-                        <div class="entry-optns">
+                        <div class="cmd-data">
+                            <div class="entry-info">
+                                <div class="cmd-number">[000]</div>
+                                <div class="cmd-text"> Test Command </div>
+                            </div>
                             <div class="cmd-hold">
                                 <label>Wait for step: </label>
                                 <span><input type="number" inputmode="integer" /></span>
                             </div>
-                            <div class="cmd-remove">
-                                <button class="remove-cmd">Remove</button>
-                            </div>
+                        </div>
+                        <div class="cmd-remove">
+                            <button class="remove-cmd">Remove</button>
                         </div>
                         
                         
@@ -313,11 +313,6 @@
         var Shutter = function(id, type) {
             content = `
             <div class="input-box">
-                <input id="shutter-num" type="number" inputmode="integer" value=1 required="required">
-                <span class="input-label">Component number</span>
-            </div>
-
-            <div class="input-box">
                 <span class="select-label">Select a position</span>
                 <div class="select">
                     <select name="shutter" id="shutter">
@@ -337,11 +332,6 @@
         var PeristalticPump = function(id, type) {
             content = `
             <div class="input-box">
-                <input id="pump-num" type="number" inputmode="integer" value=1 required="required">
-                <span class="input-label">Component number</span>
-            </div>
-
-            <div class="input-box">
                 <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
                 <span class="input-label">Enter a volume (mL)</span>
             </div>
@@ -354,11 +344,6 @@
 
         var SyringePump = function(id, type){
             content = `
-            <div class="input-box">
-                <input id="syringe-num" type="number" inputmode="integer" value=1 required="required">
-                <span class="input-label">Component number</span>
-            </div>
-
             <div class="input-box">
                 <input id="syringe-vol" type="number" inputmode="decimal" value=5 required="required">
                 <span class="input-label">Syringe volume (mL)</span>
@@ -393,11 +378,6 @@
         var Mixer = function(id, type) {
             content = `
             <div class="input-box">
-                <input id="mixer-num" type="number" inputmode="integer" value=1 required="required">
-                <span class="input-label">Component number</span>
-            </div>
-
-            <div class="input-box">
                 <span class="select-label">Select a speed</span>
                 <div class="select">
                     <select name="mixer" id="mixer">
@@ -417,11 +397,6 @@
 
         var Extractor = function(id, type) {
             content = `
-            <div class="input-box">
-                <input id="extraction-vol" type="number" inputmode="integer" value=1 readonly required="required">
-                <span class="input-label">Component number</span>
-            </div>
-
             <div class="input-box">
                 <span class="select-label">Select a slot</span>
                 <div class="select">

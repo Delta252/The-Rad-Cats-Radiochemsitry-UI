@@ -5,7 +5,7 @@
 :root {
   --black: #0B2027;
   --white: #ECEBE4;
-  --red: #b81520;
+  --red: #cc111d;
   --green: #0A9D47;
 }
 
@@ -776,47 +776,110 @@ select::-ms-expand{
   }
 }
 
-.cmd-entry {
-  padding: 10px;
-  background-color: var(--body);
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  margin: 5px;
-  border-radius: 5px;
-}
-
-.entry-info {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-
-.entry-optns {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap ;
-}
-
 .cmd-number,
 .cmd-text,
 .cmd-hold,
 .cmd-remove{
   color: var(--text);
+  padding: 2px;
   font-weight: 600;
-  padding: 10px;
   margin: 2px;
-  align-items: center;
+  align-items: right;
   justify-content: center;
 }
 
-.cmd-hold label {
-  float: left;
-  margin: 0px 5px 0px 0px;
+@media screen and (min-width: 1201px){
+  .cmd-entry{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .cmd-data {
+    display: flex;
+    flex-direction: column;
+    width: 72%;
+  }
+  
+  .cmd-remove {
+    min-width: 80px;
+    width: 12%;
+  }
+  
+  .entry-info {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .entry-optns {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .cmd-hold label {
+    float: left;
+    margin: 0px 5px 0px 0px;
+  }
+
+  .cmd-hold input {
+    width: 50%;
+  }
+}
+
+@media screen and (max-width: 1200px){
+  .cmd-entry{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .cmd-data {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .cmd-remove {
+    padding: 5px;
+    width: 90%;
+  }
+  
+  .entry-info {
+    display: flex;
+    flex-direction: column;
+    width: 75%;
+  }
+  
+  .entry-optns {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .cmd-hold {
+    display: flex;
+    flex-direction: column;
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  .cmd-hold input {
+    width: 100%;
+  }
+}
+
+.cmd-entry {
+  background-color: var(--body);
+  flex-wrap: wrap;
+  margin: 5px;
+  border-radius: 5px;
 }
 
 .cmd-hold span {
-  display: block;
   overflow: hidden;
 }
 
@@ -828,18 +891,23 @@ select::-ms-expand{
   cursor: pointer;
   border: 2px solid var(--accent);
   border-radius: 2px;
-  width: 100%;
   padding: 0px 5px;
+}
+
+.cmd-remove {
+  align-items: right;
+  padding: 0px;
 }
 
 .remove-cmd {
   background-color: var(--body);
-  padding: 0px;
-  margin: 0px;
   color: var(--red);
   font-size: 12pt;
   font-weight: 600;
   text-decoration: underline;
+  cursor: pointer;
+  height: 100%;
+  width: 100%;
 }
 
 .script-btn {
