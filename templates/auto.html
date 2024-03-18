@@ -420,6 +420,26 @@
             </div>`;
             return Card(id, type, content);
         }
+
+        var Cmd = function(number, transcript) {
+            content = `
+            <div class="cmd-entry">
+                <div class="cmd-data">
+                    <div class="entry-info">
+                        <div class="cmd-number">[${number}]</div>
+                        <div class="cmd-text"> ${transcript} </div>
+                    </div>
+                    <div class="cmd-hold">
+                        <label>Wait for step: </label>
+                        <span><input type="number" inputmode="integer" /></span>
+                    </div>
+                </div>
+                <div class="cmd-remove">
+                    <button class="remove-cmd">Remove</button>
+                </div>
+            </div>`;
+            return content;
+        }
     });
 </script>
 
