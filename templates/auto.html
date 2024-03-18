@@ -35,26 +35,7 @@
                 </div>
                 
 
-                <div id="cmd-list">
-                    <div class="cmd-entry">
-                        <div class="cmd-data">
-                            <div class="entry-info">
-                                <div class="cmd-number">[000]</div>
-                                <div class="cmd-text"> Test Command </div>
-                            </div>
-                            <div class="cmd-hold">
-                                <label>Wait for step: </label>
-                                <span><input type="number" inputmode="integer" /></span>
-                            </div>
-                        </div>
-                        <div class="cmd-remove">
-                            <button class="remove-cmd">Remove</button>
-                        </div>
-                        
-                        
-                            
-                    </div>
-                </div>
+                <div id="cmd-list"></div>
             </div>
         </div>
 
@@ -162,6 +143,13 @@
             }
         }
 
+        function generateCmdList(data) {
+            order = 1;
+            for(entry in data){
+                $("#cmd-list").append(Cmd(order++, data[entry][1]));
+            }
+        }
+
         /* Socket Functions */
         socket.on('after_connect', function(msg) {
             document.getElementById("console").textContent += ("\nSocket Connection successful");
@@ -211,6 +199,11 @@
             document.getElementById("log-text").textContent += (transcript + "\n");
         });
 
+        socket.on('update_cmd_list', function(msg) {
+            $("div.cmd-entry").remove();
+            generateCmdList(msg.data);
+        });
+
         /* UI interactions */
         $(".content").on("click", ".delete-card", function(){
             parent = $(this).closest("div.card");
@@ -227,7 +220,15 @@
             inputs = parent.find('input, select').each(function(){
                 result.push($(this).val());
             });
-            socket.emit('generate-command', result)
+            socket.emit('add-cmd-list', result)
+        });
+
+        $(".content").on("click", ".remove-cmd", function(){
+            parent = $(this).closest("div.cmd-entry");
+            stringID = parent.find(".cmd-number").text();
+            number = parseInt(stringID.match(/\d+/));
+            parent.remove();
+            socket.emit('remove-cmd-number', number);
         });
 
         $("#connect-beacon").click(function(){
