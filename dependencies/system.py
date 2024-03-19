@@ -132,6 +132,15 @@ class System:
         msg = 'Script successfully validated'
         return [success, msg]
 
+    def compileScript(self):
+        fileName = './upload/script.txt'
+        script = open(fileName, 'a')
+        script.write('>>SYSTEM\n')
+        for device in self.devices:
+            script.write('\n- '+device.type+': '+str(device.id))
+        script.close()
+        return fileName
+
     def generateCommand(self, data):
         id = int(data[2])
         result = 'No Valid Command'
