@@ -21,16 +21,31 @@
             </div>
         </div>
 
+        <div id="msg-popup" class="overlay">
+            <div class="popup">
+                <h1 id="msg-type" class="popup-title"></h1>
+                <a id="close-msg" href="#"><i class="icon icon-close"></i></a>
+                <div class="popup-message">
+                    <h3 id="popup-text"></h3> 
+                </div>
+                <div class="popup-ops">
+                    <button id="reject-op" class="ui-btn single-btn">Reject</button>
+                    <button id="approve-op" class="ui-btn single-btn">Accept</button>
+                </div>
+            </div>
+        </div>
+
         <div id="column1" class="column-container half-screen">
             <div class="script-gen">
                 <div>
                     <h1>Command List</h1>
-
-                    <div>
-                        <button class="ui-btn script-btn">Start Execution</button>
-                    </div>
-                    <div>
-                        <button class="ui-btn script-btn">Save Script</button>
+                    <div id="script-ops">
+                        <div>
+                            <button id="verify-script" class="ui-btn script-btn">Verify</button>
+                        </div>
+                        <div>
+                            <button class="ui-btn script-btn">Save Script</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -146,8 +161,11 @@
         function generateCmdList(data) {
             order = 1;
             for(entry in data){
-                $("#cmd-list").append(Cmd(order++, data[entry][1]));
+                $("#cmd-list").append(Cmd(order, data[entry][0][1]));
+                $("#hold-"+order).val(parseInt(data[entry][1]));
+                order++;
             }
+            $("#verify-script").css("background-color", "var(--accent)");
         }
 
         /* Socket Functions */
@@ -179,14 +197,14 @@
                 $("#comms-status").text("Enabled");
                 $("#comms-status").css("color", "var(--green)");
                 $("#toggle-comms").text("Disable Comms");
-                $("#connect-beacon").css("background-color", "green");
+                $("#connect-beacon").css("background-color", "var(--green)");
             }
             else {
                 comms=false;
                 $("#comms-status").text("Disabled");
                 $("#comms-status").css("color", "var(--red)");
                 $("#toggle-comms").text("Enable Comms");
-                $("#connect-beacon").css("background-color", "red");
+                $("#connect-beacon").css("background-color", "var(--red)");
             }
             $("#toggle-comms").prop("disabled",false);
         });
@@ -202,6 +220,25 @@
         socket.on('update_cmd_list', function(msg) {
             $("div.cmd-entry").remove();
             generateCmdList(msg.data);
+        });
+
+        socket.on('handle_verify', function(msg) {
+            data = msg.data;
+            success = data[0];
+            msg = data[1];
+            document.getElementById("console").textContent += ("\nScript verified: "+ success + "\nMsg: " + msg);
+            $("#msg-popup").toggle();
+            if(success == false){
+                $("#verify-script").css("background-color", "var(--red)");
+            }
+            else{
+                $("#verify-script").css("background-color", "var(--green)");
+            }
+        });
+
+        socket.on('send_script', function(msg){
+            filename = msg.data;
+            document.location.href = filename;
         });
 
         /* UI interactions */
@@ -231,6 +268,21 @@
             socket.emit('remove-cmd-number', number);
         });
 
+        $(".content").on("input", ".hold-for", function(){
+            $("#verify-script").css("background-color", "var(--accent)");
+            parent = $(this).closest("div.cmd-entry");
+            stringID = parent.find(".cmd-number").text();
+            number = parseInt(stringID.match(/\d+/));
+            newHold = $(this).val();
+            socket.emit('update-hold', [number, newHold]);
+        });
+
+        $(".content").on("click", "#verify-script", function(){
+            $("#msg-popup").toggle();
+            $("#msg-type").text("Verify Script");
+            $("#popup-text").html("Your script is about to be verified.<br/><br/>Would you like to download the script after success?")
+        });
+
         $("#connect-beacon").click(function(){
             if(comms) {
                 $("#comms-status").text("Enabled");
@@ -247,6 +299,26 @@
 
         $("#close-comms").click(function(){
             $("#comms-popup").toggle();
+        });
+
+        $("#close-msg").click(function(){
+            $("#msg-popup").toggle();
+        });
+
+        $("#approve-op").click(function(){
+            type = $("#msg-type").text();
+            result = new Array();
+            if(type.includes('Verify Script')){
+                socket.emit('verify-script',true);
+            }
+        });
+
+        $("#reject-op").click(function(){
+            type = $("#msg-type").text();
+            result = new Array();
+            if(type.includes('Verify Script')){
+                socket.emit('verify-script',false);
+            }
         });
 
         $("#toggle-comms").click(function(){
@@ -432,7 +504,7 @@
                     </div>
                     <div class="cmd-hold">
                         <label>Wait for step: </label>
-                        <span><input type="number" inputmode="integer" /></span>
+                        <span><input id="hold-${number}" class="hold-for" type="number" inputmode="integer"/></span>
                     </div>
                 </div>
                 <div class="cmd-remove">
