@@ -87,13 +87,27 @@ def generate_command(data):
 def add_cmds(data):
     backlog = sys.generateCommand(data)
     for element in backlog:
-        sys.cmds.append(element)
+        sys.cmds.append([element,None])
     socketio.emit('update_cmd_list', {'data':sys.cmds})
 
 @socketio.on('remove-cmd-number')
 def remove_command(number):
     sys.cmds.pop(number-1)
     socketio.emit('update_cmd_list', {'data':sys.cmds})
+
+@socketio.on('update-hold')
+def update_hold(data):
+    index = data[0]-1
+    newHold = data[1]
+    sys.cmds[index][1] = newHold
+
+@socketio.on('verify-script')
+def verify_script(data):
+    result = sys.verifyScript()
+    socketio.emit('handle_verify', {'data':result})
+    if data:
+        scriptFilename = sys.compileScript()
+        socketio.emit('send_script',{'data':scriptFilename}) # Requires user identification to be implemented
 
 @socketio.on('run-commands')
 def run_commands():
