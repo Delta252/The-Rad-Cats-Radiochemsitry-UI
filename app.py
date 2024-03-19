@@ -1,6 +1,6 @@
 ### Entry file into the webserver
 
-from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
+from flask import Flask, render_template, flash, redirect, url_for, session, logging, request, send_from_directory
 from flask_socketio import SocketIO
 from wtforms import Form, StringField, TextAreaField, PasswordField, SelectField, validators
 from dependencies.userhandler import UserHandler
@@ -25,6 +25,11 @@ from dependencies.sockets import *
 @app.route('/')
 def landing():
     return redirect(url_for('login'))
+
+@app.route('/upload/<path:filename>', methods=['GET', 'POST'])
+def download(filename):
+   permitted_directory='./upload/'
+   return send_from_directory(directory=permitted_directory, path=filename, as_attachment=True)
 
 # Main page to test system functionality
 @app.route('/testing', methods=['GET','POST'])
