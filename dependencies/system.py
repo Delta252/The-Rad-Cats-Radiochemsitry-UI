@@ -1,4 +1,4 @@
-import os
+import os, re
 import sqlite3
 import warnings
 from queue import *
@@ -95,6 +95,7 @@ class System:
         for i in self.devices:
             if i.id == id:
                 return i
+        return None
 
     def setDeviceStatus(self, id, status):
         device = self.findDeviceByID(id)
@@ -104,12 +105,33 @@ class System:
         # Method used for serializing data to send over sockets
         # Method addresses problems with devices list not being JSON serializeable
         data = []
-
         for i in self.devices:
             data.append((i.id, i.type))
-
         return data
-    
+
+    def verifyScript(self):
+        success = False
+        msg = ''
+        # Test No1 : if hold listed waits for a previous step
+        for index, step in enumerate(self.cmds):
+            if (step[1] is not None) and (index-int(step[1])<=0):
+                msg = f'Hold request invalid for step {index + 1}'
+                return [success, msg]
+        # Test No2 : if all commands use components listed in system delcaration 
+        for step in self.cmds:
+            packet = step[0][0]
+            sender = int(re.findall(r'sID(\d+) ', packet)[0])
+            receiver = int(re.findall(r'rID(\d+) ', packet)[0])
+            if self.findDeviceByID(sender) == None:
+                msg = f'Unable to find command device sender ID {sender}'
+                return [success, msg]
+            if self.findDeviceByID(sender) == None:
+                msg = f'Unable to find command device receiver ID {receiver}'
+                return [success, msg]
+        success = True
+        msg = 'Script successfully validated'
+        return [success, msg]
+
     def generateCommand(self, data):
         id = int(data[2])
         result = 'No Valid Command'
