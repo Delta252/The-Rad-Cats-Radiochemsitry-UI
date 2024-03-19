@@ -5,7 +5,7 @@
 :root {
   --black: #0B2027;
   --white: #ECEBE4;
-  --red: #cc111d;
+  --red: #D60816;
   --green: #0A9D47;
 }
 
@@ -427,17 +427,29 @@ select::-ms-expand{
 
 .popup {
   height: 350px;
-  width: 650px;
   position: absolute;
   top: 20%;
   left: 50%;
-  margin-left: -325px;
   background-color: var(--body);
   border-radius: 1.5em;
   border: 5px solid var(--accent);
   align-items: center;
   flex-direction: column;
   display: flex;
+}
+
+@media screen and (max-width: 1200px){
+  .popup {
+    width: 50%;
+    margin-left: -25%;
+  }
+}
+
+@media screen and (min-width: 1201px){
+  .popup {
+    width: 650px;
+    margin-left: -325px;
+  }
 }
 
 .popup h1 {
@@ -911,5 +923,61 @@ select::-ms-expand{
 }
 
 .script-btn {
+  width: 150px;
+}
+
+@media screen and (max-width: 1200px){
+  #script-ops {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .popup-ops {
+    flex-direction: column;
+  }
+
+  .popup-ops button {
+    width: 75%;
+  }
+}
+
+@media screen and (min-width: 1201px){
+  #script-ops {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+  }
+
+  .popup-ops {
+    flex-direction: row;
+  }
+
+  .popup-ops button {
+    width: 220px;
+  }
+}
+
+#msg-popup {
   width: 100%;
+  height: 100%;
+  background-size: cover;
+  backdrop-filter: blur(20px);
+  display: none;
+  position: absolute;
+  z-index: 2;
+}
+
+#msg-popup h3 {
+  text-align: center;
+  justify-content: center;
+  margin-top: 10%;
+}
+
+.popup-ops {
+  display: flex;
+  width: 100%;
+  padding: 10px;
+  justify-content: space-around;
+  align-items: center;
 }
