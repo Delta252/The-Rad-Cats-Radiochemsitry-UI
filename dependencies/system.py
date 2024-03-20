@@ -114,7 +114,7 @@ class System:
         msg = ''
         # Test No1 : if hold listed waits for a previous step
         for index, step in enumerate(self.cmds):
-            if (step[1] is not None) and (index-int(step[1])<=0):
+            if (step[1] is not None) and (index-int(step[1])<0):
                 msg = f'Hold request invalid for step {index + 1}'
                 return [success, msg]
         # Test No2 : if all commands use components listed in system delcaration 
@@ -132,13 +132,29 @@ class System:
         msg = 'Script successfully validated'
         return [success, msg]
 
-    def compileScript(self):
-        fileName = './upload/script.txt'
-        script = open(fileName, 'a')
-        script.write('>>SYSTEM\n')
+    def compileScript(self, user):
+        fileName = f'./upload/script_{user}.txt' # Create user-specific file
+        stepNum = 1
+        script = open(fileName, 'w') # User file is overwritten every time if the name is the same
+        script.write('>>START')
+        script.write('\n>>SYSTEM\n')
         for device in self.devices:
-            script.write('\n- '+device.type+': '+str(device.id))
-        script.close()
+            script.write('\n- '+device.type+': '+str(device.id)) # System declarations
+        script.write('\n\n>>EXPERIMENT\n')
+        for step in self.cmds:
+            packet = step[0][0]
+            transcript = step[0][1]
+            receiver = int(re.findall(r'rID(\d+) ', packet)[0])
+            if result := re.search('set|pump', transcript): # Edit as classes of actions are introduced
+                action = transcript[result.start():result.end()]
+                setValue = transcript.split()[-1]
+            entry = f'\n[{stepNum}] {receiver} {action} {setValue}' # Individual steps
+            if step[1] is not None:
+                entry += f' HOLD ({step[1]})' # Hold condition (yes/no)
+            stepNum += 1
+            script.write(entry)
+        script.write('\n\n>>END\n') # EOF marker
+        script.close() # Release file
         return fileName
 
     def generateCommand(self, data):
@@ -247,7 +263,7 @@ class PeristalticPump(Component):
         volume = int(data[3])
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(data[0], data[1], data[2]) # Cmd1
-        self.transcript += f' pump {volume}ml'
+        self.transcript += f' pump {volume}mL'
         self.assembleCmd()
         return
 
@@ -340,7 +356,7 @@ class Extraction(Component):
         volume = int(data[4])
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(data[0], data[1], data[2]) # Cmd2
-        self.transcript += f' extract {volume}ml' # Add to transcript
+        self.transcript += f' pump {volume}mL' # Add to transcript
         self.assembleCmd()
         return
 
