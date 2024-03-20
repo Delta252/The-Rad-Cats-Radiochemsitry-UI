@@ -2,8 +2,7 @@
 # This file handles commands received from user input in the webpages and forwards 
 # required actions to corresponding destinations
 # The creation of the Socket.IO server-side object is handled in `app.py`
-import json
-from __main__ import socketio, comms, sys, uh
+from __main__ import socketio, comms, sys, uh, session, request
 
 #SocketIO
 @socketio.on('connect')
@@ -16,8 +15,8 @@ def handle_connect():
 
 @socketio.on('get-user')
 def get_user():
-    username = uh.getUsername()
-    socketio.emit('set_user', {'data':username})
+    username = session['username']
+    socketio.emit('set_user', {'data':username}, room=request.sid)
 
 @socketio.on('update-username')
 def update_user(data):
@@ -25,7 +24,7 @@ def update_user(data):
     newUsername = data[1]
     uh.updateUsername(oldUsername, newUsername)
     username = uh.getUsername()
-    socketio.emit('set_user', {'data':username})
+    socketio.emit('set_user', {'data':username}, room=request.sid)
 
 @socketio.on('log-off')
 def log_off(data):
@@ -34,14 +33,16 @@ def log_off(data):
 
 @socketio.on('get-theme')
 def get_theme():
-    theme = uh.getUserTheme()
-    socketio.emit('update_theme', {'data':theme})
+    user = session['username']
+    theme = uh.getUserTheme(user)
+    socketio.emit('update_theme', {'data':theme}, room=request.sid)
 
 @socketio.on('send-theme')
 def send_theme(data):
+    user = session['username']
     theme = data[0]
-    uh.updateUserTheme(theme)
-    socketio.emit('update_theme', {'data':theme})
+    uh.updateUserTheme(theme, user)
+    socketio.emit('update_theme', {'data':theme}, room=request.sid)
 
 @socketio.on('ping')
 def test_ping():
@@ -106,7 +107,8 @@ def verify_script(data):
     result = sys.verifyScript()
     socketio.emit('handle_verify', {'data':result})
     if data:
-        scriptFilename = sys.compileScript()
+        username = session['username']
+        scriptFilename = sys.compileScript(username)
         socketio.emit('send_script',{'data':scriptFilename}) # Requires user identification to be implemented
 
 @socketio.on('run-commands')
