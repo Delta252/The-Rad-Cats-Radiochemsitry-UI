@@ -66,7 +66,6 @@ def profile():
         uh.updatePassword(user, pswd_candidate)
         flash('Password successfully updated.', 'success')
         return redirect(url_for('profile'))
-
     return render_template('profile.html')
 
 # User login
@@ -83,6 +82,7 @@ def login():
             # Success
             session['logged_in'] = True # Session handling is a placeholder, further functionality to be implemented
             session['username'] = username
+            session['sid'] = 'sid' + os.urandom(8).hex()
 
             flash('Login success', 'msg')
 
@@ -91,7 +91,7 @@ def login():
         else:
             flash('Username and password combination not found.', 'danger')
             return redirect(url_for('login'))
-        
+
     return render_template('login.html')
 
 #User registration
