@@ -25,12 +25,25 @@
             <div class="popup">
                 <h1 id="msg-type" class="popup-title"></h1>
                 <a id="close-msg" href="#"><i class="icon icon-close"></i></a>
-                <div class="popup-message">
-                    <h3 id="popup-text"></h3> 
-                </div>
+                <div class="popup-message"></div>
                 <div class="popup-ops">
                     <button id="reject-op" class="ui-btn single-btn">Reject</button>
                     <button id="approve-op" class="ui-btn single-btn">Accept</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="file-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Upload File</h1>
+                <a id="close-file" href="#"><i class="icon icon-close"></i></a>
+                <div id="dropbox">
+                    <p id="dropbox-text">Drag file here or click to <b>Upload File</b></p>
+                    <input id="file-input" type="file" name="file" accept=".txt" style="display:none;"/>
+                </div>
+                <div class="popup-ops">
+                    <button id="clear-file" class="ui-btn single-btn">Clear File</button>
+                    <button id="upload-file" class="ui-btn single-btn">Upload File</button>
                 </div>
             </div>
         </div>
@@ -44,7 +57,7 @@
                             <button id="verify-script" class="ui-btn script-btn">Verify</button>
                         </div>
                         <div>
-                            <button class="ui-btn script-btn">Save Script</button>
+                            <button id="upload-script" class="ui-btn script-btn">Upload Script</button>
                         </div>
                     </div>
                 </div>
@@ -243,6 +256,11 @@
         });
 
         /* UI interactions */
+        $(document).on('dragenter dragover drop', function (e){
+            e.stopPropagation();
+            e.preventDefault();
+        });
+
         $(".content").on("click", ".delete-card", function(){
             parent = $(this).closest("div.card");
             id = parseInt(parent.attr('id').match(/\d+/));
@@ -284,6 +302,50 @@
             $("#popup-text").css("border", "none");
             $(".popup-message").html(`<h3 id="popup-text">Your script is about to be verified.<br/><br/>Would you like to download the script after success?</h3>`)
         });
+
+        $("#upload-script").on("click", function(){
+            $("#file-popup").toggle();
+        });
+
+        $("#dropbox").on("dragenter dragover", function(e){
+            e.stopPropagation();
+            e.preventDefault();
+            $("#dropbox").css("background-color",  "rgb(from var(--accent) r g b / 40%)");
+        });
+
+        $("#dropbox").on("dragleave", function(e){
+            e.stopPropagation();
+            e.preventDefault();
+            $("#dropbox").css("background-color",  "rgb(from var(--accent) r g b / 20%)");
+        });
+
+        $("#dropbox").on("drop", function(e){
+            e.stopPropagation();
+            e.preventDefault();
+            $("#dropbox").css("background-color",  "rgb(from var(--accent) r g b / 20%)");
+            file = e.originalEvent.dataTransfer.files[0];
+            $("#dropbox-text").text(file.name);
+        });
+
+        $("#dropbox").on("click", function(e){
+            document.getElementById("file-input").click();
+        });
+
+        $("#clear-file").on("click", function(){
+            file = '';
+            $("#dropbox-text").html("Drag file here or click to <b>Upload File</b>");
+        });
+
+        $("#upload-file").on("click", function(){
+            $("#dropbox-text").html("Drag file here or click to <b>Upload File</b>");
+            if(file != ''){
+                socket.emit('upload-file', [file.name, file])
+            }            
+        });
+
+        $("#file-input").change(function(){
+            file = $("#file-input").prop('files')[0];
+            $("#dropbox-text").text(file.name);
         });
 
         $("#connect-beacon").on("click", function(){

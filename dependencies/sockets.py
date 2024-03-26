@@ -3,6 +3,8 @@
 # required actions to corresponding destinations
 # The creation of the Socket.IO server-side object is handled in `app.py`
 from __main__ import socketio, comms, sys, uh, session, request
+from pathlib import Path
+import os
 
 #SocketIO
 @socketio.on('connect')
@@ -114,6 +116,14 @@ def verify_script(data):
 @socketio.on('run-commands')
 def run_commands():
     sys.runCommands()
+
+@socketio.on('upload-file')
+def upload_file(file):
+    savedir = './upload/'+session['username']
+    Path(savedir).mkdir(parents=True, exist_ok=True)
+    filepath = savedir+'/'+file[0]
+    with open(filepath, 'wb') as binaryFile:
+        binaryFile.write(file[1])
 
 # Following commands are demo-specific placeholders, and will be replaced
 @socketio.on('pull-syringe')
