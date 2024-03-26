@@ -133,14 +133,15 @@ class System:
         return [success, msg]
 
     def compileScript(self, user):
-        fileName = f'./upload/script_{user}.txt' # Create user-specific file
+        fileName = f'./download/script_{user}.txt' # Create user-specific file
         stepNum = 1
         script = open(fileName, 'w') # User file is overwritten every time if the name is the same
         script.write('>>START')
         script.write('\n>>SYSTEM\n')
         for device in self.devices:
             script.write('\n- '+device.type+': '+str(device.id)) # System declarations
-        script.write('\n\n>>EXPERIMENT\n')
+        script.write('\n>>ENDSECTION\n')
+        script.write('\n>>EXPERIMENT\n')
         for step in self.cmds:
             packet = step[0][0]
             transcript = step[0][1]
@@ -153,7 +154,8 @@ class System:
                 entry += f' HOLD ({step[1]})' # Hold condition (yes/no)
             stepNum += 1
             script.write(entry)
-        script.write('\n\n>>END\n') # EOF marker
+        script.write('\n>>ENDSECTION\n')
+        script.write('\n>>ENDFILE\n') # EOF marker
         script.close() # Release file
         return fileName
 
