@@ -106,8 +106,13 @@
         /* Global vars and page startup */
         var socket = io.connect('http://127.0.0.1:5000');
         var comms = false;
+        var file = '';
         socket.emit('get-comms-status');
         adjustScroll();
+
+        $(window).on('resize', function(){
+            adjustScroll();
+        });
 
         function adjustScroll() {
             if($(window).width() < 1201) {
@@ -119,10 +124,6 @@
                 $(".content").removeClass('scrollable');
             }
         }
-
-        $(window).on('resize', function(){
-            adjustScroll();
-        });
         
         function generateCards(data) {
             for(entry in data){
@@ -268,7 +269,7 @@
             socket.emit('remove-cmd-number', number);
         });
 
-        $(".content").on("input", ".hold-for", function(){
+        $(".hold-for").on("input", function(){
             $("#verify-script").css("background-color", "var(--accent)");
             parent = $(this).closest("div.cmd-entry");
             stringID = parent.find(".cmd-number").text();
@@ -277,13 +278,15 @@
             socket.emit('update-hold', [number, newHold]);
         });
 
-        $(".content").on("click", "#verify-script", function(){
+        $("#verify-script").on("click", function(){
             $("#msg-popup").toggle();
             $("#msg-type").text("Verify Script");
-            $("#popup-text").html("Your script is about to be verified.<br/><br/>Would you like to download the script after success?")
+            $("#popup-text").css("border", "none");
+            $(".popup-message").html(`<h3 id="popup-text">Your script is about to be verified.<br/><br/>Would you like to download the script after success?</h3>`)
+        });
         });
 
-        $("#connect-beacon").click(function(){
+        $("#connect-beacon").on("click", function(){
             if(comms) {
                 $("#comms-status").text("Enabled");
                 $("#comms-status").css("color", "var(--green)");
@@ -297,15 +300,19 @@
             $("#comms-popup").toggle();
         });
 
-        $("#close-comms").click(function(){
+        $("#close-comms").on("click", function(){
             $("#comms-popup").toggle();
         });
 
-        $("#close-msg").click(function(){
+        $("#close-msg").on("click", function(){
             $("#msg-popup").toggle();
         });
 
-        $("#approve-op").click(function(){
+        $("#close-file").on("click", function(){
+            $("#file-popup").toggle();
+        });
+
+        $("#approve-op").on("click", function(){
             type = $("#msg-type").text();
             result = new Array();
             if(type.includes('Verify Script')){
@@ -313,7 +320,7 @@
             }
         });
 
-        $("#reject-op").click(function(){
+        $("#reject-op").on("click", function(){
             type = $("#msg-type").text();
             result = new Array();
             if(type.includes('Verify Script')){
@@ -321,21 +328,21 @@
             }
         });
 
-        $("#toggle-comms").click(function(){
+        $("#toggle-comms").on("click", function(){
             $(this).prop("disabled",true);
             socket.emit('comms-status');
             socket.emit('toggle-comms');
         });
 
-        $("#close-device-popup").click(function(){
+        $("#close-device-popup").on("click", function(){
             $("#device-popup").toggle();
         });
 
-        $("#plus-device").click(function(){
+        $("#plus-device").on("click", function(){
             $("#device-popup").toggle();
         });
 
-        $("#add-device").click(function(){
+        $("#add-device").on("click", function(){
             type = $("#new-device-type").find(':selected').val();
             id = parseInt($("#new-device-id").val());
             if((type=='')||id==''){
