@@ -481,21 +481,20 @@ class Valve(Component):
             raise KeyError
     
     def setValves(self, info):
-        for valve in range(0,self.numberOfValves):
-            self.packets.append(f'V1') # Valve module number
-            output = int(info[3])
-            if valve<output:
-                self.transcript = None
-                status = 1
-            elif valve==output:
-                self.transcript += f' set output to {info[3]}' # Add to transcript
-                status = 0
-            else:
-                self.transcript = None
-                status = 2
-            self.packets.append(f'S{status}')
-            self.setCmdBase(info[0], info[1], info[2]) # Cmd2           
-            self.assembleCmd()
+        self.packets.append(f'V') # Valve module number
+        output = int(info[3])
+        if valve<output:
+            self.transcript = None
+            status = 1
+        elif valve==output:
+            self.transcript += f' set output to {info[3]}' # Add to transcript
+            status = 0
+        else:
+            self.transcript = None
+            status = 2
+        self.packets.append(f'S{status}')
+        self.setCmdBase(info[0], info[1], info[2]) # Cmd2           
+        self.assembleCmd()
         return
 
 class Spectrometer(Component):
