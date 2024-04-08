@@ -46,8 +46,8 @@ def auto():
     return render_template('auto.html')
 
 @app.route('/server-logoff', methods=['GET'])
-def server_logoff(): 
-    flash('You have been logged off due to a server restart', 'danger')
+def server_logoff():
+    flash('You do not have access to this resource. Please log in.', 'danger')
     return redirect(url_for('login'))
 
 @app.route('/profile', methods=['GET','POST'])
