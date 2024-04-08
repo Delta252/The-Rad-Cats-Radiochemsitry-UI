@@ -74,6 +74,18 @@ class UserHandler:
         self.connect.commit()
 
         cursor.close()
+
+    def logOffAll(self):
+        cursor = self.connect.cursor()
+
+        # Set user status accordingly (requires future updates)
+        cursor.execute(f"""
+            UPDATE userdata SET status='offline'
+            """)
+         
+        self.connect.commit()
+
+        cursor.close() 
         
     def attemptRegister(self, userCandidate, pswdCandidate):
         cursor = self.connect.cursor()
@@ -177,3 +189,17 @@ class UserHandler:
         self.connect.commit()
 
         cursor.close()
+
+    def getStatus(self, username):
+        cursor = self.connect.cursor()
+
+        # User/password combination only inserted if both are unique to the existing table
+        cursor.execute(f"""
+            SELECT status FROM userdata WHERE username='{username}'
+            """)
+        
+        found = cursor.fetchone()
+
+        cursor.close()
+
+        return found

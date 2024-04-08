@@ -45,6 +45,11 @@ def manual():
 def auto():
     return render_template('auto.html')
 
+@app.route('/server-logoff', methods=['GET'])
+def server_logoff(): 
+    flash('You have been logged off due to a server restart', 'danger')
+    return redirect(url_for('login'))
+
 @app.route('/profile', methods=['GET','POST'])
 def profile():
     if request.method == 'POST':
@@ -124,10 +129,11 @@ class RegisterForm(Form):
     confirm = PasswordField('Confirm Password.', [validators.EqualTo('pswd', message='Passwords do not match.')], render_kw={"placeholder": "Confirm Password *"},)
 
 def main():
-    app.secret_key = os.urandom(12).hex() # For sending cookies; required for Flask to run
+    app.secret_key = 'RadCatsRadiochemistry2024' # For sending cookies; required for Flask to run
+    uh.logOffAll()
     # Below runs as HTTP, ssl_context required to run as HTTPS
     socketio.run(app, debug=True) #ssl_context=('dependencies/ssl/server.crt', 'dependencies/ssl/server.key')
-
+ 
 # Core function call
 if __name__ == '__main__':
     main()

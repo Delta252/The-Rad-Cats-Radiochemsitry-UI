@@ -183,10 +183,6 @@
         }
 
         /* Socket Functions */
-        socket.on('after_connect', function(msg) {
-            document.getElementById("console").textContent += ("\nSocket Connection successful");
-        });
-
         socket.on('update_cards', function(msg) {
             $("div.card").remove();
             generateCards(msg.data);

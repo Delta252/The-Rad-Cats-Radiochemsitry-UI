@@ -10,8 +10,9 @@ import os
 @socketio.on('connect')
 def handle_connect():
     print('Connection established!')
-    sys.updateFromDB()
-    socketio.emit('after_connect')
+    status = uh.getStatus(session['username'])
+    sys.updateFromDB() 
+    socketio.emit('after_connect', {'data':status}, room=request.sid)
     socketio.emit('update_cards', {'data':sys.define()})
     socketio.emit('update_cmd_list', {'data':sys.cmds})
 
