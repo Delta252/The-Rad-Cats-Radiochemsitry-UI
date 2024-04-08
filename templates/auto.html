@@ -269,6 +269,7 @@
         });
 
         $(".content").on("click", ".apply-action", function(){
+            action = $(this).val();
             parent = $(this).closest("div.card");
             var result = [];
             result.push("server");
@@ -276,7 +277,7 @@
             inputs = parent.find('input, select').each(function(){
                 result.push($(this).val());
             });
-            socket.emit('add-cmd-list', result)
+            socket.emit('add-cmd-list', [action,result])
         });
 
         $(".content").on("click", ".remove-cmd", function(){
@@ -340,7 +341,9 @@
             $("#dropbox-text").html("Drag file here or click to <b>Upload File</b>");
             if(file != ''){
                 socket.emit('upload-file', [file.name, file])
-            }            
+            }
+            $("#file-input").val('');
+            $("#file-popup").toggle();
         });
 
         $("#file-input").change(function(){
@@ -447,7 +450,7 @@
             </div>
             
             <div class="optns">
-                <button class="ui-btn single-btn apply-action">Set Valve</button>
+                <button class="ui-btn single-btn apply-action" value="set">Set Valve</button>
             </div>`;
             return Card(id, type, content);
         };
@@ -466,7 +469,7 @@
             </div>
             
             <div class="optns">
-                <button class="ui-btn single-btn apply-action">Set Shutter</button>
+                <button class="ui-btn single-btn apply-action" value="set">Set Shutter</button>
             </div>`;
             return Card(id, type, content);
         }
@@ -479,7 +482,7 @@
             </div>
             
             <div class="optns">
-                <button class="ui-btn single-btn apply-action">Start Pump</button>
+                <button class="ui-btn single-btn apply-action" value="pump">Start Pump</button>
             </div>`;
             return Card(id, type, content);
         }
@@ -512,7 +515,7 @@
             </div>
 
             <div class="optns">
-                <button class="ui-btn single-btn apply-action">Start Pump</button>
+                <button class="ui-btn single-btn apply-action" value="pump">Start Pump</button>
             </div>`;
             return Card(id, type, content);
         }
@@ -532,7 +535,7 @@
             </div>
 
             <div class="optns">
-                <button class="ui-btn single-btn apply-action">Set Speed</button>
+                <button class="ui-btn single-btn apply-action" value="set">Set Speed</button>
             </div>`;
             return Card(id, type, content);
         }
@@ -552,13 +555,17 @@
                 </div>
             </div>
 
+            <div class="optns">
+                <button class="ui-btn single-btn apply-action" value="set">Set Extraction Slot</button>
+            </div>
+
             <div class="input-box">
                 <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
                 <span class="input-label">Enter a volume (mL)</span>
             </div>
 
             <div class="optns">
-                <button class="ui-btn single-btn apply-action">Start Extraction</button>
+                <button class="ui-btn single-btn apply-action" value="pump">Start Extraction</button>
             </div>`;
             return Card(id, type, content);
         }

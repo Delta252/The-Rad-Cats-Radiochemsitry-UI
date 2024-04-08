@@ -124,6 +124,9 @@ def upload_file(file):
     filepath = savedir+'/'+file[0]
     with open(filepath, 'wb') as binaryFile:
         binaryFile.write(file[1])
+    sys.parseScript(filepath)
+    socketio.emit('update_cards', {'data':sys.define()})
+    socketio.emit('update_cmd_list', {'data':sys.cmds})
 
 # Following commands are demo-specific placeholders, and will be replaced
 @socketio.on('pull-syringe')

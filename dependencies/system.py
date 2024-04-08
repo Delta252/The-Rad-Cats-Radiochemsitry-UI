@@ -94,7 +94,7 @@ class System:
     def findDeviceByID(self, id):
         for i in self.devices:
             if i.id == id:
-                return i
+                return i # THROWS ERROR IF DEVICE IS NOT IN DEVICE LIST (DURING SETUP)
         return None
 
     def setDeviceStatus(self, id, status):
@@ -158,6 +158,79 @@ class System:
         script.write('\n>>ENDFILE\n') # EOF marker
         script.close() # Release file
         return fileName
+
+    def parseScript(self, pathToFile):
+        # Clear component database
+        for device in self.devices:
+            self.removeFromDB(device.id)
+        # Clear system parameters
+        self.devices = []
+        self.cmds = []
+        lineNumber = 0
+        fileoutline = []
+        msg = ''
+        try:
+            file = open(pathToFile, 'r')
+            content = file.readlines() # Read file line-by-line
+            # Loop through lines for sections
+            flaglines = []
+            for line in content:
+                if line.find('>>') != -1:
+                    flaglines.append(lineNumber)
+                lineNumber += 1
+            # Catch file format errors
+            if len(flaglines) < 1:
+                msg = ('error', 'No file flags detected.')
+            elif 'start' not in (content[flaglines[0]].split('>>')[1]).lower():
+                print((content[flaglines[0]].split('>>')[1]).lower())
+                msg = ('error', 'File start flag misplaced.')
+            elif 'endfile' not in (content[flaglines[-1]].split('>>')[1]).lower():
+                msg = ('error', 'End of file misplaced.')
+            # Raise error if incorrectly formatted
+            if msg != '':
+                raise SyntaxError
+            # Keep track of sections
+            for index, entry in enumerate(flaglines):
+                if re.search('>>(.*)', content[entry]).group(1).strip().lower() in {'start', 'endsection', 'endfile'}:
+                    continue
+                if 'endsection' not in re.search('>>(.*)', content[flaglines[index+1]]).group(1).strip().lower():
+                    msg = ('error', 'Section pairing headings mismatched.')
+                    raise SyntaxError
+                else:
+                    fileoutline.append((re.search('>>(.*)', content[entry]).group(1).strip().lower(), flaglines[index], flaglines[index+1]))
+            # Parse sections
+            for section in fileoutline:
+                for line in range(section[1]+1, section[2]-1): # Exclude start and end flags of section
+                    if content[line] == '\n':
+                        continue
+                    if section[0] == 'system':
+                        module = (re.search('- (.*): ', content[line])).group(1)
+                        moduleID = (re.search(':(.*)', content[line])).group(1).strip()
+                        self.addToDB(moduleID, module)
+                    elif section[0] == 'experiment':
+                        destinationID = int((re.search(' (.*) [set|pump]', content[line])).group(1).strip()) # Find action keyword
+                        action = re.search('set|pump', content[line]).group()
+                        value = (re.search('[set|pump] (\S+?)(\s*$|\sHOLD)', content[line])).group(1).strip() # Find action data
+                        hold = (re.search('HOLD \((\S+)\)', content[line])) # Find Hold step
+                        if hold is not None:
+                            holdValue = hold.group(1).strip()
+                        else:
+                            holdValue = None
+                        parseData = ['server', 1000, destinationID, value]
+                        backlog = self.generateCommand([action, parseData])
+                        for element in backlog:
+                            self.cmds.append([element, holdValue]) # Append to cmd list
+                        pass
+                    else:
+                        msg = ('error', 'Unknown section heading.')
+                        raise SyntaxError
+            file.close()
+
+        except SyntaxError:
+            print('encountered FormatError')
+            print(msg)
+            file.close()
+            return
 
     def generateCommand(self, data):
         id = int(data[2])
