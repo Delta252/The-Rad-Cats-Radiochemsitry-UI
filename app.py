@@ -15,7 +15,7 @@ uh = UserHandler() # Create object to handle user profiles
 
 socketio = SocketIO(app, cors_allowed_origins="*") #IMPORTANT! Required for university/corporate networks where origin is not identical to host
 
-sys = System()
+sys = System(socketio)
 comms = Comms(sys, socketio)
 
 from dependencies.sockets import *
@@ -90,7 +90,7 @@ def login():
             session['username'] = username
             session['sid'] = 'sid' + os.urandom(8).hex()
 
-            flash('Login success', 'msg')
+            flash('Login success', 'success')
 
             return redirect(url_for('testing'))
             

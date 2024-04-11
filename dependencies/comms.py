@@ -70,9 +70,6 @@ class Comms:
         if result != None:
             for entry in result:
                 self.socket.emit('serial_response', {'data':entry})
-                if 'FREE' in entry:
-                    deviceID = int((re.search('sID(.*) rID', entry)).group(1))
-                    self.system.setDeviceStatus(deviceID, 'free')
         return result     
 
     # Discover which COM port a system is connected on
@@ -98,11 +95,13 @@ class Comms:
         try:
             run = True
             while run:
-                cmd = self.system.handleQueues()
-                if cmd != None:
+                if self.system.q.qsize()>0:
+                    cmd = self.system.q.get()
                     self.runCommand(cmd)
                 incoming = self.readResponse()
-                time.sleep(1)
+                for entry in incoming:
+                    self.system.handleResponse(entry)
+                time.sleep(0.5)
         except BrokenPipeError:
             return
     # Add a command to a queue (not currently implemented)

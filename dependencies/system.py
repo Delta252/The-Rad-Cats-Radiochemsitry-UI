@@ -249,12 +249,13 @@ class System:
     def runCommands(self):
         for device in self.devices:
             device.executeCmds()
-    
-    def handleQueues(self):
-        for device in self.devices:
-            if (device.q.qsize()>0) & (device.status == 'free'):
-                return device.q.get()
-        return None
+
+    def handleResponse(self, msg):
+        if 'FREE' in msg:
+            deviceID = int((re.search('sID(.*) rID', msg)).group(1))
+            self.setDeviceStatus(deviceID, 'done')
+        else:
+             pass
 
 class Component:
     def __init__(self, id, descriptor):
