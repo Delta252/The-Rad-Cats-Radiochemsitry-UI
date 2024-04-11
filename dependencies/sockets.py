@@ -83,15 +83,12 @@ def update_server(data):
 
 @socketio.on('generate-run-command') # Necessary to protect order of operations for manual control
 def generate_command(data):
-    print(data)
     sys.generateCommand(data)
-    sys.runCommands()
+    sys.runCommand() # REQUIRES FIX
 
 @socketio.on('add-cmd-list')
 def add_cmds(data):
-    backlog = sys.generateCommand(data)
-    for element in backlog:
-        sys.cmds.append([element,None])
+    sys.generateCommand(data)
     socketio.emit('update_cmd_list', {'data':sys.cmds})
 
 @socketio.on('remove-cmd-number')
@@ -113,6 +110,10 @@ def verify_script(data):
         username = session['username']
         scriptFilename = sys.compileScript(username)
         socketio.emit('send_script',{'data':scriptFilename}) # Requires user identification to be implemented
+
+@socketio.on('execute-script')
+def execute_script():
+    sys.executeScript()
 
 @socketio.on('run-commands')
 def run_commands():

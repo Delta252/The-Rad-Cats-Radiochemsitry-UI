@@ -1,23 +1,23 @@
-import os, re
+import os, re, time
 import sqlite3
 import warnings
 from queue import *
 
 class System:
-    def __init__(self):
+    def __init__(self, socket):
         self.systemdataFilepath = os.path.abspath('dependencies/systemdata.db')
         self.connect = sqlite3.connect(self.systemdataFilepath, check_same_thread=False)
         self.devices = []
         self.cmds = []
+        self.q = Queue(-1)
+        self.socket = socket
 
     def updateFromDB(self):
         self.devices = []
         self.cursor = self.connect.cursor()
-        self.cursor.execute("""
+        found = self.cursor.execute("""
             SELECT * FROM systemdata                            
-            """)
-
-        found = self.cursor.fetchall()
+            """).fetchall()
 
         for i in found:
             match i[1]:
@@ -41,7 +41,6 @@ class System:
             self.devices.append(dev)
         
         self.cursor.close()
-
 
     def addToDB(self, id, descriptor):
         # Inserts new element or updates an existing one  !!WARNING
@@ -91,9 +90,9 @@ class System:
         for i in self.devices:
             print(f'Device {i.type} at ID {i.id}\n')
 
-    def findDeviceByID(self, id):
+    def findDeviceByID(self, dev):
         for i in self.devices:
-            if i.id == id:
+            if dev == i.id:
                 return i # THROWS ERROR IF DEVICE IS NOT IN DEVICE LIST (DURING SETUP)
         return None
 
@@ -109,17 +108,30 @@ class System:
             data.append((i.id, i.type))
         return data
 
+    def addWait(self):
+        # Add global wait time
+        transcript = 'Global Wait'
+        cmd = f'Wait'
+        packet = (cmd, transcript)
+        return packet
+
     def verifyScript(self):
         success = False
         msg = ''
         # Test No1 : if hold listed waits for a previous step
         for index, step in enumerate(self.cmds):
-            if (step[1] is not None) and (index-int(step[1])<0):
+            packet = step[0][0]
+            if (packet == 'Wait') and ((step[1] ==  '') or (int(step[1]) < 0)):
+                msg = f'Wait time invalid for step {index + 1}'
+                return [success, msg]
+            elif (packet != 'Wait') and (step[1] != None) and (index-int(step[1])<0):
                 msg = f'Hold request invalid for step {index + 1}'
                 return [success, msg]
         # Test No2 : if all commands use components listed in system delcaration 
         for step in self.cmds:
             packet = step[0][0]
+            if packet == 'Wait':
+                continue
             sender = int(re.findall(r'sID(\d+) ', packet)[0])
             receiver = int(re.findall(r'rID(\d+) ', packet)[0])
             if self.findDeviceByID(sender) == None:
@@ -136,22 +148,28 @@ class System:
         fileName = f'./download/script_{user}.txt' # Create user-specific file
         stepNum = 1
         script = open(fileName, 'w') # User file is overwritten every time if the name is the same
-        script.write('>>START')
-        script.write('\n>>SYSTEM\n')
+        script.write('>>START\n')
+        script.write('\n>>SYSTEM')
         for device in self.devices:
             script.write('\n- '+device.type+': '+str(device.id)) # System declarations
         script.write('\n>>ENDSECTION\n')
-        script.write('\n>>EXPERIMENT\n')
+        script.write('\n>>EXPERIMENT')
         for step in self.cmds:
             packet = step[0][0]
             transcript = step[0][1]
-            receiver = int(re.findall(r'rID(\d+) ', packet)[0])
-            if result := re.search('set|pump', transcript): # Edit as classes of actions are introduced
-                action = transcript[result.start():result.end()]
-                setValue = transcript.split()[-1]
-            entry = f'\n[{stepNum}] {receiver} {action} {setValue}' # Individual steps
-            if step[1] is not None:
-                entry += f' HOLD ({step[1]})' # Hold condition (yes/no)
+            if packet == 'Wait':
+                entry = f'\n[{stepNum}] Global Wait'
+            else:
+                receiver = int(re.findall(r'rID(\d+) ', packet)[0])
+                if result := re.search('set|pump', transcript): # Edit as classes of actions are introduced
+                    action = transcript[result.start():result.end()]
+                    setValue = transcript.split()[-1]
+                entry = f'\n[{stepNum}] {receiver} {action} {setValue}' # Individual steps
+            if step[1] !=  None:
+                if packet == 'Wait':
+                    entry += f' {step[1]}s'
+                else:
+                    entry += f' HOLD ({step[1]})' # Hold condition (yes/no)
             stepNum += 1
             script.write(entry)
         script.write('\n>>ENDSECTION\n')
@@ -182,7 +200,6 @@ class System:
             if len(flaglines) < 1:
                 msg = ('error', 'No file flags detected.')
             elif 'start' not in (content[flaglines[0]].split('>>')[1]).lower():
-                print((content[flaglines[0]].split('>>')[1]).lower())
                 msg = ('error', 'File start flag misplaced.')
             elif 'endfile' not in (content[flaglines[-1]].split('>>')[1]).lower():
                 msg = ('error', 'End of file misplaced.')
@@ -200,7 +217,7 @@ class System:
                     fileoutline.append((re.search('>>(.*)', content[entry]).group(1).strip().lower(), flaglines[index], flaglines[index+1]))
             # Parse sections
             for section in fileoutline:
-                for line in range(section[1]+1, section[2]-1): # Exclude start and end flags of section
+                for line in range(section[1]+1, section[2]): # Exclude start and end flags of section
                     if content[line] == '\n':
                         continue
                     if section[0] == 'system':
@@ -208,18 +225,20 @@ class System:
                         moduleID = (re.search(':(.*)', content[line])).group(1).strip()
                         self.addToDB(moduleID, module)
                     elif section[0] == 'experiment':
-                        destinationID = int((re.search(' (.*) [set|pump]', content[line])).group(1).strip()) # Find action keyword
-                        action = re.search('set|pump', content[line]).group()
-                        value = (re.search('[set|pump] (\S+?)(\s*$|\sHOLD)', content[line])).group(1).strip() # Find action data
-                        hold = (re.search('HOLD \((\S+)\)', content[line])) # Find Hold step
-                        if hold is not None:
-                            holdValue = hold.group(1).strip()
+                        if 'Global Wait' in content[line]:
+                            value = (re.search('Global Wait (\S+?)(s\s*$)', content[line])).group(1).strip()
+                            self.generateCommand(['wait', value])
                         else:
-                            holdValue = None
-                        parseData = ['server', 1000, destinationID, value]
-                        backlog = self.generateCommand([action, parseData])
-                        for element in backlog:
-                            self.cmds.append([element, holdValue]) # Append to cmd list
+                            destinationID = int((re.search(' (.*) [set|pump]', content[line])).group(1).strip()) # Find action keyword
+                            action = re.search('set|pump', content[line]).group()
+                            value = (re.search('[set|pump] (\S+?)(\s*$|\sHOLD)', content[line])).group(1).strip() # Find action data
+                            hold = (re.search('HOLD \((\S+)\)', content[line])) # Find Hold step
+                            if hold != None:
+                                holdValue = hold.group(1).strip()
+                            else:
+                                holdValue = None
+                            parseData = ['server', 1000, destinationID, value]
+                            self.generateCommand([action, parseData, holdValue])
                         pass
                     else:
                         msg = ('error', 'Unknown section heading.')
@@ -232,22 +251,136 @@ class System:
             file.close()
             return
 
+    def executeScript(self):
+        # Divide cmd list into per-device queues; this allows for parallel operation without multithreading
+        startTime = time.time()
+        self.socket.emit('system_msg', {'data':'Priming'})
+        for cmd in self.cmds:
+            packet = cmd[0]
+            if packet[0] == 'Wait':
+                continue
+            receiver = int(re.findall(r'rID(\d+) ', packet[0])[0]) # Extract cmd destination device id
+            for device in self.devices:
+                if device.id == receiver:
+                    device.backlog.append(packet)
+                    device.status = 'pending'
+        # Active loop to work through the cmd list
+        self.socket.emit('system_msg', {'data':'Beginning execution...'})
+        laggingIndex = 0 # This is an index of the "slowest" cmd that is currently not done
+        while laggingIndex < len(self.cmds):
+            time.sleep(0.1) # 100ms tic time
+            # Check if lagging index has become done and find the next incomplete command if not
+            if self.cmds[laggingIndex][2] == 'done':
+                laggingIndex += 1 # Make one step forward in the main record; IMPORTANT! This allows for loop termination
+                continue # Next tic with updated lagging index
+            # If lagging index is hung up on a wait (critical point), then execute wait
+            if (self.cmds[laggingIndex][0][0] == 'Wait') and (self.cmds[laggingIndex][2] != 'done'):
+                waitTime = int(self.cmds[laggingIndex][1])
+                self.socket.emit('system_msg', {'data':f'Executing global wait ({waitTime}s)'})
+                waitStart = time.time()
+                time.sleep(waitTime)
+                waitEnd = time.time()
+                self.socket.emit('system_msg', {'data':f'Actual wait time: ({round((waitEnd - waitStart),2)}s)'})
+                self.cmds[laggingIndex][2] = 'done'
+                laggingIndex += 1
+                continue
+            # Check next cmd candidate for each device against main cmd record
+            for device in self.devices:
+                if not device.backlog:
+                    if device.status == 'free':
+                        continue # Ignore devices that have no backlog and are not executing
+                if (device.currentCommand == None):
+                    device.currentCommand = device.backlog.pop(0) # Initialize command
+                    for index, cmd in enumerate(self.cmds):
+                        if (device.currentCommand[0] == cmd[0][0]) and (cmd[2] != 'done'):
+                            device.currentIndex = index
+                            break
+                    continue
+                if device.status == 'done': # Check if there are any more cmds to complete
+                    if not device.backlog:
+                        device.status = 'free'
+                        self.cmds[device.currentIndex][2] = 'done'
+                        continue
+                    self.cmds[device.currentIndex][2] = 'done'
+                    device.currentCommand = device.backlog.pop(0) # Initialize command
+                    for index, cmd in enumerate(self.cmds):
+                        if (device.currentCommand[0] == cmd[0][0]) and (cmd[2] != 'done'):
+                            device.currentIndex = index
+                            print(f'Added cmd {device.currentCommand} with index {device.currentIndex}')
+                            break
+                    device.status = 'pending'
+                    continue # Wait for a tic between commands
+                # Check if the current cmd has been completed; wait if not
+                elif device.status == 'pending': # Current device is waiting
+                    # Check for incomplete prior global wait
+                    proceed = True
+                    for index in range(0, device.currentIndex):
+                        if (self.cmds[index][0][0] == 'Wait') and (self.cmds[index][2] != 'done'):
+                            proceed = False
+                            break
+                    # Check for a prerequisite step and completion
+                    if self.cmds[device.currentIndex][1] != None:
+                        previousStatus = self.cmds[self.cmds[device.currentIndex][1]-1][2]
+                        if previousStatus != 'done':
+                            proceed = False
+                    if not proceed:
+                        continue # Counterintuitive, but this jumps to the next loop iteration rather than finishing current one
+                    device.status = 'active'
+                    self.cmds[device.currentIndex][2] = 'in progress'
+                    self.q.put(device.currentCommand) 
+                else:
+                    continue
+        endTime = time.time()
+        self.socket.emit('system_msg', {'data':'Cleaning up...'})
+        # Cleanup
+        for device in self.devices:
+            device.status = 'free'
+            device.currentCommand = None
+        # Verify that all cmds are done
+        for cmd in self.cmds:
+            if cmd[2] != 'done':
+                self.socket.emit('system_msg', {'data':'Failed to properly execute all commands'})
+                print(self.cmds)
+                return False
+                # Reset cmds statuses
+        for cmd in self.cmds:
+            cmd[2] = 'pending'
+        self.socket.emit('system_msg', {'data':f'Script successfully completed (Execution time = {round((endTime - startTime),2)}s)'})
+        return True
+
     def generateCommand(self, data):
-        id = int(data[1][2])
-        result = 'No Valid Command'
-        for device in self.devices:
-            if id == device.id:
-                try:
-                    result = device.parseCommand(data)
-                    break
-                except KeyError:
-                    print('Invalid action key submitted.')
+        # Expected data format: [set/pump/wait, [input1, input2, input3], holdVal]
+        # Main cmd list format: [(cmd, transcript), holdValue, status]
+        if data[0] == "wait":
+            result = self.addWait()
+            if data[1] == '':
+                holdVal = 0
+            else:
+                holdVal = int(data[1])
+            self.cmds.append([result, holdVal, 'pending']) 
         else:
-            warnings.warn('Unrecognized device request.')
-        return result
+            id = int(data[1][2])
+            result = 'No Valid Command'
+            hold = data[2]
+            if (hold == None) or (hold == 'None'): # Depending on source of cmd generation call
+                holdVal = None
+            else:
+                holdVal = int(hold)
+            for device in self.devices:
+                if id == device.id:
+                    try:
+                        result = device.parseCommand(data)
+                        self.cmds.append([result, holdVal, 'pending'])
+                        break
+                    except KeyError:
+                        print('Invalid action key submitted.')
+            else:
+                warnings.warn('Unrecognized device request.')
+        return 
     
-    def runCommands(self):
+    def runCommand(self): # REQUIRES FIX
         for device in self.devices:
+            device.status = 'active'
             device.executeCmds()
 
     def handleResponse(self, msg):
@@ -266,14 +399,15 @@ class Component:
         self.transcript = ''
         self.packets = [] # Flexible array of individual packet elements
         self.commandPacket = () # Immutable serial command and transcript
-        self.backlog = [] # Stored commands pending execution
-        self.q = Queue(-1)
+        self.backlog = [] # Array to keep commands prior to them being pushed to execution
+        self.currentCommand = None
+        self.currentIndex = 0 # Location in main command log
     
     def setCmdBase(self, senderDevice, senderID, receiverID):
         self.cmd = f'[sID{senderID} rID{receiverID}'
         self.transcript = f'{str(senderDevice).capitalize()} ({senderID}) requests {str(self.type).capitalize()} ({receiverID})'
         return
-    
+
     def assembleCmd(self):
         numOfPackets = len(self.packets)
         self.cmd += f' PK{numOfPackets}' # Automatic packet length
@@ -281,15 +415,10 @@ class Component:
             self.cmd += f' {entry}' # Add all packets
         self.cmd += ']' # End command
         self.commandPacket = (self.cmd, self.transcript) # Create immutable cmd/transcript pair
-        self.backlog.append(self.commandPacket) # Add packet to backlog
         self.cmd = '' # Clear cmd
         self.transcript = '' # Clear transcript
         self.packets = [] # Empty packet array
-        return self.backlog
-    
-    def executeCmds(self):
-        for entry in self.backlog:
-            self.q.put(entry)
+        return self.commandPacket
     
     def setStatus(self, status):
         self.status = status
@@ -313,12 +442,11 @@ class SyringePump(Component):
     def parseCommand(self, data):
         action = data[0]
         info = data[1]
-        self.backlog = [] # Clear backlog for new commands
         self.requiredVolume = int(info[5])
         while self.requiredVolume>0: # Loop until full necessary volume is delivered
             self.fill(info) # Fill full volume of syringe
             self.empty(info) # Empty necessary volume of syringe
-        return self.backlog
+        return self.backlog #ERROR >> REQUIRES REWORK
     
     def fill(self, info):
         self.packets.append(f'Y1') # Pump module number
@@ -337,10 +465,9 @@ class PeristalticPump(Component):
     def parseCommand(self, data):
         action = data[0]
         info = data[1]
-        self.backlog = [] # Clear backlog for new commands
         if action == 'pump':
-            self.pumpVolume(info)
-            return self.backlog
+            result = self.pumpVolume(info)
+            return result
         else:
             raise KeyError
     
@@ -353,8 +480,7 @@ class PeristalticPump(Component):
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
         self.transcript += f' pump {volume}mL'
-        self.assembleCmd()
-        return
+        return self.assembleCmd()
 
 class Mixer(Component):
     def __init__(self, id, descriptor):
@@ -363,10 +489,9 @@ class Mixer(Component):
     def parseCommand(self, data):
         action = data[0]
         info = data[1]
-        self.backlog = [] # Clear backlog for new commands
         if action == 'set':  
-            self.setSpeed(info)
-            return self.backlog
+            result = self.setSpeed(info)
+            return result
         else:
             raise KeyError
     
@@ -392,8 +517,7 @@ class Mixer(Component):
         self.packets.append(f'D{direction}')
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
         self.transcript += f' set to {mode}' # Add to transcript
-        self.assembleCmd()
-        return
+        return self.assembleCmd()
 
 class Shutter(Component):
     def __init__(self, id, descriptor):
@@ -402,10 +526,9 @@ class Shutter(Component):
     def parseCommand(self, data):
         action = data[0]
         info = data[1]
-        self.backlog = [] # Clear backlog for new commands
         if action == 'set':
-            self.setPosition(info)
-            return self.backlog
+            result = self.setPosition(info)
+            return result
         else:
             raise KeyError
     
@@ -427,8 +550,7 @@ class Shutter(Component):
         self.packets.append(f'S{posNum}')
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
         self.transcript += f' set to {position}' # Add to transcript
-        self.assembleCmd()
-        return
+        return self.assembleCmd()
 
 class Extraction(Component):
     def __init__(self, id, descriptor):
@@ -439,23 +561,21 @@ class Extraction(Component):
         info = data[1]
         self.backlog = [] # Clear backlog for new commands
         if action == 'set':
-            self.setAngle(info)
-            return self.backlog
+            result = self.setAngle(info)
         elif action == 'pump':
-            self.pumpVolume(info)
-            return self.backlog
+            result = self.pumpVolume(info)
         else:
             raise KeyError
+        return result
     
     def setAngle(self, info):
-        self.packets.append(f'E1') # Extractor module number
+        self.packets.append(f'E') # Extractor module number
         slot = int(info[3])
         angle = ((slot)-1)*(180/4)
         self.packets.append(f'S{angle}') # Extractor slot
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
         self.transcript += f' set to position {slot}' # Add to transcript
-        self.assembleCmd()
-        return
+        return self.assembleCmd()
     
     def pumpVolume(self, info):
         self.packets.append(f'P5') # Extractor pump module number (static)
@@ -463,8 +583,7 @@ class Extraction(Component):
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(info[0], info[1], info[2]) # Cmd2
         self.transcript += f' pump {volume}mL' # Add to transcript
-        self.assembleCmd()
-        return
+        return self.assembleCmd()
 
 class Valve(Component):
     def __init__(self, id, descriptor):
@@ -474,29 +593,27 @@ class Valve(Component):
     def parseCommand(self, data):
         action = data[0]
         info = data[1]
-        self.backlog = [] # Clear backlog for new commands
         if action == 'set':
-            self.setValves(info)
-            return self.backlog
+            result = self.setValves(info)
+            return result
         else:
             raise KeyError
     
     def setValves(self, info):
         self.packets.append(f'V') # Valve module number
-        output = int(info[3])
-        if valve<output:
-            self.transcript = None
-            status = 1
-        elif valve==output:
-            self.transcript += f' set output to {info[3]}' # Add to transcript
-            status = 0
-        else:
-            self.transcript = None
-            status = 2
-        self.packets.append(f'S{status}')
-        self.setCmdBase(info[0], info[1], info[2]) # Cmd2           
-        self.assembleCmd()
-        return
+        # output = int(info[3])
+        # if valve<output:
+        #     self.transcript = None
+        #     status = 1
+        # elif valve==output:
+        #     self.transcript += f' set output to {info[3]}' # Add to transcript
+        #     status = 0
+        # else:
+        #     self.transcript = None
+        #     status = 2
+        # self.packets.append(f'S{status}')
+        # self.setCmdBase(info[0], info[1], info[2]) # Cmd2           
+        return self.assembleCmd()
 
 class Spectrometer(Component):
     def __init__(self, id, descriptor):
