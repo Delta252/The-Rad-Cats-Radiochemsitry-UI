@@ -79,7 +79,7 @@ class Serial:
     # Open a connection on a desired port 
     def OPEN_SERIAL_PORT(self, port):
         try:
-            self.connection = serial.Serial(port=port,baudrate=115200,write_timeout=5,timeout=5) # Serial setup; should not be modified
+            self.connection = serial.Serial(port=port,baudrate=115200,write_timeout=2,timeout=2) # Serial setup; should not be modified
             self.connection.isOpen()
         except IOError:
             self.connection.close()
