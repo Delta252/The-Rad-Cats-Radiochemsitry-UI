@@ -945,6 +945,10 @@ select::-ms-expand{
   width: 150px;
 }
 
+#execute-script:disabled{
+  background-color: rgb(from var(--accent) r g b / 40%);;;
+}
+
 @media screen and (max-width: 1200px){
   #script-ops {
     display: flex;

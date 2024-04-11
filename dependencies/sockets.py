@@ -8,7 +8,7 @@ import os
 
 #SocketIO
 @socketio.on('connect')
-def handle_connect():
+def handle_connect(ip):
     print('Connection established!')
     status = uh.getStatus(session['username'])
     sys.updateFromDB() 
@@ -109,11 +109,12 @@ def verify_script(data):
     if data:
         username = session['username']
         scriptFilename = sys.compileScript(username)
-        socketio.emit('send_script',{'data':scriptFilename}) # Requires user identification to be implemented
+        socketio.emit('send_script',{'data':scriptFilename},room=request.sid)
 
 @socketio.on('execute-script')
 def execute_script():
-    sys.executeScript()
+    success = sys.executeScript()
+    socketio.emit('complete_execute', {'data':success})
 
 @socketio.on('run-commands')
 def run_commands():

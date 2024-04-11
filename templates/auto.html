@@ -192,6 +192,7 @@
                 order++;
             }
             $("#verify-script").css("background-color", "var(--accent)");
+            $("#execute-script").attr("disabled", "disabled");
         }
 
         /* Socket Functions */
@@ -262,12 +263,25 @@
             }
             else{
                 $("#verify-script").css("background-color", "var(--green)");
+                $("#execute-script").removeAttr("disabled");
             }
         });
 
         socket.on('send_script', function(msg){
             filename = msg.data;
             document.location.href = filename;
+        });
+
+        socket.on('complete_execute', function(msg){
+            success = msg.data;
+            if(success){
+                $("#verify-script").css("background-color", "var(--green)");
+                $("#execute-script").removeAttr("disabled");
+            }
+            else{
+                $("#verify-script").css("background-color", "var(--red)");
+                $("#execute-script").attr("disabled", "disabled");
+            }
         });
 
         /* UI interactions */
@@ -305,6 +319,7 @@
 
         $(".content").on("input", ".hold-for", function(){
             $("#verify-script").css("background-color", "var(--accent)");
+            $("#execute-script").attr("disabled", "disabled");
             parent = $(this).closest("div.cmd-entry");
             stringID = parent.find(".cmd-number").text();
             number = parseInt(stringID.match(/\d+/));
@@ -328,7 +343,8 @@
         });
 
         $("#execute-script").on("click", function(){
-            socket.emit('execute-script')
+            socket.emit('execute-script');
+            $("#execute-script").attr("disabled", "disabled");
         });
 
         $("#dropbox").on("dragenter dragover", function(e){
