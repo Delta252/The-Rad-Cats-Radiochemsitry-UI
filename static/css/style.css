@@ -10,10 +10,10 @@
 }
 
 :root.theme1 {
-  --background: #d1d0cc;
-  --body: #e4dcdc;
+  --background: #fafafa;
+  --body: #eaeaeb;
   --text: #2C2C2C;
-  --accent: #4e3c69;
+  --accent: #4a68fcb4;
   --button-text: #ECEBE4;
 }
 
@@ -577,6 +577,16 @@ select::-ms-expand{
   margin: auto;
   width: 30%;
   min-width: 430px;
+}
+
+.admin-checkbox {
+  position: absolute;
+  margin-right: none;
+  margin-top: 12px;
+  background-color: var(--background);
+  border: 2px solid var(--accent);
+  height: 24px;
+  width: 24px;
 }
 
 .profile-span {

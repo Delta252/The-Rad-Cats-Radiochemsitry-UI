@@ -3,7 +3,9 @@ jQuery(function() {
     socket.emit('get-theme');
 
     socket.on('after_connect', function(msg) {
-        document.getElementById("console").textContent += ("\nSocket Connection successful");
+        if($("#console").length){
+            document.getElementById("console").textContent += ("\nSocket Connection successful");
+        }
         
         if(msg.data == "offline"){
             window.location.href = './server-logoff';
@@ -14,7 +16,7 @@ jQuery(function() {
     });
 
     $("#theme").on("change", function(){
-    socket.emit('send-theme', [$("#theme").val()]);
+        socket.emit('send-theme', [$("#theme").val()]);
     });
 
     $("#update-server").click(function(){

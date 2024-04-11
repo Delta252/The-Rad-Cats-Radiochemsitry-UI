@@ -59,10 +59,15 @@
                         <div>
                             <button id="upload-script" class="ui-btn script-btn">Upload Script</button>
                         </div>
+                        <div>
+                            <button id="add-wait" class="ui-btn script-btn">Add Global Wait</button>
+                        </div>
+                        <div>
+                            <button id="execute-script" class="ui-btn script-btn">Execute Script</button>
+                        </div>
                     </div>
                 </div>
                 
-
                 <div id="cmd-list"></div>
             </div>
         </div>
@@ -175,7 +180,14 @@
         function generateCmdList(data) {
             order = 1;
             for(entry in data){
-                $("#cmd-list").append(Cmd(order, data[entry][0][1]));
+                cmd = data[entry][0][0]
+                if(cmd.indexOf("Wait") >= 0){
+                    holdType = "global";
+                }
+                else{
+                    holdType = "cmd";
+                }
+                $("#cmd-list").append(Cmd(order, data[entry][0][1], holdType));
                 $("#hold-"+order).val(parseInt(data[entry][1]));
                 order++;
             }
@@ -190,6 +202,12 @@
 
         socket.on('serial_response', function(msg) {
             document.getElementById("console").textContent += ("\nSerial Response >> " + msg.data);
+            $('#console').scrollTop($('#console').get(0).scrollHeight);
+        });
+
+        socket.on('system_msg', function(msg) {
+            document.getElementById("console").textContent += ("\nSystem Message >> " + msg.data);
+            $('#console').scrollTop($('#console').get(0).scrollHeight);
         });
 
         socket.on('send_comms_status', (data) => {
@@ -224,6 +242,7 @@
             cmd = data[0];
             transcript = data[1];
             document.getElementById("console").textContent += ("\nSent to Serial >> "+ cmd);
+            $('#console').scrollTop($('#console').get(0).scrollHeight);
             document.getElementById("log-text").textContent += (transcript + "\n");
         });
 
@@ -273,7 +292,7 @@
             inputs = parent.find('input, select').each(function(){
                 result.push($(this).val());
             });
-            socket.emit('add-cmd-list', [action,result])
+            socket.emit('add-cmd-list', [action,result,'None'])
         });
 
         $(".content").on("click", ".remove-cmd", function(){
@@ -284,13 +303,17 @@
             socket.emit('remove-cmd-number', number);
         });
 
-        $(".hold-for").on("input", function(){
+        $(".content").on("input", ".hold-for", function(){
             $("#verify-script").css("background-color", "var(--accent)");
             parent = $(this).closest("div.cmd-entry");
             stringID = parent.find(".cmd-number").text();
             number = parseInt(stringID.match(/\d+/));
             newHold = $(this).val();
             socket.emit('update-hold', [number, newHold]);
+        });
+
+        $("#add-wait").on("click", function(){
+            socket.emit('add-cmd-list', ["wait", 0])
         });
 
         $("#verify-script").on("click", function(){
@@ -302,6 +325,10 @@
 
         $("#upload-script").on("click", function(){
             $("#file-popup").toggle();
+        });
+
+        $("#execute-script").on("click", function(){
+            socket.emit('execute-script')
         });
 
         $("#dropbox").on("dragenter dragover", function(e){
@@ -342,7 +369,7 @@
             $("#file-popup").toggle();
         });
 
-        $("#file-input").change(function(){
+        $("#file-input").on("change", function(){
             file = $("#file-input").prop('files')[0];
             $("#dropbox-text").text(file.name);
         });
@@ -566,7 +593,16 @@
             return Card(id, type, content);
         }
 
-        var Cmd = function(number, transcript) {
+        var Cmd = function(number, transcript, holdType) {
+            if(holdType == "cmd"){
+                labelText = "Wait for step: ";
+            }
+            else if(holdType == "global"){
+                labelText = "Wait time (s): ";
+            }
+            else {
+                labelText = "Unrecognized hold command - ";
+            }
             content = `
             <div class="cmd-entry">
                 <div class="cmd-data">
@@ -575,7 +611,7 @@
                         <div class="cmd-text"> ${transcript} </div>
                     </div>
                     <div class="cmd-hold">
-                        <label>Wait for step: </label>
+                        <label>${labelText}</label>
                         <span><input id="hold-${number}" class="hold-for" type="number" inputmode="integer"/></span>
                     </div>
                 </div>
