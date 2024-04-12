@@ -456,6 +456,15 @@
             socket.emit('add-device', [id, type]);           
         });
 
+        $(".content").on("change", "#valve", function(){
+            if($("#valve").val() == "custom"){
+                $("#valve-code").removeClass('disabled');
+            }
+            else{
+                $("#valve-code").addClass('disabled');
+            }
+        });
+
         /* Element generation */
         var Card = function(id, name, content) { 
             return `
@@ -484,8 +493,14 @@
                         <option value="3">Output 3</option>
                         <option value="4">Output 4</option>
                         <option value="5">Output 5</option>
+                        <option value="custom">Custom</option>
                     </select>
                 </div>
+            </div>
+
+            <div id="valve-code" class="input-box disabled">
+                <input id="valve-seq" type="number" inputmode="integer" value=00000 required="required">
+                <span class="input-label">Enter a 5-digit code</span>
             </div>
             
             <div class="optns">
@@ -529,28 +544,19 @@
         var SyringePump = function(id, type){
             content = `
             <div class="input-box">
-                <input id="syringe-vol" type="number" inputmode="decimal" value=5 required="required">
-                <span class="input-label">Syringe volume (mL)</span>
-            </div>
-
-            <div class="input-box">
-                <input id="syringe-length" type="number" inputmode="decimal" value=45 required="required">
-                <span class="input-label">Syringe length (mm)</span>
+                <span class="select-label">Select a syringe type</span>
+                <div class="select">
+                    <select name="pump-syringe" id="pump-syringe">
+                        <option selected value="1">10mL Eccentric</option>
+                        <option value="2">5mL Concentric</option>
+                        <option value="3">2mL Concentric</option>
+                    </select>
+                </div>
             </div>
 
             <div class="input-box">
                 <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
                 <span class="input-label">Enter a volume (mL)</span>
-            </div>
-
-            <div class="input-box">
-                <span class="select-label">Select a direction</span>
-                <div class="select">
-                    <select name="pump-syringe" id="pump-syringe">
-                        <option selected value="fill">Fill</option>
-                        <option value="empty">Empty</option>
-                    </select>
-                </div>
             </div>
 
             <div class="optns">
@@ -569,6 +575,16 @@
                         <option value="slow">Slow</option>
                         <option value="medium">Medium</option>
                         <option value="fast">Fast</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-box">
+                <span class="select-label">Select a direction</span>
+                <div class="select">
+                    <select name="mixer" id="mixer">
+                        <option selected value="1">Clockwise</option>
+                        <option value="2">Counter-clockwise</option>
                     </select>
                 </div>
             </div>

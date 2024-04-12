@@ -440,29 +440,7 @@ class SyringePump(Component):
         self.requiredVolume = 0
 
     def parseCommand(self, data):
-        action = data[0]
-        info = data[1]
-        self.requiredVolume = int(info[5])
-        while self.requiredVolume>0: # Loop until full necessary volume is delivered
-            self.fill(info) # Fill full volume of syringe
-            self.empty(info) # Empty necessary volume of syringe
-        return self.backlog #ERROR >> REQUIRES REWORK
-    
-    def fill(self, info):
-        self.packets.append(f'Y1') # Pump module number
-        return
-    
-    def empty(self, info):
-        return
-    
-    def resetPosition(self):
-        return
-
-class PeristalticPump(Component):
-    def __init__(self, id, descriptor):
-        super().__init__(id, descriptor)
-    
-    def parseCommand(self, data):
+        # [sID rID PK3 Y S{type} m{volume}]
         action = data[0]
         info = data[1]
         if action == 'pump':
@@ -472,7 +450,34 @@ class PeristalticPump(Component):
             raise KeyError
     
     def pumpVolume(self, info):
-        self.packets.append(f'P1') # Pump module number
+        self.packets.append(f'Y') # Pump module number
+        syringeType = info[3]
+        self.packets.append(f'S{syringeType}')
+        if type(info[4]) == str:
+            volume = int(re.findall(r'\d+', info[4])[0])
+        else:
+            volume = int(info[4])
+        self.packets.append(f'm{volume}') # Pump volume
+        self.setCmdBase(info[0], info[1], info[2]) # Cmd1
+        self.transcript += f' pump {volume}mL'
+        return self.assembleCmd()
+
+class PeristalticPump(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+    
+    def parseCommand(self, data):
+        # [sID rID PK2 P m{volume}]
+        action = data[0]
+        info = data[1]
+        if action == 'pump':
+            result = self.pumpVolume(info)
+            return result
+        else:
+            raise KeyError
+    
+    def pumpVolume(self, info):
+        self.packets.append(f'P') # Pump module number
         if type(info[3]) == str:
             volume = int(re.findall(r'\d+', info[3])[0])
         else:
@@ -487,6 +492,7 @@ class Mixer(Component):
         super().__init__(id, descriptor)
 
     def parseCommand(self, data):
+        # [sID rID PK3 M S{speed} D{direction}]
         action = data[0]
         info = data[1]
         if action == 'set':  
@@ -496,8 +502,13 @@ class Mixer(Component):
             raise KeyError
     
     def setSpeed(self, info):
-        self.packets.append(f'M1') # Mixer module number
+        self.packets.append(f'M') # Mixer module number
         mode = info[3]
+        dirVal = int(info[4])
+        if dirVal == 1:
+            direction = 'clockwise'
+        else:
+            direction = 'counter-clockwise'
         match mode:
             case 'stop':
                 speed = 0
@@ -513,10 +524,9 @@ class Mixer(Component):
                 self.transcript = 'An unexpected mixer speed has been encountered; speed has been set to 0 and mixer' # First half of error transcript
                 return
         self.packets.append(f'S{speed}') # Mixer speed
-        direction = 1 # Permanent direction
-        self.packets.append(f'D{direction}')
+        self.packets.append(f'D{dirVal}')
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
-        self.transcript += f' set to {mode}' # Add to transcript
+        self.transcript += f' set to {direction} {mode}' # Add to transcript
         return self.assembleCmd()
 
 class Shutter(Component):
@@ -524,6 +534,7 @@ class Shutter(Component):
         super().__init__(id, descriptor)
 
     def parseCommand(self, data):
+        # [sID rID PK2 I S{position}]
         action = data[0]
         info = data[1]
         if action == 'set':
@@ -533,7 +544,7 @@ class Shutter(Component):
             raise KeyError
     
     def setPosition(self, info):
-        self.packets.append(f'I1') # Shutter module number
+        self.packets.append(f'I') # Shutter module number
         position = info[3]
         match position:
             case 'closed':
@@ -557,6 +568,8 @@ class Extraction(Component):
         super().__init__(id, descriptor)
     
     def parseCommand(self, data):
+        # [sID rID PK2 E S{angle}]
+        # [sID rID PK2 P m{volume}]
         action = data[0]
         info = data[1]
         self.backlog = [] # Clear backlog for new commands
@@ -578,7 +591,7 @@ class Extraction(Component):
         return self.assembleCmd()
     
     def pumpVolume(self, info):
-        self.packets.append(f'P5') # Extractor pump module number (static)
+        self.packets.append(f'P') # Extractor pump module number (static)
         volume = int(info[4])
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(info[0], info[1], info[2]) # Cmd2
@@ -591,6 +604,8 @@ class Valve(Component):
         self.numberOfValves = 5
     
     def parseCommand(self, data):
+        # [sID rID PK2 V S{valve}]
+        # [sID rID PK2 U S{valveCode}]
         action = data[0]
         info = data[1]
         if action == 'set':
@@ -600,19 +615,23 @@ class Valve(Component):
             raise KeyError
     
     def setValves(self, info):
-        self.packets.append(f'V') # Valve module number
-        # output = int(info[3])
-        # if valve<output:
-        #     self.transcript = None
-        #     status = 1
-        # elif valve==output:
-        #     self.transcript += f' set output to {info[3]}' # Add to transcript
-        #     status = 0
-        # else:
-        #     self.transcript = None
-        #     status = 2
-        # self.packets.append(f'S{status}')
-        # self.setCmdBase(info[0], info[1], info[2]) # Cmd2           
+        output = info[3]
+        self.setCmdBase(info[0], info[1], info[2]) # Cmd2  
+        if output == "custom":
+            self.packets.append(f'U') # Valve module number
+            self.transcript += f' set valves to'
+            for character in info[4]:
+                if character == '0':
+                    self.transcript += f' open'
+                elif character == '1':
+                    self.transcript += f' closed'
+                else:
+                    self.transcript += f' middle'
+            self.packets.append(f'S{info[4]}')
+        else:
+            self.packets.append(f'V') # Valve module number
+            self.transcript += f' set output to {output}' # Add to transcript
+            self.packets.append(f'S{output}')      
         return self.assembleCmd()
 
 class Spectrometer(Component):
