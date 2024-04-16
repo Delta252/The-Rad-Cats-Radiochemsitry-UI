@@ -12,7 +12,7 @@ from dependencies.serialhandler import Serial
 class Comms:
     def __init__(self, system, socket):
         self.system = system
-        self.comport = -1
+        self.comPorts = -1
         self.s = Serial()
         self.isConnected = False
         self.socket = socket
@@ -21,11 +21,14 @@ class Comms:
     def start(self):
         try:
             self.socket.emit('serial_response', {'data':'Initializing comms process...'}) 
-            result = self.findPort()
+            result = self.findPorts()
+            portList = ''
             if result:
-                msg = 'Opened ' + self.s.comPort + ' port'
+                for entry in self.comPorts:
+                    portList += (f' {entry[0]} ')
+                msg = 'Opened [' + portList + '] ports'
                 self.socket.emit('serial_response', {'data':msg})
-                self.openPort()
+                self.openPorts(self.comPorts)
                 self.isConnected = True
                 # Create process to feed commands to and read responses from Serial
                 # Process runs in parallel to main program
@@ -38,7 +41,7 @@ class Comms:
                        
         except Exception as error:
             self.socket.emit('serial_response', {'data':'Encountered an error during startup'})
-            errorMsg = 'Error: ' + error
+            errorMsg = 'Error: ' + repr(error)
             self.socket.emit('serial_response', {'data':errorMsg})
             return False
 
@@ -46,12 +49,12 @@ class Comms:
     def stop(self):
         try:
             self.socket.emit('serial_response', {'data':'Stopping comms process...'}) 
-            self.closePort()
+            self.closePorts()
             self.isConnected = False
             return True         
         except Exception as error:
             self.socket.emit('serial_response', {'data':'Encountered an error during shutdown'})
-            errorMsg = 'Error: ' + error
+            errorMsg = 'Error: ' + repr(error)
             self.socket.emit('serial_response', {'data':errorMsg})
             return False
     
@@ -62,21 +65,29 @@ class Comms:
     # Run a created command and ensure success
     def runCommand(self, command):
         self.socket.emit('log_command', {'data':command})
-        self.s.WRITE(command[0]) # This method will be replaced in order to receive success feedback
+        destination= int(re.findall(' rID(\d+) ', command[0])[0])
+        for port in self.comPorts:
+            if port[1] == destination:
+                print(f'Started command execution for {destination} at {time.time()}')
+                self.s.WRITE(port[0], command[0]) # This method will be replaced in order to receive success feedback
         return
 
     def readResponse(self):
-        result = self.s.READ()
-        if result != None:
-            for entry in result:
-                self.socket.emit('serial_response', {'data':entry})
+        result = None
+        for port in self.comPorts:
+            result = self.s.READ(port[0])
+            if result != None:
+                for entry in result:
+                    self.socket.emit('serial_response', {'data':entry})
+                    self.system.handleResponse(entry)
         return result     
 
     # Discover which COM port a system is connected on
-    def findPort(self):
-        self.comport = self.s.FIND_COM_PORT()
-        if self.comport != -1:
-            self.socket.emit('serial_response', {'data':'Eligible COM port found'})
+    def findPorts(self):
+        self.comPorts = self.s.FIND_COM_PORTS()
+        print(self.comPorts)
+        if self.comPorts != False:
+            self.socket.emit('serial_response', {'data':'Eligible COM ports found'})
             return True
         else:
             self.socket.emit('serial_response', {'data':'No eligible COM port found'})
@@ -84,12 +95,16 @@ class Comms:
             return False
 
     # Underlying wrapper method to connect to a COM port  
-    def openPort(self):
-        self.s.OPEN_SERIAL_PORT(self.comport)
+    def openPorts(self, portList):
+        ports = []
+        for entry in portList:
+            ports.append(entry[0])
+        self.s.OPEN_SERIAL_PORTS(ports)
+        print('Successfully opened ports')
 
     # Underlying wrapper method to close a current connection
-    def closePort(self):
-        self.s.CLOSE_SERIAL_PORT()
+    def closePorts(self):
+        self.s.CLOSE_SERIAL_PORTS(self.comPorts)
     
     def runComms(self):
         try:
@@ -97,18 +112,13 @@ class Comms:
             while run:
                 if self.system.q.qsize()>0:
                     cmd = self.system.q.get()
+                    print(f'Got command at {time.time()}')
                     self.runCommand(cmd)
                 incoming = self.readResponse()
-                for entry in incoming:
-                    self.system.handleResponse(entry)
-                time.sleep(0.5)
+                # The following throws a 'TypeError: 'bool' object is not iterable'
+#                if incoming != None:
+#                    for entry in incoming:
+#                        print(entry)
+                time.sleep(0.001)
         except BrokenPipeError:
             return
-    # Add a command to a queue (not currently implemented)
-#    def addCommand(self, cmd):
-#        try:
-#            print('Attempting to add to buffer:',cmd)
-#            self.queue.put(cmd)
-#        except Exception as error:
-#            print('Experienced error loading command into buffer')
-#            print('Error:',error)

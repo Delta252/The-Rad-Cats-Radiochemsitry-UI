@@ -91,9 +91,8 @@
                         <option selected disabled value="">Select Module Type</option>
                         <option value="pump-peristaltic">Peristaltic Pump</option>
                         <option value="pump-syringe">Syringe Pump</option>
-                        <option value="mixer">Mixer</option>
-                        <option value="shutter">Shutter</option>
-                        <option value="extract">Extraction</option>
+                        <option value="mixer-shutter">Mixer-Shutter</option>
+                        <option value="extraction">Extraction</option>
                         <option value="valve">Valve</option>
                     </select>
                 </div>
@@ -155,11 +154,8 @@
                     case 'pump-syringe':
                         $(columnID).append(SyringePump(data[entry][0], type));
                         break;
-                    case 'mixer':
-                        $(columnID).append(Mixer(data[entry][0], type));
-                        break;
-                    case 'shutter':
-                        $(columnID).append(Shutter(data[entry][0], type));
+                    case 'mixer-shutter':
+                        $(columnID).append(MixerShutter(data[entry][0], type));
                         break;
                     case 'extraction':
                         $(columnID).append(Extractor(data[entry][0], type));
@@ -509,25 +505,6 @@
             return Card(id, type, content);
         };
 
-        var Shutter = function(id, type) {
-            content = `
-            <div class="input-box">
-                <span class="select-label">Select a position</span>
-                <div class="select">
-                    <select name="shutter" id="shutter">
-                        <option selected value="closed">Closed</option>
-                        <option value="open">Open</option>
-                        <option value="partial">Partial</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="optns">
-                <button class="ui-btn single-btn apply-action" value="set">Set Shutter</button>
-            </div>`;
-            return Card(id, type, content);
-        }
-
         var PeristalticPump = function(id, type) {
             content = `
             <div class="input-box">
@@ -565,7 +542,7 @@
             return Card(id, type, content);
         }
 
-        var Mixer = function(id, type) {
+        var MixerShutter = function(id, type) {
             content = `
             <div class="input-box">
                 <span class="select-label">Select a speed</span>
@@ -583,14 +560,29 @@
                 <span class="select-label">Select a direction</span>
                 <div class="select">
                     <select name="mixer" id="mixer">
-                        <option selected value="1">Clockwise</option>
-                        <option value="2">Counter-clockwise</option>
+                        <option selected value="clockwise">Clockwise</option>
+                        <option value="counterclockwise">Counter-clockwise</option>
                     </select>
                 </div>
             </div>
 
             <div class="optns">
-                <button class="ui-btn single-btn apply-action" value="set">Set Speed</button>
+                <button class="ui-btn single-btn apply-action" value="mix">Set Mixer Speed</button>
+            </div>
+            
+            <div class="input-box">
+                <span class="select-label">Select a shutter position</span>
+                <div class="select">
+                    <select name="shutter" id="shutter">
+                        <option selected value="closed">Closed</option>
+                        <option value="open">Open</option>
+                        <option value="partial">Partial</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="optns">
+                <button class="ui-btn single-btn apply-action" value="set">Set Shutter Position</button>
             </div>`;
             return Card(id, type, content);
         }

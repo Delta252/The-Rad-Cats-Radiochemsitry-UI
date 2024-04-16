@@ -7,6 +7,22 @@ class System:
     def __init__(self, socket):
         self.systemdataFilepath = os.path.abspath('dependencies/systemdata.db')
         self.connect = sqlite3.connect(self.systemdataFilepath, check_same_thread=False)
+        cursor = self.connect.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS systemdata (
+                id INT UNSIGNED NOT NULL,
+                device VARCHAR(255) NOT NULL,
+                UNIQUE(id, device)
+                )
+            """)
+        self.connect.commit()
+        cursor.execute(f"""
+            INSERT INTO systemdata(id, device) 
+                SELECT 1000, 'server' 
+                    WHERE NOT EXISTS(SELECT 1 FROM systemdata WHERE device='server')
+            """)
+        self.connect.commit()
+        cursor.close()
         self.devices = []
         self.cmds = []
         self.q = Queue(-1)
@@ -27,10 +43,8 @@ class System:
                     dev = SyringePump(i[0], i[1])
                 case 'pump-peristaltic':
                     dev = PeristalticPump(i[0], i[1])
-                case 'mixer':
-                    dev = Mixer(i[0], i[1])
-                case 'shutter':
-                    dev = Shutter(i[0], i[1])
+                case 'mixer-shutter':
+                    dev = MixerShutter(i[0], i[1])
                 case 'extraction':
                     dev = Extraction(i[0], i[1])
                 case 'valve':
@@ -229,15 +243,19 @@ class System:
                             value = (re.search('Global Wait (\S+?)(s\s*$)', content[line])).group(1).strip()
                             self.generateCommand(['wait', value])
                         else:
-                            destinationID = int((re.search(' (.*) [set|pump]', content[line])).group(1).strip()) # Find action keyword
-                            action = re.search('set|pump', content[line]).group()
-                            value = (re.search('[set|pump] (\S+?)(\s*$|\sHOLD)', content[line])).group(1).strip() # Find action data
-                            hold = (re.search('HOLD \((\S+)\)', content[line])) # Find Hold step
-                            if hold != None:
-                                holdValue = hold.group(1).strip()
-                            else:
-                                holdValue = None
-                            parseData = ['server', 1000, destinationID, value]
+                            lineElements = content[line].split()
+                            destinationID = int(lineElements[1]) # Find action keyword
+                            action = lineElements[2]
+                            values = []
+                            for element in lineElements[3:None]:
+                                if element == 'HOLD':
+                                    holdValue = lineElements[-1]
+                                    break
+                                else:
+                                    values.append(element)
+                                    holdValue = None
+                            parseData = ['server', 1000, destinationID]
+                            parseData.extend(values)
                             self.generateCommand([action, parseData, holdValue])
                         pass
                     else:
@@ -252,6 +270,8 @@ class System:
             return
 
     def executeScript(self):
+        for device in self.devices:
+            device.status = 'free'
         # Divide cmd list into per-device queues; this allows for parallel operation without multithreading
         startTime = time.time()
         self.socket.emit('system_msg', {'data':'Priming'})
@@ -266,9 +286,10 @@ class System:
                     device.status = 'pending'
         # Active loop to work through the cmd list
         self.socket.emit('system_msg', {'data':'Beginning execution...'})
+        print(self.cmds)
         laggingIndex = 0 # This is an index of the "slowest" cmd that is currently not done
         while laggingIndex < len(self.cmds):
-            time.sleep(0.1) # 100ms tic time
+            time.sleep(0.05) # 50ms tic time
             # Check if lagging index has become done and find the next incomplete command if not
             if self.cmds[laggingIndex][2] == 'done':
                 laggingIndex += 1 # Make one step forward in the main record; IMPORTANT! This allows for loop termination
@@ -286,10 +307,10 @@ class System:
                 continue
             # Check next cmd candidate for each device against main cmd record
             for device in self.devices:
-                if not device.backlog:
-                    if device.status == 'free':
-                        continue # Ignore devices that have no backlog and are not executing
+                if device.status == 'free':
+                    continue # Ignore devices that have no backlog and are not executing
                 if (device.currentCommand == None):
+                    print(f'adding command for {device.type} ({device.status}) and {device.id}')
                     device.currentCommand = device.backlog.pop(0) # Initialize command
                     for index, cmd in enumerate(self.cmds):
                         if (device.currentCommand[0] == cmd[0][0]) and (cmd[2] != 'done'):
@@ -320,12 +341,16 @@ class System:
                             break
                     # Check for a prerequisite step and completion
                     if self.cmds[device.currentIndex][1] != None:
-                        previousStatus = self.cmds[self.cmds[device.currentIndex][1]-1][2]
+                        previousIndex = self.cmds[device.currentIndex][1]
+                        if isinstance(previousIndex, str):
+                            previousIndex = int(previousIndex)
+                        previousStatus = self.cmds[previousIndex-1][2]
                         if previousStatus != 'done':
                             proceed = False
                     if not proceed:
                         continue # Counterintuitive, but this jumps to the next loop iteration rather than finishing current one
                     device.status = 'active'
+                    print(f'Added command at {time.time()}')
                     self.cmds[device.currentIndex][2] = 'in progress'
                     self.q.put(device.currentCommand) 
                 else:
@@ -387,6 +412,7 @@ class System:
         if 'FREE' in msg:
             deviceID = int((re.search('sID(.*) rID', msg)).group(1))
             self.setDeviceStatus(deviceID, 'done')
+            print(f'Updated device {deviceID} status at {time.time()}')
         else:
              pass
 
@@ -418,6 +444,7 @@ class Component:
         self.cmd = '' # Clear cmd
         self.transcript = '' # Clear transcript
         self.packets = [] # Empty packet array
+        print(self.commandPacket)
         return self.commandPacket
     
     def setStatus(self, status):
@@ -452,12 +479,12 @@ class SyringePump(Component):
     def pumpVolume(self, info):
         self.packets.append(f'Y') # Pump module number
         syringeType = info[3]
-        self.packets.append(f'S{syringeType}')
+        # self.packets.append(f'S{syringeType}')
         if type(info[4]) == str:
             volume = int(re.findall(r'\d+', info[4])[0])
         else:
             volume = int(info[4])
-        self.packets.append(f'm{volume}') # Pump volume
+        self.packets.append(f'S{volume}') # Pump volume
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
         self.transcript += f' pump {volume}mL'
         return self.assembleCmd()
@@ -487,7 +514,7 @@ class PeristalticPump(Component):
         self.transcript += f' pump {volume}mL'
         return self.assembleCmd()
 
-class Mixer(Component):
+class MixerShutter(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
 
@@ -495,29 +522,33 @@ class Mixer(Component):
         # [sID rID PK3 M S{speed} D{direction}]
         action = data[0]
         info = data[1]
-        if action == 'set':  
-            result = self.setSpeed(info)
+        print(data)
+        if action == 'mix':  
+            result = self.setMixer(info)
+            return result
+        elif action == 'set':
+            result = self.setShutter(info)
             return result
         else:
             raise KeyError
     
-    def setSpeed(self, info):
-        self.packets.append(f'M') # Mixer module number
+    def setMixer(self, info):
         mode = info[3]
-        dirVal = int(info[4])
-        if dirVal == 1:
-            direction = 'clockwise'
+        self.packets.append(f'M') # Mixer module number
+        direction = info[4]
+        if direction == 'clockwise':
+            dirVal = 1
         else:
-            direction = 'counter-clockwise'
+            dirVal = 0
         match mode:
             case 'stop':
                 speed = 0
             case 'slow':
                 speed = 45
             case 'medium':
-                speed = 60
+                speed = 80
             case 'fast':
-                speed = 200
+                speed = 120
             case _:
                 speed = 0
                 mode = 'stop'
@@ -529,24 +560,14 @@ class Mixer(Component):
         self.transcript += f' set to {direction} {mode}' # Add to transcript
         return self.assembleCmd()
 
-class Shutter(Component):
-    def __init__(self, id, descriptor):
-        super().__init__(id, descriptor)
-
-    def parseCommand(self, data):
-        # [sID rID PK2 I S{position}]
-        action = data[0]
-        info = data[1]
-        if action == 'set':
-            result = self.setPosition(info)
-            return result
-        else:
-            raise KeyError
-    
-    def setPosition(self, info):
+    def setShutter(self, info):
         self.packets.append(f'I') # Shutter module number
-        position = info[3]
-        match position:
+        print(info)
+        if info[3] in ['open', 'closed', 'middle']:
+            mode = info[3]
+        else:
+            mode = info[5]
+        match mode:
             case 'closed':
                 posNum = 0
             case 'open':
@@ -555,12 +576,12 @@ class Shutter(Component):
                 posNum = 2
             case _:
                 posNum = 0
-                position = 'closed'
+                mode = 'closed'
                 self.transcript = 'An unexpected shutter position has been encountered; shutter has been' # First half of error transcript
                 return
         self.packets.append(f'S{posNum}')
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
-        self.transcript += f' set to {position}' # Add to transcript
+        self.transcript += f' set to {mode}' # Add to transcript
         return self.assembleCmd()
 
 class Extraction(Component):
