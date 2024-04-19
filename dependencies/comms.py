@@ -114,11 +114,7 @@ class Comms:
                     cmd = self.system.q.get()
                     print(f'Got command at {time.time()}')
                     self.runCommand(cmd)
-                incoming = self.readResponse()
-                # The following throws a 'TypeError: 'bool' object is not iterable'
-#                if incoming != None:
-#                    for entry in incoming:
-#                        print(entry)
-                time.sleep(0.001)
+                incoming = self.readResponse() # Assigned response package to variable for future handling (not implemented)
+                time.sleep(0.001) # 1ms tic for comms handling
         except BrokenPipeError:
             return
