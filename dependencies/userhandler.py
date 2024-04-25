@@ -74,6 +74,18 @@ class UserHandler:
         self.connect.commit()
 
         cursor.close()
+
+    def logOffAll(self):
+        cursor = self.connect.cursor()
+
+        # Set user status accordingly (requires future updates)
+        cursor.execute(f"""
+            UPDATE userdata SET status='offline'
+            """)
+         
+        self.connect.commit()
+
+        cursor.close() 
         
     def attemptRegister(self, userCandidate, pswdCandidate):
         cursor = self.connect.cursor()
@@ -152,12 +164,12 @@ class UserHandler:
 
         cursor.close()
 
-    def getUserTheme(self):
+    def getUserTheme(self, username):
         cursor = self.connect.cursor()
 
         # User/password combination only inserted if both are unique to the existing table
         cursor.execute(f"""
-            SELECT theme FROM userdata WHERE status='active'
+            SELECT theme FROM userdata WHERE username='{username}'
             """)
         
         found = cursor.fetchone()
@@ -166,14 +178,28 @@ class UserHandler:
 
         return found
     
-    def updateUserTheme(self, newTheme):
+    def updateUserTheme(self, newTheme, username):
         cursor = self.connect.cursor()
 
         # User/password combination only inserted if both are unique to the existing table
         cursor.execute(f"""
-            UPDATE userdata SET theme='{newTheme}' WHERE status='active'
+            UPDATE userdata SET theme='{newTheme}' WHERE username='{username}'
             """)
         
         self.connect.commit()
 
         cursor.close()
+
+    def getStatus(self, username):
+        cursor = self.connect.cursor()
+
+        # User/password combination only inserted if both are unique to the existing table
+        cursor.execute(f"""
+            SELECT status FROM userdata WHERE username='{username}'
+            """)
+        
+        found = cursor.fetchone()
+
+        cursor.close()
+
+        return found

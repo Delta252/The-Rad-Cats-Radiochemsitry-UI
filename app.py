@@ -1,6 +1,7 @@
 ### Entry file into the webserver
 
-from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
+from flask import Flask, render_template, flash, redirect, url_for, session, logging, request, make_response, send_from_directory
+from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO
 from wtforms import Form, StringField, TextAreaField, PasswordField, SelectField, validators
 from dependencies.userhandler import UserHandler
@@ -14,7 +15,7 @@ uh = UserHandler() # Create object to handle user profiles
 
 socketio = SocketIO(app, cors_allowed_origins="*") #IMPORTANT! Required for university/corporate networks where origin is not identical to host
 
-sys = System()
+sys = System(socketio)
 comms = Comms(sys, socketio)
 
 from dependencies.sockets import *
@@ -26,6 +27,11 @@ from dependencies.sockets import *
 def landing():
     return redirect(url_for('login'))
 
+@app.route('/download/<path:filename>', methods=['GET', 'POST'])
+def download(filename):
+   permitted_directory = './download/'
+   return send_from_directory(directory=permitted_directory, path=filename, as_attachment=True)
+
 # Main page to test system functionality
 @app.route('/testing', methods=['GET','POST'])
 def testing():
@@ -34,6 +40,15 @@ def testing():
 @app.route('/manual', methods=['GET','POST'])
 def manual():
     return render_template('manual.html')
+
+@app.route('/auto', methods=['GET','POST'])
+def auto():
+    return render_template('auto.html')
+
+@app.route('/server-logoff', methods=['GET'])
+def server_logoff():
+    flash('You do not have access to this resource. Please log in.', 'danger')
+    return redirect(url_for('login'))
 
 @app.route('/profile', methods=['GET','POST'])
 def profile():
@@ -57,7 +72,6 @@ def profile():
         uh.updatePassword(user, pswd_candidate)
         flash('Password successfully updated.', 'success')
         return redirect(url_for('profile'))
-
     return render_template('profile.html')
 
 # User login
@@ -74,15 +88,16 @@ def login():
             # Success
             session['logged_in'] = True # Session handling is a placeholder, further functionality to be implemented
             session['username'] = username
+            session['sid'] = 'sid' + os.urandom(8).hex()
 
-            flash('Login success', 'msg')
+            flash('Login success', 'success')
 
             return redirect(url_for('testing'))
             
         else:
             flash('Username and password combination not found.', 'danger')
             return redirect(url_for('login'))
-        
+
     return render_template('login.html')
 
 #User registration
@@ -114,10 +129,11 @@ class RegisterForm(Form):
     confirm = PasswordField('Confirm Password.', [validators.EqualTo('pswd', message='Passwords do not match.')], render_kw={"placeholder": "Confirm Password *"},)
 
 def main():
-    app.secret_key = os.urandom(12).hex() # For sending cookies; required for Flask to run
+    app.secret_key = 'RadCatsRadiochemistry2024' # For sending cookies; required for Flask to run
+    uh.logOffAll()
     # Below runs as HTTP, ssl_context required to run as HTTPS
     socketio.run(app, debug=True) #ssl_context=('dependencies/ssl/server.crt', 'dependencies/ssl/server.key')
-
+ 
 # Core function call
 if __name__ == '__main__':
     main()
