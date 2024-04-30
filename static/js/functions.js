@@ -102,6 +102,7 @@ jQuery(function() {
         order = 1;
         for(entry in data){
             cmd = data[entry][0][0]
+            alert(cmd);
             if(cmd.indexOf("Wait") >= 0){
                 holdType = "global";
             }
@@ -245,7 +246,7 @@ jQuery(function() {
         if(href.includes('/auto')){
             $("div.cmd-entry").remove();
             generateCmdList(msg.data);
-        }        
+        }
     });
 
     socket.on('handle_verify', function(msg) {
@@ -566,7 +567,7 @@ jQuery(function() {
         </div>
         
         <div class="optns">
-            <button class="ui-btn single-btn apply-action">Set Valve</button>
+            <button class="ui-btn single-btn apply-action" value="set">Set Valve</button>
         </div>`;
         return Card(id, type, content);
     };
@@ -584,7 +585,7 @@ jQuery(function() {
         </div>
         
         <div class="optns">
-            <button class="ui-btn single-btn apply-action">Start Pump</button>
+            <button class="ui-btn single-btn apply-action" value="pump">Start Pump</button>
         </div>`;
         return Card(id, type, content);
     };
@@ -592,18 +593,14 @@ jQuery(function() {
     var SyringePump = function(id, type){
         content = `
         <div class="input-box">
-            <input id="syringe-num" type="number" inputmode="integer" value=1 required="required">
-            <span class="input-label">Component number</span>
-        </div>
-
-        <div class="input-box">
-            <input id="syringe-vol" type="number" inputmode="decimal" value=5 required="required">
-            <span class="input-label">Syringe volume (mL)</span>
-        </div>
-
-        <div class="input-box">
-            <input id="syringe-length" type="number" inputmode="decimal" value=45 required="required">
-            <span class="input-label">Syringe length (mm)</span>
+            <span class="select-label">Select a syringe</span>
+            <div class="select">
+                <select name="pump-syringe" id="pump-syringe">
+                    <option selected value="1">Eccentric 10mL</option>
+                    <option value="3">Concentric 5mL</option>
+                    <option value="2">Concentric 2mL (Uncalibrated)</option>
+                </select>
+            </div>
         </div>
 
         <div class="input-box">
@@ -611,18 +608,8 @@ jQuery(function() {
             <span class="input-label">Enter a volume (mL)</span>
         </div>
 
-        <div class="input-box">
-            <span class="select-label">Select a direction</span>
-            <div class="select">
-                <select name="pump-syringe" id="pump-syringe">
-                    <option selected value="fill">Fill</option>
-                    <option value="empty">Empty</option>
-                </select>
-            </div>
-        </div>
-
         <div class="optns">
-            <button class="ui-btn single-btn apply-action">Start Pump</button>
+            <button class="ui-btn single-btn apply-action" value="pump">Start Pump</button>
         </div>`;
         return Card(id, type, content);
     };
@@ -698,8 +685,37 @@ jQuery(function() {
         </div>
 
         <div class="optns">
-            <button class="ui-btn single-btn apply-action">Start Extraction</button>
+            <button class="ui-btn single-btn apply-action" value="set">Start Extraction</button>
         </div>`;
         return Card(id, type, content);
     };
+
+    var Cmd = function(number, transcript, holdType) {	
+        if(holdType == "cmd"){	
+            labelText = "Wait for step: ";	
+        }	
+        else if(holdType == "global"){	
+            labelText = "Wait time (s): ";	
+        }	
+        else {	
+            labelText = "Unrecognized hold command - ";	
+        }	
+        content = `	
+        <div class="cmd-entry">	
+            <div class="cmd-data">	
+                <div class="entry-info">	
+                    <div class="cmd-number">[${number}]</div>	
+                    <div class="cmd-text"> ${transcript} </div>	
+                </div>	
+                <div class="cmd-hold">	
+                    <label>${labelText}</label>	
+                    <span><input id="hold-${number}" class="hold-for" type="number" inputmode="integer"/></span>	
+                </div>	
+            </div>	
+            <div class="cmd-remove">	
+                <button class="remove-cmd">Remove</button>	
+            </div>	
+        </div>`;	
+        return content;	
+    } 
 });

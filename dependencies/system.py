@@ -479,12 +479,12 @@ class SyringePump(Component):
     def pumpVolume(self, info):
         self.packets.append(f'Y') # Pump module number
         syringeType = info[3]
-        # self.packets.append(f'S{syringeType}')
+        self.packets.append(f'S{syringeType}')
         if type(info[4]) == str:
             volume = int(re.findall(r'\d+', info[4])[0])
         else:
             volume = int(info[4])
-        self.packets.append(f'S{volume}') # Pump volume
+        self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
         self.transcript += f' pump {volume}mL'
         return self.assembleCmd()
