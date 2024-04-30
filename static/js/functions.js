@@ -101,8 +101,7 @@ jQuery(function() {
     function generateCmdList(data) {
         order = 1;
         for(entry in data){
-            cmd = data[entry][0][0]
-            alert(cmd);
+            cmd = data[entry][0][0];
             if(cmd.indexOf("Wait") >= 0){
                 holdType = "global";
             }
@@ -338,7 +337,15 @@ jQuery(function() {
         inputs = parent.find('input, select').each(function(){
             result.push($(this).val());
         });
-        socket.emit('add-cmd-list', [action,result,'None'])
+        if(href.includes('/auto')){
+            socket.emit('add-cmd-list', [action,result,'None']);
+        }
+        else if(href.includes('/manual')){
+            socket.emit('generate-run-command', [action,result,'None']);
+        }
+        else{
+            return;
+        }
     });
 
     $(".content").on("click", ".remove-cmd", function(){
@@ -575,11 +582,6 @@ jQuery(function() {
     var PeristalticPump = function(id, type) {
         content = `
         <div class="input-box">
-            <input id="pump-num" type="number" inputmode="integer" value=1 required="required">
-            <span class="input-label">Component number</span>
-        </div>
-
-        <div class="input-box">
             <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
             <span class="input-label">Enter a volume (mL)</span>
         </div>
@@ -662,11 +664,6 @@ jQuery(function() {
     var Extractor = function(id, type) {
         content = `
         <div class="input-box">
-            <input id="extraction-vol" type="number" inputmode="integer" value=1 readonly required="required">
-            <span class="input-label">Component number</span>
-        </div>
-
-        <div class="input-box">
             <span class="select-label">Select a slot</span>
             <div class="select">
                 <select name="extraction" id="extraction">
@@ -679,13 +676,17 @@ jQuery(function() {
             </div>
         </div>
 
+        <div class="optns">
+            <button class="ui-btn single-btn apply-action" value="set">Set Extractor Slot</button>
+        </div>
+
         <div class="input-box">
             <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
             <span class="input-label">Enter a volume (mL)</span>
         </div>
 
         <div class="optns">
-            <button class="ui-btn single-btn apply-action" value="set">Start Extraction</button>
+            <button class="ui-btn single-btn apply-action" value="pump">Extract Volume</button>
         </div>`;
         return Card(id, type, content);
     };

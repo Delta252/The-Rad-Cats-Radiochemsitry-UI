@@ -401,12 +401,7 @@ class System:
                         print('Invalid action key submitted.')
             else:
                 warnings.warn('Unrecognized device request.')
-        return 
-    
-    def runCommand(self): # REQUIRES FIX
-        for device in self.devices:
-            device.status = 'active'
-            device.executeCmds()
+        return result
 
     def handleResponse(self, msg):
         if 'FREE' in msg:

@@ -101,12 +101,14 @@ def update_server(data):
 
 @socketio.on('generate-run-command') # Necessary to protect order of operations for manual control
 def generate_command(data):
-    sys.generateCommand(data)
-    sys.runCommand() # REQUIRES FIX
+    command = sys.generateCommand(data)
+    sys.cmds = []
+    print(f'added command {command}')
+    sys.q.put(command)
 
 @socketio.on('add-cmd-list')
 def add_cmds(data):
-    sys.generateCommand(data)
+    command = sys.generateCommand(data)
     socketio.emit('update_cmd_list', {'data':sys.cmds})
 
 @socketio.on('remove-cmd-number')
