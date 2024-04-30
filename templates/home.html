@@ -1,0 +1,97 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<div class="body" onload="load_fctn()">
+    {% set active_page = 'nav-testing' %}
+    {% include 'includes/_messages.html' %}
+    <div class="content full-height-content">
+        <div id="comms-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Comms Status</h1>
+                <a id="close-comms" href="#"><i class="icon icon-close"></i></a>
+                <div class="popup-message">
+                    <h4>The system comms to the chamber are currently</h4> 
+                    <h2 id="comms-status" class="status"></h2>
+                    <h4 id="status-update">Please click below to toggle this value.</h4>
+                </div>
+                <div>
+                    <button id="toggle-comms" class="comms-btn single-btn">Enable Comms</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="column1" class="column-container half-screen">
+            <div id="title-text">
+                <div class="title-line">
+                    <h4 class="small-home-text align-left">Welcome to the</h4>
+                    <span></span>
+                </div>
+                <div class="title-line">
+                    <h1 class="home-title align-fill"><i>Arcadius Project</i></h1>
+                </div>
+                <div class="title-line ">
+                    <span></span>
+                    <h4 class="small-home-text align-right">Made by the Rad Cats</h4>
+                </div>
+            </div>
+            
+        </div>
+
+        <div id="column2" class="column-container half-screen" style="overflow:hidden">
+            <div id="menu-description">
+                <div id="goto-auto" class="description-entry">
+                    <h2 class="align-right">Auto</h2>
+                    <p class="description-text">This is where automatic experiment scripts can be generated and executed.</p>
+                    <p class="description-goto">Go There >></p>
+                </div>
+                <div id="goto-manual" class="description-entry">
+                    <h2 class="align-right">Manual</h2>
+                    <p class="description-text">This is where the chamber components can be manually and individually controlled.</p>
+                    <p class="description-goto">Go There >></p>
+                </div>
+                <div id="goto-testing" class="description-entry">
+                    <h2 class="align-right">Testing</h2>
+                    <p class="description-text">This is where automatic experiment scripts can be generated and executed.</p>
+                    <p class="description-goto">Go There >></p>
+                </div>
+                <div id="goto-monitor" class="description-entry">
+                    <h2 class="align-right">Monitor</h2>
+                    <p class="description-text">This is where the current state of progress of the system can be viewed.</p>
+                    <p class="description-goto">Go There >></p>
+                </div>
+                <div id="goto-profile" class="description-entry">
+                    <h2 class="align-right">Profile</h2>
+                    <p class="description-text">This is where account details such as username and password can be modified.</p>
+                    <p class="description-goto">Go There >></p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+<script src="{{url_for('static', filename='js/functions.js')}}"></script>
+<script>
+    jQuery(function() {
+        function generateCards(data) {
+            for(entry in data){
+                type = data[entry][1];
+                columnID = "#column2"; /* by default */
+                
+                switch(type){
+                    case 'server':
+                        $("#server-id").val(data[entry][0])
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}
