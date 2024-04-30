@@ -45,15 +45,23 @@ def manual():
 def auto():
     return render_template('auto.html')
 
+@app.route('/monitor', methods=['GET','POST'])
+def monitor():
+    return render_template('monitor.html')
+
 @app.route('/server-logoff', methods=['GET'])
 def server_logoff():
     flash('You do not have access to this resource. Please log in.', 'danger')
     return redirect(url_for('login'))
 
+@app.route('/home', methods=['GET'])
+def home():
+    return render_template('home.html')
+
 @app.route('/profile', methods=['GET','POST'])
 def profile():
     if request.method == 'POST':
-        user = request.form['username']
+        user = request.form['username-select']
         pswd_verification = request.form['oldPassword']
         pswd_candidate = request.form['newPassword']
         pswd_confirm = request.form['confPassword']
@@ -92,7 +100,7 @@ def login():
 
             flash('Login success', 'success')
 
-            return redirect(url_for('testing'))
+            return redirect(url_for('home'))
             
         else:
             flash('Username and password combination not found.', 'danger')

@@ -30,8 +30,8 @@ class System:
 
     def updateFromDB(self):
         self.devices = []
-        self.cursor = self.connect.cursor()
-        found = self.cursor.execute("""
+        cursor = self.connect.cursor()
+        found =cursor.execute("""
             SELECT * FROM systemdata                            
             """).fetchall()
 
@@ -54,50 +54,50 @@ class System:
 
             self.devices.append(dev)
         
-        self.cursor.close()
+        cursor.close()
 
     def addToDB(self, id, descriptor):
         # Inserts new element or updates an existing one  !!WARNING
-        self.cursor = self.connect.cursor()
-        self.cursor.execute("""
+        cursor = self.connect.cursor()
+        cursor.execute("""
             INSERT INTO systemdata(id, device) VALUES(?, ?)
             """, (id, descriptor))
         
         self.connect.commit()
-        self.cursor.close()
+        cursor.close()
         self.updateFromDB()
 
     def removeFromDB(self, id):
         # Removes a known entry based on device ID
-        self.cursor = self.connect.cursor()
-        self.cursor.execute(f"""
+        cursor = self.connect.cursor()
+        cursor.execute(f"""
             DELETE FROM systemdata WHERE id={id}
             """)
         
         self.connect.commit()
-        self.cursor.close()
+        cursor.close()
         self.updateFromDB()
 
     def updateID(self, oldID, newID):
         # Updates record of device without adding/removing listing
-        self.cursor = self.connect.cursor()
-        self.cursor.execute(f"""
+        cursor = self.connect.cursor()
+        cursor.execute(f"""
             UPDATE systemdata SET id = REPLACE(id, {oldID}, {newID})
             """)
 
         self.connect.commit()
-        self.cursor.close()
+        cursor.close()
         self.updateFromDB()
 
     def updateServerID(self, newID):
         # Updates server id specifically without need for old id
-        self.cursor = self.connect.cursor()
-        self.cursor.execute(f"""
+        cursor = self.connect.cursor()
+        cursor.execute(f"""
             UPDATE systemdata SET id ='{newID}' WHERE device='server'
             """)
 
         self.connect.commit()
-        self.cursor.close()
+        cursor.close()
         self.updateFromDB()
 
     def listDevices(self):

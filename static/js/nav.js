@@ -27,5 +27,5 @@ jQuery(function() {
     socket.on('update_theme', function(msg) {
         $("#theme").val(msg.data);
         document.documentElement.classList = msg.data;
-    });   
+    });
 });

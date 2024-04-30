@@ -3,8 +3,9 @@
 # required actions to corresponding destinations
 # The creation of the Socket.IO server-side object is handled in `app.py`
 from __main__ import socketio, comms, sys, uh, session, request
+from dependencies.analysis import Analysis
 from pathlib import Path
-import os
+import os, time
 
 #SocketIO
 @socketio.on('connect')
@@ -12,6 +13,7 @@ def handle_connect(ip):
     print('Connection established!')
     status = uh.getStatus(session['username'])
     sys.updateFromDB() 
+    time.sleep(0.05) # Necessary delay to prevent loss of data as page is rendered
     socketio.emit('after_connect', {'data':status}, room=request.sid)
     socketio.emit('update_cards', {'data':sys.define()})
     socketio.emit('update_cmd_list', {'data':sys.cmds})
