@@ -19,19 +19,35 @@ def handle_connect(ip):
 @socketio.on('get-user')
 def get_user():
     username = session['username']
-    socketio.emit('set_user', {'data':username}, room=request.sid)
+    allUsers = uh.getAllUsers()
+    results = [username, allUsers]
+    socketio.emit('set_user', {'data':results}, room=request.sid)
 
 @socketio.on('update-username')
 def update_user(data):
+    currentUser = session['username']
     oldUsername = data[0]
     newUsername = data[1]
     uh.updateUsername(oldUsername, newUsername)
-    username = uh.getUsername()
-    socketio.emit('set_user', {'data':username}, room=request.sid)
+    allUsers = uh.getAllUsers()
+    results = [currentUser, allUsers]
+    socketio.emit('set_user', {'data':results}, room=request.sid)
+
+@socketio.on('set-admin-status')
+def set_admin_status(data):
+    currentUser = session['username']
+    username = data[0]
+    adminStatus = data[1]
+    print(adminStatus)
+    uh.updateAdmin(username, adminStatus)
+    allUsers = uh.getAllUsers()
+    results = [currentUser, allUsers]
+    print(results)
+    socketio.emit('set_user', {'data':results}, room=request.sid)
 
 @socketio.on('log-off')
 def log_off(data):
-    username = data[0]
+    username = data
     uh.logOff(username)
 
 @socketio.on('get-theme')

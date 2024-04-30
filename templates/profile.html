@@ -21,15 +21,15 @@
         </div>
 
         <div class="profile">
-            <div class="card">
+            <div class="profile-card">
                 <h1>Profile Information</h1>
 
                 {% include 'includes/_messages.html' %}
 
                 <form class="profile-form" method="POST" action="">
-                    <div class="input-box">
-                        <input id="username" type="text" name="username" inputmode="text" required="required" readonly>
-                        <span class="profile-span">Username</span>
+                    <div class="input-box username-dropdown">
+                        <select id="username-select"></select>
+                        <span class="username-span">Username</span>
                     </div>
 
                     <div class="input-box">
@@ -37,8 +37,15 @@
                         <span class="profile-span">New Username</span>
                     </div>
 
+                    <div class="input-box">
+                        <div class="admin-checkbox">
+                            <input type="checkbox" id="admin-check"/>
+                            <label for="admin-check">Admin Privileges</label>
+                        </div>
+                    </div>
+
                     <div class="optns">
-                        <button id="update-user" class="ui-btn single-btn">Update Username</button>
+                        <button id="update-user" type="button" class="ui-btn single-btn">Update Username</button>
                     </div>
                 
                     <div class="input-box">
