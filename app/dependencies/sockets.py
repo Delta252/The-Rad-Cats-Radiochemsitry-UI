@@ -2,8 +2,9 @@
 # This file handles commands received from user input in the webpages and forwards 
 # required actions to corresponding destinations
 # The creation of the Socket.IO server-side object is handled in `app.py`
-from __main__ import socketio, comms, sys, uh, session, request
-from dependencies.analysis import Analysis
+from .. import socketio, comms, sys, uh
+from ..core.routes import session, request
+from .analysis import Analysis
 from pathlib import Path
 import os, time
 

@@ -5,7 +5,7 @@ from queue import *
 
 class System:
     def __init__(self, socket):
-        self.systemdataFilepath = os.path.abspath('dependencies/systemdata.db')
+        self.systemdataFilepath = os.path.abspath('app/dependencies/systemdata.db')
         self.connect = sqlite3.connect(self.systemdataFilepath, check_same_thread=False)
         cursor = self.connect.cursor()
         cursor.execute("""

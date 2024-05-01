@@ -4,7 +4,7 @@
 
 import os, time, re
 from threading import Thread
-from dependencies.serialhandler import Serial
+from .serialhandler import Serial
 
 # Creation of a Comms object
 # Object is responsible for interfacing with user input as a wrapper for the serial connection
