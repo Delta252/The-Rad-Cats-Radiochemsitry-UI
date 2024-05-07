@@ -2,6 +2,7 @@ import os, re, time
 import sqlite3
 import warnings
 from queue import *
+from .analysis import Analysis
 
 class System:
     def __init__(self, socket):
@@ -27,6 +28,9 @@ class System:
         self.cmds = []
         self.q = Queue(-1)
         self.socket = socket
+        self.tempReadings = [] # This should be consolidated elsewhere (within a sensor module)
+        self.lastReadingTime = 0
+        self.sensorID = 1005
 
     def updateFromDB(self):
         self.devices = []
@@ -288,8 +292,12 @@ class System:
         self.socket.emit('system_msg', {'data':'Beginning execution...'})
         print(self.cmds)
         laggingIndex = 0 # This is an index of the "slowest" cmd that is currently not done
+        sensors = self.findDeviceByID(self.sensorID)
         while laggingIndex < len(self.cmds):
             time.sleep(0.05) # 50ms tic time
+            # Request a sensor reading 
+            if((time.time() - self.lastReadingTime) > 0.5) and (sensors.status != 'active'):
+                self.q.put(('[sID1000 rID1005 PK1 R]', 'Server (1000) requests sensor readings'))
             # Check if lagging index has become done and find the next incomplete command if not
             if self.cmds[laggingIndex][2] == 'done':
                 laggingIndex += 1 # Make one step forward in the main record; IMPORTANT! This allows for loop termination
@@ -352,6 +360,7 @@ class System:
                     device.status = 'active'
                     print(f'Added command at {time.time()}')
                     self.cmds[device.currentIndex][2] = 'in progress'
+                    print(device.currentCommand)
                     self.q.put(device.currentCommand) 
                 else:
                     continue
@@ -367,7 +376,11 @@ class System:
                 self.socket.emit('system_msg', {'data':'Failed to properly execute all commands'})
                 print(self.cmds)
                 return False
-                # Reset cmds statuses
+        # Export data
+        analysis = Analysis()
+        filename = f'TestRun{round(time.time())}'
+        analysis.exportToFile(self.tempReadings, filename)
+        # Reset cmds statuses
         for cmd in self.cmds:
             cmd[2] = 'pending'
         self.socket.emit('system_msg', {'data':f'Script successfully completed (Execution time = {round((endTime - startTime),2)}s)'})
@@ -408,6 +421,13 @@ class System:
             deviceID = int((re.search('sID(.*) rID', msg)).group(1))
             self.setDeviceStatus(deviceID, 'done')
             print(f'Updated device {deviceID} status at {time.time()}')
+        elif 'SEN' in msg:
+            if ' T' in msg: # Is a temperature sensor
+                value = float((re.search('T(.) S(.*)]', msg)).group(2))
+                self.tempReadings.append(value)
+                deviceID = int((re.search('sID(.*) rID', msg)).group(1))
+                self.setDeviceStatus(deviceID, 'done')
+                self.lastReadingTime = time.time()
         else:
              pass
 

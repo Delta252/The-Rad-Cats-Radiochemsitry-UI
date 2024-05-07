@@ -193,6 +193,9 @@ jQuery(function() {
 
     socket.on('serial_response', function(msg) {
         if(href.includes('/profile')||href.includes('/home')){
+            return;
+        }
+        else{
             document.getElementById("console").textContent += ("\nSerial Response >> " + msg.data);
             $('#console').scrollTop($('#console').get(0).scrollHeight);
         }
@@ -200,6 +203,9 @@ jQuery(function() {
 
     socket.on('system_msg', function(msg) {
         if(href.includes('/profile')||href.includes('/home')){
+            return;
+        }
+        else{
             document.getElementById("console").textContent += ("\nSystem Message >> " + msg.data);
             $('#console').scrollTop($('#console').get(0).scrollHeight);
         }

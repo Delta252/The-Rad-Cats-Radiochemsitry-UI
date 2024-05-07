@@ -20,14 +20,14 @@ class Comms:
     # Find and open a COM port where the chamber is connected
     def start(self):
         try:
-            self.socket.emit('serial_response', {'data':'Initializing comms process...'}) 
+            self.socket.emit('system_msg', {'data':'Initializing comms process...'}) 
             result = self.findPorts()
             portList = ''
             if result:
                 for entry in self.comPorts:
                     portList += (f' {entry[0]} ')
                 msg = 'Opened [' + portList + '] ports'
-                self.socket.emit('serial_response', {'data':msg})
+                self.socket.emit('system_msg', {'data':msg})
                 self.openPorts(self.comPorts)
                 self.isConnected = True
                 # Create process to feed commands to and read responses from Serial
@@ -36,26 +36,26 @@ class Comms:
                 thread.start()
                 return True
             else:
-                self.socket.emit('serial_response', {'data':'Encountered an issue, unable to start comms'})
+                self.socket.emit('system_msg', {'data':'Encountered an issue, unable to start comms'})
                 return False
                        
         except Exception as error:
-            self.socket.emit('serial_response', {'data':'Encountered an error during startup'})
+            self.socket.emit('system_msg', {'data':'Encountered an error during startup'})
             errorMsg = 'Error: ' + repr(error)
-            self.socket.emit('serial_response', {'data':errorMsg})
+            self.socket.emit('system_msg', {'data':errorMsg})
             return False
 
     # Close a connection
     def stop(self):
         try:
-            self.socket.emit('serial_response', {'data':'Stopping comms process...'}) 
+            self.socket.emit('system_msg', {'data':'Stopping comms process...'}) 
             self.closePorts()
             self.isConnected = False
             return True         
         except Exception as error:
-            self.socket.emit('serial_response', {'data':'Encountered an error during shutdown'})
+            self.socket.emit('system_msg', {'data':'Encountered an error during shutdown'})
             errorMsg = 'Error: ' + repr(error)
-            self.socket.emit('serial_response', {'data':errorMsg})
+            self.socket.emit('system_msg', {'data':errorMsg})
             return False
     
     # Create a command based on user input (placeholder)
@@ -87,11 +87,11 @@ class Comms:
         self.comPorts = self.s.FIND_COM_PORTS()
         print(self.comPorts)
         if self.comPorts != False:
-            self.socket.emit('serial_response', {'data':'Eligible COM ports found'})
+            self.socket.emit('system_msg', {'data':'Eligible COM ports found'})
             return True
         else:
-            self.socket.emit('serial_response', {'data':'No eligible COM port found'})
-            self.socket.emit('serial_response', {'data':'Comms could not be established'})
+            self.socket.emit('system_msg', {'data':'No eligible COM port found'})
+            self.socket.emit('system_msg', {'data':'Comms could not be established'})
             return False
 
     # Underlying wrapper method to connect to a COM port  
