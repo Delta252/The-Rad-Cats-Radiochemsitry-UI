@@ -132,6 +132,7 @@ jQuery(function() {
         adjustScroll();
     });
 
+    /** 
     window.navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
             video.srcObject = stream;
@@ -143,6 +144,7 @@ jQuery(function() {
             $("#camera-box").append(`<img id="no-camera"></img>`);
             $("#camera").remove();
     });
+    */
 
     /* Begin new Addition */
 

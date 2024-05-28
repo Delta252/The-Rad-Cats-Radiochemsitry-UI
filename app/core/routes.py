@@ -1,15 +1,47 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, request, send_from_directory
+from flask import Flask, render_template, flash, redirect, url_for, session, request, send_from_directory, Response
 from werkzeug.utils import secure_filename
 from . import core
 from .forms import RegisterForm
 from .. import uh
 import os
+import cv2, numpy
 # Page routing
+
+liveFeed = cv2.VideoCapture(0)
+spectrometerFeed = cv2.VideoCapture(1)
+
+def video_stream():
+    while(True):
+        ret, frame = liveFeed.read()
+        if not ret:
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpeg',frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n' b'Content-type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+def spect_stream():
+    while(True):
+        ret, frame = spectrometerFeed.read()
+        if not ret:
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpeg',frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n' b'Content-type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 # Landing page; todo: determine what page appears depending on logged in status
 @core.route('/')
 def landing():
     return redirect(url_for('core.login'))
+
+@core.route('/video_feed')
+def video_feed():
+    return Response(video_stream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
+
+@core.route('/spect_feed')
+def spect_feed():
+    return Response(spect_stream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
 
 @core.route('/download/<path:filename>', methods=['GET', 'POST'])
 def download(filename):

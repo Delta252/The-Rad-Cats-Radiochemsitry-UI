@@ -706,5 +706,5 @@ class Sensor(Component):
         self.transcript += f' take temperature reading'
         return self.assembleCmd()
     
-    def takeSpectReading(self, info): # To be completed
+    def takeSpectReading(self): # To be completed
         return
