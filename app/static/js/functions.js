@@ -84,6 +84,18 @@ jQuery(function() {
                     }
                     $(columnID).append(Valve(data[entry][0], type));
                     break;
+                case 'sensor':
+                        if(numCol != 2){
+                            columnID = "#column2";
+                        }
+                        else{
+                            columnID = "#column2";
+                        }
+                        if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
+                            break;
+                        }
+                        $(columnID).append(Sensor(data[entry][0], type));
+                        break;
                 case 'server':
                     $("#server-id").val(data[entry][0])
                     break;
@@ -283,6 +295,15 @@ jQuery(function() {
         else{
             $("#verify-script").css("background-color", "var(--red)");
             $("#execute-script").attr("disabled", "disabled");
+        }
+    });
+
+    socket.on('tempPlot', function(msg){
+        filename = msg.data;
+        filepath = "../static/img/"+filename;
+        
+        if(href.includes('/monitor')){
+            $("#tempPlot").attr("src", filepath);
         }
     });
 
@@ -693,6 +714,24 @@ jQuery(function() {
 
         <div class="optns">
             <button class="ui-btn single-btn apply-action" value="pump">Extract Volume</button>
+        </div>`;
+        return Card(id, type, content);
+    };
+
+    var Sensor = function(id, type) {
+        content = `
+        <div class="input-box">
+            <span class="select-label">Select a camera</span>
+            <div class="select">
+                <select name="cameraDev" id="cameraDev">
+                    <option selected value="1">Camera 1</option>
+                    <option value="2">Camera 2</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="optns">
+            <button class="ui-btn single-btn apply-action" value="spect">Take Spectrometer Reading</button>
         </div>`;
         return Card(id, type, content);
     };

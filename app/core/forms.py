@@ -1,10 +1,15 @@
+import sys
 from wtforms import Form, StringField, TextAreaField, PasswordField, SelectField, validators
 
 # Custom validator to check if password is part of the 100k pwned list
 def PasswordNotExists(self, field):
-    with open('dependencies/100k-pswd.txt', encoding='utf-8') as myfile:
-        if field.data in myfile.read():
-                raise validators.ValidationError('Password is too common.')
+    if getattr(sys, 'frozen', False):
+            filePath = 'app/dependencies/100k-pswd.txt'
+    elif __file__:
+        filePath = 'dependencies/100k-pswd.txt'
+        with open(filePath, encoding='utf-8') as myfile:
+            if field.data in myfile.read():
+                    raise validators.ValidationError('Password is too common.')
 
 # Form class for registration
 class RegisterForm(Form):

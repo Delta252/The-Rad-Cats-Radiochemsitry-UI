@@ -1,4 +1,4 @@
-import os, re, time
+import os, re, time, sys
 import sqlite3
 import warnings
 from queue import *
@@ -6,8 +6,13 @@ from .analysis import Analysis
 
 class System:
     def __init__(self, socket):
-        self.systemdataFilepath = os.path.abspath('app/dependencies/systemdata.db')
-        self.connect = sqlite3.connect(self.systemdataFilepath, check_same_thread=False)
+        databaseFilepath = os.path.abspath('systemdata.db')
+        if getattr(sys, 'frozen', False):
+            applicationPath = os.path.dirname(sys.executable)
+        elif __file__:
+            applicationPath = os.path.dirname(__file__)
+        systemdataFilepath = os.path.join(applicationPath, databaseFilepath)
+        self.connect = sqlite3.connect(systemdataFilepath, check_same_thread=False)
         cursor = self.connect.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS systemdata (
@@ -30,7 +35,7 @@ class System:
         self.socket = socket
         self.tempReadings = [] # This should be consolidated elsewhere (within a sensor module)
         self.lastReadingTime = 0
-        self.sensorID = 1005
+        self.analysis = Analysis()
 
     def updateFromDB(self):
         self.devices = []
@@ -53,6 +58,8 @@ class System:
                     dev = Extraction(i[0], i[1])
                 case 'valve':
                     dev = Valve(i[0], i[1])
+                case 'sensor':
+                    dev = Sensor(i[0], i[1])
                 case _:
                     warnings.warn('Unrecognized device in database.')
 
@@ -163,7 +170,7 @@ class System:
         return [success, msg]
 
     def compileScript(self, user):
-        fileName = f'./download/script_{user}.txt' # Create user-specific file
+        fileName = f'app/download/script_{user}.txt' # Create user-specific file
         stepNum = 1
         script = open(fileName, 'w') # User file is overwritten every time if the name is the same
         script.write('>>START\n')
@@ -292,27 +299,34 @@ class System:
         self.socket.emit('system_msg', {'data':'Beginning execution...'})
         print(self.cmds)
         laggingIndex = 0 # This is an index of the "slowest" cmd that is currently not done
-        sensors = self.findDeviceByID(self.sensorID)
         while laggingIndex < len(self.cmds):
             time.sleep(0.05) # 50ms tic time
             # Request a sensor reading 
-            if((time.time() - self.lastReadingTime) > 0.5) and (sensors.status != 'active'):
-                self.q.put(('[sID1000 rID1005 PK1 R]', 'Server (1000) requests sensor readings'))
+            if((time.time() - self.lastReadingTime) > 1):
+                for device in self.devices:
+                    if (device.type == 'sensor') and (device.status != 'active'): # Request temperature reading from all sensor modules that are not currently awaiting response
+                        self.q.put(device.takeTempReading())
+                        device.status = 'active'
             # Check if lagging index has become done and find the next incomplete command if not
             if self.cmds[laggingIndex][2] == 'done':
                 laggingIndex += 1 # Make one step forward in the main record; IMPORTANT! This allows for loop termination
                 continue # Next tic with updated lagging index
             # If lagging index is hung up on a wait (critical point), then execute wait
             if (self.cmds[laggingIndex][0][0] == 'Wait') and (self.cmds[laggingIndex][2] != 'done'):
-                waitTime = int(self.cmds[laggingIndex][1])
-                self.socket.emit('system_msg', {'data':f'Executing global wait ({waitTime}s)'})
-                waitStart = time.time()
-                time.sleep(waitTime)
-                waitEnd = time.time()
-                self.socket.emit('system_msg', {'data':f'Actual wait time: ({round((waitEnd - waitStart),2)}s)'})
-                self.cmds[laggingIndex][2] = 'done'
-                laggingIndex += 1
-                continue
+                if (self.cmds[laggingIndex][2] == 'active') and (time.time()-waitStart < waitTime):
+                    continue
+                elif (self.cmds[laggingIndex][2] == 'pending'):
+                    self.cmds[laggingIndex][2] = 'active'
+                    waitTime = int(self.cmds[laggingIndex][1])
+                    self.socket.emit('system_msg', {'data':f'Executing global wait ({waitTime}s)'})
+                    waitStart = time.time()
+                    continue
+                else:
+                    self.cmds[laggingIndex][2] = 'done'
+                    waitEnd = time.time()
+                    self.socket.emit('system_msg', {'data':f'Actual wait time: ({round((waitEnd - waitStart),2)}s)'})
+                    laggingIndex += 1
+                    continue
             # Check next cmd candidate for each device against main cmd record
             for device in self.devices:
                 if device.status == 'free':
@@ -377,9 +391,8 @@ class System:
                 print(self.cmds)
                 return False
         # Export data
-        analysis = Analysis()
         filename = f'TestRun{round(time.time())}'
-        analysis.exportToFile(self.tempReadings, filename)
+        self.analysis.exportToFile(self.tempReadings, filename)
         # Reset cmds statuses
         for cmd in self.cmds:
             cmd[2] = 'pending'
@@ -417,6 +430,7 @@ class System:
         return result
 
     def handleResponse(self, msg):
+        print(msg)
         if 'FREE' in msg:
             deviceID = int((re.search('sID(.*) rID', msg)).group(1))
             self.setDeviceStatus(deviceID, 'done')
@@ -428,6 +442,9 @@ class System:
                 deviceID = int((re.search('sID(.*) rID', msg)).group(1))
                 self.setDeviceStatus(deviceID, 'done')
                 self.lastReadingTime = time.time()
+                filename = self.analysis.generateTempGraph(self.tempReadings)
+                print(f'forwarding {filename}')
+                self.socket.emit('tempPlot', {'data':filename})
         else:
              pass
 
@@ -537,7 +554,6 @@ class MixerShutter(Component):
         # [sID rID PK3 M S{speed} D{direction}]
         action = data[0]
         info = data[1]
-        print(data)
         if action == 'mix':  
             result = self.setMixer(info)
             return result
@@ -670,9 +686,25 @@ class Valve(Component):
             self.packets.append(f'S{output}')      
         return self.assembleCmd()
 
-class Spectrometer(Component):
+class Sensor(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
     
     def parseCommand(self, data):
+        action = data[0]
+        info = data[1]
+        if action == 'spect':  
+            result = self.takeSpectReading(info)
+            return result
+        else:
+            raise KeyError
+        return
+
+    def takeTempReading(self):
+        self.setCmdBase('server', '1000', self.id)
+        self.packets.append(f'R') # Ping for temperature reading
+        self.transcript += f' take temperature reading'
+        return self.assembleCmd()
+    
+    def takeSpectReading(self, info): # To be completed
         return

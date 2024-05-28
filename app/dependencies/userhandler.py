@@ -1,6 +1,6 @@
 # Interactions with user database
 
-import os
+import os, sys
 import sqlite3
 from argon2 import PasswordHasher
 
@@ -9,7 +9,12 @@ class UserHandler:
 
     def __init__(self):
         # Config user database handling
-        userdataFilepath = os.path.abspath('app/dependencies/userdata.db')
+        databaseFilepath = 'userdata.db'
+        if getattr(sys, 'frozen', False):
+            applicationPath = os.path.dirname(sys.executable)
+        elif __file__:
+            applicationPath = os.path.dirname(__file__)
+        userdataFilepath = os.path.join(applicationPath, databaseFilepath)
         self.connect = sqlite3.connect(userdataFilepath, check_same_thread=False)
 
         cursor= self.connect.cursor()

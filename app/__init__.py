@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_socketio import SocketIO
+from engineio.async_drivers import threading
 from .dependencies.userhandler import UserHandler
 from .dependencies.system import System
 from .dependencies.comms import Comms
@@ -18,6 +19,6 @@ def create_app(debug=False):
     from .core import core as core_blueprint
     app.register_blueprint(core_blueprint) 
 
-    socketio.init_app(app, cors_allowed_origins="*")
+    socketio.init_app(app, cors_allowed_origins="*",async_mode="threading")
 
     return app
