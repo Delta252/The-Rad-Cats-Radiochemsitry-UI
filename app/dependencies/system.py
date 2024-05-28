@@ -3,10 +3,11 @@ import sqlite3
 import warnings
 from queue import *
 from .analysis import Analysis
+from .cameras import *
 
 class System:
     def __init__(self, socket):
-        databaseFilepath = os.path.abspath('systemdata.db')
+        databaseFilepath = 'systemdata.db'
         if getattr(sys, 'frozen', False):
             applicationPath = os.path.dirname(sys.executable)
         elif __file__:
@@ -40,7 +41,7 @@ class System:
     def updateFromDB(self):
         self.devices = []
         cursor = self.connect.cursor()
-        found =cursor.execute("""
+        found = cursor.execute("""
             SELECT * FROM systemdata                            
             """).fetchall()
 
@@ -694,7 +695,7 @@ class Sensor(Component):
         action = data[0]
         info = data[1]
         if action == 'spect':  
-            result = self.takeSpectReading(info)
+            result = self.takeSpectReading()
             return result
         else:
             raise KeyError
@@ -707,4 +708,13 @@ class Sensor(Component):
         return self.assembleCmd()
     
     def takeSpectReading(self): # To be completed
+        try:
+            frame = spect_frame()
+            if frame == None:
+                raise TypeError
+
+        except TypeError:
+            print(f'Unfortunately, Spectrometer has failed to gather frames. Please try again.')
+            pass
+        
         return
