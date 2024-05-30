@@ -564,7 +564,12 @@ class MixerShutter(Component):
             result = self.setMixer(info)
             return result
         elif action == 'set':
-            result = self.setShutter(info)
+            if action in ['open', 'closed', 'middle']:
+                result = self.setShutter(info)
+            elif action in ['stop', 'slow', 'medium', 'fast']:
+                result = self.setMixer(info)
+            else:
+                result = None
             return result
         else:
             raise KeyError
