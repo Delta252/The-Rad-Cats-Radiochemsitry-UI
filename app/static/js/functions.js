@@ -287,7 +287,6 @@ jQuery(function() {
         success = data[0];
         msg = data[1];
         document.getElementById("console").textContent += ("\nScript verified: "+ success + "\nMsg: " + msg);
-        $("#msg-popup").toggle();
         if(success == false){
             $("#verify-script").css("background-color", "var(--red)");
         }
@@ -434,8 +433,11 @@ jQuery(function() {
     });
 
     $("#execute-script").on("click", function(){
-        socket.emit('execute-script');
-        $("#execute-script").attr("disabled", "disabled");
+        $("#msg-popup").toggle();
+        $("#msg-type").text("Execute Script");
+        $("#popup-text").css("border", "none");
+        $(".popup-message").html(`<h3 id="popup-text">Your script is about to commence execution.<br/><br/>Would you like to monitor progress?</h3>`)
+        
     });
 
     $("#dropbox").on("dragenter dragover", function(e){
@@ -515,16 +517,27 @@ jQuery(function() {
     $("#approve-op").on("click", function(){
         type = $("#msg-type").text();
         result = new Array();
+        $("#msg-popup").toggle();
         if(type.includes('Verify Script')){
             socket.emit('verify-script',true);
+        }
+        else if(type.includes('Execute Script')){
+            socket.emit('execute-script');
+            $("#execute-script").attr("disabled", "disabled");
+            window.location.href = "/monitor";
         }
     });
 
     $("#reject-op").on("click", function(){
         type = $("#msg-type").text();
         result = new Array();
+        $("#msg-popup").toggle();
         if(type.includes('Verify Script')){
             socket.emit('verify-script',false);
+        }
+        else if(type.includes('Execute Script')){
+            socket.emit('execute-script');
+            $("#execute-script").attr("disabled", "disabled");
         }
     });
 
