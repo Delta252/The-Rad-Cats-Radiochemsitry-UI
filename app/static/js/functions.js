@@ -1,6 +1,5 @@
 jQuery(function() {
     /* Global vars and page startup */
-    const video = document.querySelector('#camera');
     var socket = io.connect('http://127.0.0.1:5000');
     var comms = false;
     var users = [];
@@ -85,17 +84,17 @@ jQuery(function() {
                     $(columnID).append(Valve(data[entry][0], type));
                     break;
                 case 'sensor':
-                        if(numCol != 2){
-                            columnID = "#column2";
-                        }
-                        else{
-                            columnID = "#column2";
-                        }
-                        if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
-                            break;
-                        }
-                        $(columnID).append(Sensor(data[entry][0], type));
+                    if(numCol != 2){
+                        columnID = "#column2";
+                    }
+                    else{
+                        columnID = "#column2";
+                    }
+                    if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
                         break;
+                    }
+                    $(columnID).append(Sensor(data[entry][0], type));
+                    break;
                 case 'server':
                     $("#server-id").val(data[entry][0])
                     break;
@@ -153,8 +152,21 @@ jQuery(function() {
         else{
             document.getElementById("console").textContent += ("\nSocket Connection successful");
         }        
+        if(msg.data == "offline"){
+            window.location.href = './server-logoff';
+        }
+        else if(msg.data == "restricted"){
+            $(" :input").prop("disabled", true);
+        }
+        
         socket.emit('get-comms-status');
         socket.emit('get-user');
+        socket.emit('get-theme');
+    });
+
+    socket.on('update_theme', function(msg) {
+        $("#theme").val(msg.data);
+        document.documentElement.classList = msg.data;
     });
 
     socket.on('set_user', function(msg) {
@@ -348,6 +360,15 @@ jQuery(function() {
     $(document).on('dragenter dragover drop', function (e){
         e.stopPropagation();
         e.preventDefault();
+    });
+
+    $("#theme").on("change", function(){
+        socket.emit('send-theme', [$("#theme").val()]);
+    });
+
+    $("#update-server").click(function(){
+        newID = $("#server-id").val();
+        socket.emit('update-server', newID)
     });
 
     $(".content").on("click", ".delete-card", function(){
