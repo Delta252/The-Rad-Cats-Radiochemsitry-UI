@@ -482,6 +482,11 @@ jQuery(function() {
     });
 
     $("#connect-beacon").on("click", function(){
+        $(".popup-message").html(`
+            <h4>The system comms to the chamber are currently</h4> 
+            <h2 id="comms-status" class="status"></h2>
+            <h4 id="status-update">Please click below to toggle this value.</h4>
+        `);
         if(comms) {
             $("#comms-status").text("Enabled");
             $("#comms-status").css("color", "var(--green)");
