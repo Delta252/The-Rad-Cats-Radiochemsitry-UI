@@ -3,9 +3,11 @@ from werkzeug.utils import secure_filename
 from . import core
 from .forms import RegisterForm
 from .. import uh
-import app.dependencies.cameras as cameras
+from app.dependencies.cameras import LiveVideo
 import os
 # Page routing
+
+webcam = LiveVideo()
 
 # Landing page; todo: determine what page appears depending on logged in status
 @core.route('/')
@@ -14,11 +16,11 @@ def landing():
 
 @core.route('/video_feed')
 def video_feed():
-    return Response(cameras.video_stream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
+    return Response(webcam.videoStream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
 
-@core.route('/spect_feed')
-def spect_feed():
-    return Response(cameras.spect_stream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
+#@core.route('/spect_feed')
+#def spect_feed():
+#    return Response(cameras.spect_stream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
 
 @core.route('/download/<path:filename>', methods=['GET', 'POST'])
 def download(filename):

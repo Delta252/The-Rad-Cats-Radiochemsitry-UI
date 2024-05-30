@@ -45,6 +45,8 @@ class System:
             SELECT * FROM systemdata                            
             """).fetchall()
 
+        print(found)
+
         for i in found:
             match i[1]:
                 case 'server':
@@ -63,7 +65,7 @@ class System:
                     dev = Sensor(i[0], i[1])
                 case _:
                     warnings.warn('Unrecognized device in database.')
-
+            print(dev)
             self.devices.append(dev)
         
         cursor.close()
@@ -690,6 +692,12 @@ class Valve(Component):
 class Sensor(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
+        try:
+            pass
+            #self.source = SpectrometerVideo()
+        except ValueError:
+            print('Failed to start spectrometer video. Please try again.')
+            
     
     def parseCommand(self, data):
         action = data[0]
@@ -709,12 +717,9 @@ class Sensor(Component):
     
     def takeSpectReading(self): # To be completed
         try:
-            frame = spect_frame()
-            if frame == None:
-                raise TypeError
-
-        except TypeError:
-            print(f'Unfortunately, Spectrometer has failed to gather frames. Please try again.')
+            frames = self.source.getSampleSet()
+            Analysis.generateSpectGraph(frames)  
+        except Exception as e:
+            print(f'Unfortunately, Spectrometer process has failed. Please try again.')
+            print(e)
             pass
-        
-        return
