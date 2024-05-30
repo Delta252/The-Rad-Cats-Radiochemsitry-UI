@@ -149,7 +149,7 @@ class System:
         # Test No1 : if hold listed waits for a previous step
         for index, step in enumerate(self.cmds):
             packet = step[0][0]
-            if (packet == 'Wait') and ((step[1] ==  '') or (int(step[1]) < 0)):
+            if (packet == 'Wait') and ((step[1] ==  '') or (int(step[1][0]) < 0)):
                 msg = f'Wait time invalid for step {index + 1}'
                 return [success, msg]
             elif (packet != 'Wait') and (step[1] != None):
@@ -308,22 +308,22 @@ class System:
         laggingIndex = 0 # This is an index of the "slowest" cmd that is currently not done
         while laggingIndex < len(self.cmds):
             time.sleep(0.05) # 50ms tic time
-            # Request a sensor reading 
-            if((time.time() - self.lastReadingTime) > 1):
-                for device in self.devices:
-                    if (device.type == 'sensor') and (device.status != 'active'): # Request temperature reading from all sensor modules that are not currently awaiting response
-                        device.backlog.append(device.takeTempReading())
             # Check if lagging index has become done and find the next incomplete command if not
             if self.cmds[laggingIndex][2] == 'done':
                 laggingIndex += 1 # Make one step forward in the main record; IMPORTANT! This allows for loop termination
                 continue # Next tic with updated lagging index
+            for device in self.devices:
+                if (device.type == 'sensor') and (device.status != 'active'):
+                    if ((time.time()-self.lastReadingTime) > 1): # Request temperature reading from all sensor modules that are not currently awaiting response
+                        device.status = 'active'
+                        self.q.put(device.takeTempReading())
             # If lagging index is hung up on a wait (critical point), then execute wait
             if (self.cmds[laggingIndex][0][0] == 'Wait') and (self.cmds[laggingIndex][2] != 'done'):
                 if (self.cmds[laggingIndex][2] == 'active') and (time.time()-waitStart < waitTime):
                     continue
                 elif (self.cmds[laggingIndex][2] == 'pending'):
                     self.cmds[laggingIndex][2] = 'active'
-                    waitTime = int(self.cmds[laggingIndex][1])
+                    waitTime = int(self.cmds[laggingIndex][1][0])
                     self.socket.emit('system_msg', {'data':f'Executing global wait ({waitTime}s)'})
                     waitStart = time.time()
                     continue
