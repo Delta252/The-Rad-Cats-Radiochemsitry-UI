@@ -111,18 +111,27 @@ jQuery(function() {
 
     function generateCmdList(data) {
         order = 1;
+        
         for(entry in data){
             cmd = data[entry][0][0];
             if(cmd.indexOf("Wait") >= 0){
                 holdType = "global";
+                holdValue = "0";
             }
             else{
                 holdType = "cmd";
+                if(data[entry][1] != null){
+                    
+                    holdValue = data[entry][1].join(", ");
+                }
+                else{
+                    holdValue = " ";
+                }
             }
-            $("#cmd-list").append(Cmd(order, data[entry][0][1], holdType));
-            if(data[entry][1] != null){
-                $("#hold-"+order).val(data[entry][1].join(", "));
-            }            
+            
+            $("#cmd-list").append(Cmd(order, data[entry][0][1], holdType, holdValue));
+            
+              
             order++;
         }
         $("#verify-script").css("background-color", "var(--accent)");
@@ -779,7 +788,7 @@ jQuery(function() {
         return Card(id, type, content);
     };
 
-    var Cmd = function(number, transcript, holdType) {	
+    var Cmd = function(number, transcript, holdType, holdValue) {	
         if(holdType == "cmd"){	
             labelText = "Wait for step: ";	
         }	
@@ -798,7 +807,7 @@ jQuery(function() {
                 </div>	
                 <div class="cmd-hold">	
                     <label>${labelText}</label>	
-                    <span><input id="hold-${number}" class="hold-for" type="text"/></span>	
+                    <span><input id="hold-${number}" class="hold-for" value="${holdValue}" type="text"/></span>	
                 </div>	
             </div>	
             <div class="cmd-remove">	
