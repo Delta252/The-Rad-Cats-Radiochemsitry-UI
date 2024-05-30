@@ -193,15 +193,21 @@ class System:
                 entry = f'\n[{stepNum}] Global Wait'
             else:
                 receiver = int(re.findall(r'rID(\d+) ', packet)[0])
-                if result := re.search('set|pump', transcript): # Edit as classes of actions are introduced
+                if result := re.search('set|pump|mix', transcript): # Edit as classes of actions are introduced
                     action = transcript[result.start():result.end()]
+                    print(transcript)
                     setValue = transcript.split()[-1]
-                entry = f'\n[{stepNum}] {receiver} {action} {setValue}' # Individual steps
+                    if 'mix' in transcript:
+                        direction = (re.search('mix (.*) ', transcript)).group(1).strip()
+                    else:
+                        direction = ""
+                    
+                entry = f'\n[{stepNum}] {receiver} {action} {setValue} {direction}' # Individual steps
             if step[1] !=  None:
                 if packet == 'Wait':
                     entry += f' {step[1]}s'
                 else:
-                    entry += f' HOLD ({",".join(step[1])})' # Hold condition (yes/no)
+                    entry += f'HOLD ({",".join(step[1])})' # Hold condition (yes/no)
             stepNum += 1
             script.write(entry)
         script.write('\n>>ENDSECTION\n')
@@ -564,12 +570,7 @@ class MixerShutter(Component):
             result = self.setMixer(info)
             return result
         elif action == 'set':
-            if action in ['open', 'closed', 'middle']:
-                result = self.setShutter(info)
-            elif action in ['stop', 'slow', 'medium', 'fast']:
-                result = self.setMixer(info)
-            else:
-                result = None
+            result = self.setShutter(info)
             return result
         else:
             raise KeyError
@@ -599,7 +600,7 @@ class MixerShutter(Component):
         self.packets.append(f'S{speed}') # Mixer speed
         self.packets.append(f'D{dirVal}')
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
-        self.transcript += f' set to {direction} {mode}' # Add to transcript
+        self.transcript += f' mix {direction} {mode}' # Add to transcript
         return self.assembleCmd()
 
     def setShutter(self, info):
