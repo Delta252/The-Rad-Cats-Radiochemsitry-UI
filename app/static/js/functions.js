@@ -120,7 +120,9 @@ jQuery(function() {
                 holdType = "cmd";
             }
             $("#cmd-list").append(Cmd(order, data[entry][0][1], holdType));
-            $("#hold-"+order).val(parseInt(data[entry][1]));
+            if(data[entry][1] != null){
+                $("#hold-"+order).val(data[entry][1].join(", "));
+            }            
             order++;
         }
         $("#verify-script").css("background-color", "var(--accent)");
@@ -778,7 +780,7 @@ jQuery(function() {
                 </div>	
                 <div class="cmd-hold">	
                     <label>${labelText}</label>	
-                    <span><input id="hold-${number}" class="hold-for" type="number" inputmode="integer"/></span>	
+                    <span><input id="hold-${number}" class="hold-for" type="text"/></span>	
                 </div>	
             </div>	
             <div class="cmd-remove">	

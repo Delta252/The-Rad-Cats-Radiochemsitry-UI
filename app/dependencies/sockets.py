@@ -121,7 +121,8 @@ def remove_command(number):
 def update_hold(data):
     index = data[0]-1
     newHold = data[1]
-    sys.cmds[index][1] = newHold
+    holdArray = newHold.split(",")
+    sys.cmds[index][1] = holdArray
 
 @socketio.on('verify-script')
 def verify_script(data):
@@ -130,7 +131,7 @@ def verify_script(data):
     if data:
         username = session['username']
         scriptFilename = sys.compileScript(username)
-        socketio.emit('send_script',{'data':scriptFilename},room=request.sid)
+        socketio.emit('send_script',{'data':'/download/script_Arcadius.txt'},room=request.sid)
 
 @socketio.on('execute-script')
 def execute_script():

@@ -152,9 +152,12 @@ class System:
             if (packet == 'Wait') and ((step[1] ==  '') or (int(step[1]) < 0)):
                 msg = f'Wait time invalid for step {index + 1}'
                 return [success, msg]
-            elif (packet != 'Wait') and (step[1] != None) and (index-int(step[1])<0):
-                msg = f'Hold request invalid for step {index + 1}'
-                return [success, msg]
+            elif (packet != 'Wait') and (step[1] != None):
+                print(f'packet: {packet}, step: {step}')
+                for hold in step[1]:
+                    if (index-int(hold)<0):
+                        msg = f'Hold request invalid for step {index + 1}'
+                        return [success, msg]
         # Test No2 : if all commands use components listed in system delcaration 
         for step in self.cmds:
             packet = step[0][0]
@@ -173,9 +176,10 @@ class System:
         return [success, msg]
 
     def compileScript(self, user):
-        fileName = f'app/download/script_{user}.txt' # Create user-specific file
+        fileName = f'/download/script_{user}.txt' # Create user-specific file
         stepNum = 1
-        script = open(fileName, 'w') # User file is overwritten every time if the name is the same
+        scriptLoc = f'app/{fileName}'
+        script = open(scriptLoc, 'w') # User file is overwritten every time if the name is the same
         script.write('>>START\n')
         script.write('\n>>SYSTEM')
         for device in self.devices:
@@ -197,7 +201,7 @@ class System:
                 if packet == 'Wait':
                     entry += f' {step[1]}s'
                 else:
-                    entry += f' HOLD ({step[1]})' # Hold condition (yes/no)
+                    entry += f' HOLD ({",".join(step[1])})' # Hold condition (yes/no)
             stepNum += 1
             script.write(entry)
         script.write('\n>>ENDSECTION\n')
@@ -365,12 +369,11 @@ class System:
                             break
                     # Check for a prerequisite step and completion
                     if self.cmds[device.currentIndex][1] != None:
-                        previousIndex = self.cmds[device.currentIndex][1]
-                        if isinstance(previousIndex, str):
-                            previousIndex = int(previousIndex)
-                        previousStatus = self.cmds[previousIndex-1][2]
-                        if previousStatus != 'done':
-                            proceed = False
+                        previousIndeces = [ int(x) for x in self.cmds[device.currentIndex][1]]
+                        for index in previousIndeces:
+                            previousStatus = self.cmds[index-1][2]
+                            if previousStatus != 'done':
+                                proceed = False
                     if not proceed:
                         continue # Counterintuitive, but this jumps to the next loop iteration rather than finishing current one
                     device.status = 'active'
@@ -418,7 +421,8 @@ class System:
             if (hold == None) or (hold == 'None'): # Depending on source of cmd generation call
                 holdVal = None
             else:
-                holdVal = int(hold)
+                values = re.search('\(([^)]+)', hold).group(1)
+                holdVal = [int(x) for x in values.split(',')]
             for device in self.devices:
                 if id == device.id:
                     try:
