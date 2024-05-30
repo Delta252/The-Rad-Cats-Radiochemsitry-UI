@@ -308,8 +308,7 @@ class System:
             if((time.time() - self.lastReadingTime) > 1):
                 for device in self.devices:
                     if (device.type == 'sensor') and (device.status != 'active'): # Request temperature reading from all sensor modules that are not currently awaiting response
-                        self.q.put(device.takeTempReading())
-                        device.status = 'active'
+                        device.backlog.append(device.takeTempReading())
             # Check if lagging index has become done and find the next incomplete command if not
             if self.cmds[laggingIndex][2] == 'done':
                 laggingIndex += 1 # Make one step forward in the main record; IMPORTANT! This allows for loop termination
