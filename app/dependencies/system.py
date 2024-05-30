@@ -201,8 +201,12 @@ class System:
                         direction = (re.search('mix (.*) ', transcript)).group(1).strip()
                     else:
                         direction = ""
-                    
-                entry = f'\n[{stepNum}] {receiver} {action} {setValue} {direction}' # Individual steps
+                    if 'Pump-syringe' in transcript:
+                        syringeID = (re.search('\[S(.*)\]', transcript)).group(1).strip()
+                        syringeType = f' type {syringeID}'
+                    else:
+                        syringeType = ""
+                entry = f'\n[{stepNum}] {receiver}{syringeType} {action} {setValue} {direction}' # Individual steps
             if step[1] !=  None:
                 if packet == 'Wait':
                     entry += f' {step[1]}s'
@@ -264,17 +268,21 @@ class System:
                         self.addToDB(moduleID, module)
                     elif section[0] == 'experiment':
                         if 'Global Wait' in content[line]:
-                            value = (re.search('Global Wait (\S+?)(s\s*$)', content[line])).group(1).strip()
+                            value = (re.search('Global Wait \[\'(\S+?)\'\](s\s*$)', content[line])).group(1).strip()
                             self.generateCommand(['wait', value])
                         else:
                             lineElements = content[line].split()
                             destinationID = int(lineElements[1]) # Find action keyword
                             action = lineElements[2]
+                            if action == 'type':
+                                action = lineElements[4]
                             values = []
                             for element in lineElements[3:None]:
                                 if element == 'HOLD':
                                     holdValue = lineElements[-1]
                                     break
+                                if element == 'type':
+                                    continue
                                 else:
                                     values.append(element)
                                     holdValue = None
@@ -341,7 +349,7 @@ class System:
                     continue
             # Check next cmd candidate for each device against main cmd record
             for device in self.devices:
-                if device.status == 'free':
+                if (device.status == 'free') or (device.type == 'sensor'):
                     continue # Ignore devices that have no backlog and are not executing
                 if (device.currentCommand == None):
                     print(f'adding command for {device.type} ({device.status}) and {device.id}')
@@ -437,8 +445,8 @@ class System:
                         break
                     except KeyError:
                         print('Invalid action key submitted.')
-            else:
-                warnings.warn('Unrecognized device request.')
+                else:
+                    warnings.warn('Unrecognized device request.')
         return result
 
     def handleResponse(self, msg):
@@ -521,16 +529,17 @@ class SyringePump(Component):
             raise KeyError
     
     def pumpVolume(self, info):
+        print(info)
         self.packets.append(f'Y') # Pump module number
         syringeType = info[3]
         self.packets.append(f'S{syringeType}')
-        if type(info[4]) == str:
-            volume = int(re.findall(r'\d+', info[4])[0])
+        if info[4] == 'pump':
+            volume = int(re.findall(r'\d+', info[5])[0])
         else:
             volume = int(info[4])
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
-        self.transcript += f' pump {volume}mL'
+        self.transcript += f' [S{syringeType}] pump {volume}mL'
         return self.assembleCmd()
 
 class PeristalticPump(Component):
