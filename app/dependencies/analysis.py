@@ -32,7 +32,7 @@ class Analysis:
     # The original code can be found here:
     def generateSpectGraph(frames):
         # Constants for further operation
-        fileName = f'spectMeas_{round(time.time())}.csv'
+        fileName = f'app/data/spectMeas_{round(time.time())}.csv'
         spectCal = ((355,532),(577,650))
         mindist = 50
         thresh = 20
@@ -135,6 +135,12 @@ class Analysis:
         plt.ylabel('Log10(Mean Intensity Ratio)')
         plt.grid(True)
         plotDir = 'app/static/img'
-        plt.savefig(os.path.join(plotDir, 'testSpectPlot.png'), bbox_inches='tight')
-        return
+        for fname in os.listdir(plotDir):
+            if fname.startswith("spectGraph"):
+                os.remove(os.path.join(plotDir, fname))
+        plotData = data[-30:]
+        plt.plot(plotData)
+        filename = f'spectGraph_{round(time.time())}.png'
+        plt.savefig(os.path.join(plotDir, filename), bbox_inches='tight')
+        return filename
 

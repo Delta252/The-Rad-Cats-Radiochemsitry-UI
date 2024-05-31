@@ -712,12 +712,10 @@ class Sensor(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
         try:
-            pass
-            #self.source = SpectrometerVideo()
+            self.source = SpectrometerVideo()
         except ValueError:
             print('Failed to start spectrometer video. Please try again.')
             
-    
     def parseCommand(self, data):
         action = data[0]
         info = data[1]
