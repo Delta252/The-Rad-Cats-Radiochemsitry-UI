@@ -3,7 +3,7 @@ import sqlite3
 import warnings
 from queue import *
 from .analysis import Analysis
-from .cameras import *
+from .cameras import SpectrometerVideo
 
 class System:
     def __init__(self, socket):
@@ -37,6 +37,7 @@ class System:
         self.tempReadings = [] # This should be consolidated elsewhere (within a sensor module)
         self.lastReadingTime = 0
         self.analysis = Analysis()
+        self.updateFromDB()
 
     def updateFromDB(self):
         self.devices = []
@@ -63,6 +64,8 @@ class System:
                     dev = Valve(i[0], i[1])
                 case 'sensor':
                     dev = Sensor(i[0], i[1])
+                case 'spectrometer':
+                    dev = Spectrometer(i[0], i[1])
                 case _:
                     warnings.warn('Unrecognized device in database.')
             print(dev)
@@ -161,7 +164,7 @@ class System:
         # Test No2 : if all commands use components listed in system delcaration 
         for step in self.cmds:
             packet = step[0][0]
-            if packet == 'Wait':
+            if (packet == 'Wait') or (packet == 'Spectrometer Reading'):
                 continue
             sender = int(re.findall(r'sID(\d+) ', packet)[0])
             receiver = int(re.findall(r'rID(\d+) ', packet)[0])
@@ -206,7 +209,7 @@ class System:
                         syringeType = f' type {syringeID}'
                     else:
                         syringeType = ""
-                entry = f'\n[{stepNum}] {receiver}{syringeType} {action} {setValue} {direction}' # Individual steps
+                entry = f'\n[{stepNum}] {receiver}{syringeType} {action} {setValue} {direction} ' # Individual steps
             if step[1] !=  None:
                 if packet == 'Wait':
                     entry += f' {step[1]}s'
@@ -311,7 +314,10 @@ class System:
             packet = cmd[0]
             if packet[0] == 'Wait':
                 continue
-            receiver = int(re.findall(r'rID(\d+) ', packet[0])[0]) # Extract cmd destination device id
+            elif packet[0] == 'Spectrometer Reading':
+                receiver = 1011 # THIS IS A TEMPORARY FIX FOR THE SPECTROMETER OPERATION!!!
+            else:
+                receiver = int(re.findall(r'rID(\d+) ', packet[0])[0]) # Extract cmd destination device id
             for device in self.devices:
                 if device.id == receiver:
                     device.backlog.append(packet)
@@ -393,8 +399,11 @@ class System:
                         continue # Counterintuitive, but this jumps to the next loop iteration rather than finishing current one
                     device.status = 'active'
                     print(f'Added command at {time.time()}')
-                    self.cmds[device.currentIndex][2] = 'in progress'
-                    self.q.put(device.currentCommand)
+                    self.cmds[device.currentIndex][2] = 'active'
+                    if device.currentCommand[0] == 'Spectrometer Reading':
+                        device.takeSpectReading() # THIS IS A TEMPORARY FIX FOR THE SPECTROMETER OPERATION!!!
+                    else:
+                        self.q.put(device.currentCommand)
                 else:
                     continue
         endTime = time.time()
@@ -420,7 +429,7 @@ class System:
         return True
 
     def generateCommand(self, data):
-        # Expected data format: [set/pump/wait, [input1, input2, input3], holdVal]
+        # Expected data format: [set/pump/mix/wait/spectrometer, [input1, input2, input3], holdVal]
         # Main cmd list format: [(cmd, transcript), holdValue, status]
         if data[0] == "wait":
             result = self.addWait()
@@ -429,6 +438,9 @@ class System:
             else:
                 holdVal = int(data[1])
             self.cmds.append([result, holdVal, 'pending']) 
+        elif data[0] == "spectrometer":
+            result = [("Spectrometer Reading", "Server (1000) requests Spectrometer (1011) take spectrometer reading"), None, "pending"] # THIS IS A FUDGE TO GET THE SPECTROMETER WORKING !!!
+            self.cmds.append(result)
         else:
             id = int(data[1][2])
             result = 'No Valid Command'
@@ -711,10 +723,6 @@ class Valve(Component):
 class Sensor(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
-        try:
-            self.source = SpectrometerVideo()
-        except ValueError:
-            print('Failed to start spectrometer video. Please try again.')
             
     def parseCommand(self, data):
         action = data[0]
@@ -732,10 +740,26 @@ class Sensor(Component):
         self.transcript += f' take temperature reading'
         return self.assembleCmd()
     
+class Spectrometer(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+    
+    def parseCommand(self, data):
+        action = data[0]
+        info = data[1]
+        if action == 'spect':  
+            result = self.takeSpectReading()
+            return result
+        else:
+            raise KeyError
+        return
+
     def takeSpectReading(self): # To be completed
         try:
             frames = self.source.getSampleSet()
             Analysis.generateSpectGraph(frames)  
+            self.setStatus('done')
+            return 'filename'
         except Exception as e:
             print(f'Unfortunately, Spectrometer process has failed. Please try again.')
             print(e)

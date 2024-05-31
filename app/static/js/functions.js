@@ -100,6 +100,18 @@ jQuery(function() {
                     }
                     $(columnID).append(Sensor(data[entry][0], type));
                     break;
+                case 'spectrometer':
+                    if(numCol != 2){
+                        columnID = "#column2";
+                    }
+                    else{
+                        columnID = "#column1";
+                    }
+                    if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
+                        break;
+                    }
+                    $(columnID).append(Spectrometer(data[entry][0], type));
+                    break;
                 case 'server':
                     $("#server-id").val(data[entry][0])
                     break;
@@ -115,8 +127,7 @@ jQuery(function() {
     }
 
     function generateCmdList(data) {
-        order = 1;
-        
+        order = 1;        
         for(entry in data){
             cmd = data[entry][0][0];
             if(cmd.indexOf("Wait") >= 0){
@@ -137,8 +148,7 @@ jQuery(function() {
                 $("#cmd-list").append(Cmd(order, data[entry][0][1], holdType, holdValue, null));
             }
             else if(href.includes('/monitor')){
-                newCard = Cmd(order, data[entry][0][1], holdType, holdValue, data[entry][2]);
-                $("#cmd-history").append(newCard);                
+                $("#cmd-history").append(Cmd(order, data[entry][0][1], holdType, holdValue, data[entry][2]));         
             }
             else{}
             
@@ -343,8 +353,18 @@ jQuery(function() {
         }
     });
 
+    socket.on('spectPlot', function(msg){
+        filename = msg.data;
+        filepath = "../static/img/"+filename;
+        
+        if(href.includes('/monitor')){
+            $("#spectPlot").attr("src", filepath);
+        }
+    });
+
     socket.on('update-history', function(msg){
         if(href.includes('/monitor')){
+            
             $("div.cmd-entry").remove();
             data = msg.data;
             stepNo = 1;
@@ -827,6 +847,14 @@ jQuery(function() {
     };
 
     var Sensor = function(id, type) {
+        content = `
+        <div class="optns">
+            
+        </div>`;
+        return Card(id, type, content);
+    };
+
+    var Spectrometer = function(id, type) {
         if(href.includes('/auto')){
             buttonText = 'Add Spectrometer Reading';
         }
@@ -834,18 +862,8 @@ jQuery(function() {
             buttonText = 'Take Spectrometer Reading';
         }
         content = `
-        <div class="input-box">
-            <span class="select-label">Select a camera</span>
-            <div class="select">
-                <select name="cameraDev" id="cameraDev">
-                    <option selected value="1">Camera 1</option>
-                    <option value="2">Camera 2</option>
-                </select>
-            </div>
-        </div>
-
         <div class="optns">
-            <button class="ui-btn single-btn apply-action" value="spect">${buttonText}</button>
+            <button class="ui-btn single-btn apply-action" value="spectrometer">${buttonText}</button>
         </div>`;
         return Card(id, type, content);
     };

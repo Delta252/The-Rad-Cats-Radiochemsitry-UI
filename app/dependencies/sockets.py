@@ -12,8 +12,7 @@ import os, time
 @socketio.on('connect')
 def handle_connect(ip):
     print('Connection established!')
-    status = uh.getStatus(session['username'])
-    sys.updateFromDB() 
+    status = uh.getStatus(session['username']) 
     time.sleep(0.05) # Necessary delay to prevent loss of data as page is rendered
     socketio.emit('after_connect', {'data':status}, room=request.sid)
     socketio.emit('update_cards', {'data':sys.define()})
@@ -106,12 +105,22 @@ def generate_command(data):
     command = sys.generateCommand(data)
     sys.cmds = []
     print(f'added command {command}')
-    sys.q.put(command)
+    if command[0][0] == 'Spectrometer Reading':
+        for device in sys.devices:
+            if device.type == 'sensor':
+                socketio.emit('log_command', {'data':command[0]})
+                filename = device.takeSpectReading()
+                socketio.emit('spectPlot', {'data':filename})
+                
+    else:
+        pass
+        #sys.q.put(command)
 
 @socketio.on('add-cmd-list')
 def add_cmds(data):
     command = sys.generateCommand(data)
     socketio.emit('update_cmd_list', {'data':sys.cmds})
+    print(sys.cmds)
 
 @socketio.on('remove-cmd-number')
 def remove_command(number):
