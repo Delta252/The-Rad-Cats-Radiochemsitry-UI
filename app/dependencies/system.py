@@ -398,6 +398,7 @@ class System:
                 else:
                     continue
         endTime = time.time()
+        self.socket.emit('update-history', {'data':self.cmds})
         self.socket.emit('system_msg', {'data':'Cleaning up...'})
         # Cleanup
         for device in self.devices:

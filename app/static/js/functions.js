@@ -129,11 +129,11 @@ jQuery(function() {
                 }
             }
             if(href.includes('/auto')){
-                $("#cmd-list").append(Cmd(order, data[entry][0][1], holdType, holdValue));
+                $("#cmd-list").append(Cmd(order, data[entry][0][1], holdType, holdValue, null));
             }
             else if(href.includes('/monitor')){
-                $("#cmd-history").append(Cmd(order, data[entry][0][1], holdType, holdValue));
-                $("div.cmd-remove").remove();
+                newCard = Cmd(order, data[entry][0][1], holdType, holdValue, data[entry][2]);
+                $("#cmd-history").append(newCard);                
             }
             else{}
             
@@ -805,7 +805,7 @@ jQuery(function() {
         return Card(id, type, content);
     };
 
-    var Cmd = function(number, transcript, holdType, holdValue) {	
+    var Cmd = function(number, transcript, holdType, holdValue, status) {	
         if(holdType == "cmd"){	
             labelText = "Wait for step: ";	
         }	
@@ -814,23 +814,49 @@ jQuery(function() {
         }	
         else {	
             labelText = "Unrecognized hold command - ";	
-        }	
+        }
+
+        color = "";
+        if(status != null){
+            if(status == 'done'){
+               color = "style=\"color:#0A9D47\""
+            }
+            else if(status == 'active'){
+                color = "style=\"color:#FFB238\""
+            }
+            else{
+                color = "style=\"color:#D60816\""
+            }
+        }
+
+        if(href.includes('/monitor')){
+            remove = ``;
+            readonly = 'readonly';
+        }
+        else{
+            readonly = '';
+            remove = `
+            <div class="cmd-remove">	
+                <button class="remove-cmd">Remove</button>	
+            </div>
+            `;
+        }
+
         content = `	
         <div class="cmd-entry">	
             <div class="cmd-data">	
                 <div class="entry-info">	
-                    <div class="cmd-number">[${number}]</div>	
-                    <div class="cmd-text"> ${transcript} </div>	
+                    <div class="cmd-number" ${color}>[${number}]</div>	
+                    <div class="cmd-text" ${color}> ${transcript} </div>	
                 </div>	
                 <div class="cmd-hold">	
                     <label>${labelText}</label>	
-                    <span><input id="hold-${number}" class="hold-for" value="${holdValue}" type="text"/></span>	
+                    <span><input id="hold-${number}" class="hold-for" value="${holdValue}" type="text" ${readonly}/></span>	
                 </div>	
             </div>	
-            <div class="cmd-remove">	
-                <button class="remove-cmd">Remove</button>	
-            </div>	
-        </div>`;	
+            ${remove}	
+        </div>`;
+        
         return content;	
     } 
 });

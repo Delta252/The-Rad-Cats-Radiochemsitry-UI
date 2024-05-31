@@ -43,10 +43,10 @@ class SpectrometerVideo:
             if not ret:
                 return (ret, None)
             else:
-                frame = cv2.resize(frame, (320, 240))  # resize the live image
-                cv2.line(frame, (0, 120), (320, 120), (255, 255, 255), 1)
+                blackwhite = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 cv2.imwrite("frame%s.jpg" % ret, frame) 
-                return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                cv2.imwrite("frame%s.jpg" % ret, blackwhite) 
+                return blackwhite
 
     def getSampleSet(self):
         frames = []
