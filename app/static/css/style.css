@@ -862,6 +862,44 @@ select::-ms-expand{
   text-align: center;
 }
 
+#cmd-history {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  font-size: 20px;
+  font-weight: 600;
+  background-color: var(--background);
+  overflow-y: scroll;
+  overflow-x: wrap;
+  padding: 15px;
+}
+
+#cmd-history::-webkit-scrollbar {
+  width: 20px;
+}
+
+#cmd-history::-webkit-scrollbar-track {
+  background: var(--body); 
+  border: 5px solid transparent;
+}
+ 
+#cmd-history::-webkit-scrollbar-thumb {
+  background: var(--accent); 
+  width: 10px;
+  border-radius: 0.75em;
+  border: 5px solid transparent;
+  padding: 10px;
+  background-clip: padding-box;
+  margin: 5px;
+  transition: all 0.4s;
+  -moz-transition: all 0.4s;
+  -webkit-transition: all 0.4s;
+}
+
+#cmd-history::-webkit-scrollbar-thumb:hover {
+  border-radius: 5px solid var(--accent);
+}
+
 #cmd-list {
   height: 100%;
   width: 100%;

@@ -322,6 +322,7 @@ class System:
         laggingIndex = 0 # This is an index of the "slowest" cmd that is currently not done
         while laggingIndex < len(self.cmds):
             time.sleep(0.05) # 50ms tic time
+            self.socket.emit('update-history', {'data':self.cmds})
             # Check if lagging index has become done and find the next incomplete command if not
             if self.cmds[laggingIndex][2] == 'done':
                 laggingIndex += 1 # Make one step forward in the main record; IMPORTANT! This allows for loop termination
@@ -393,8 +394,7 @@ class System:
                     device.status = 'active'
                     print(f'Added command at {time.time()}')
                     self.cmds[device.currentIndex][2] = 'in progress'
-                    print(device.currentCommand)
-                    self.q.put(device.currentCommand) 
+                    self.q.put(device.currentCommand)
                 else:
                     continue
         endTime = time.time()

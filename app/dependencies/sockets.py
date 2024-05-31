@@ -17,6 +17,7 @@ def handle_connect(ip):
     time.sleep(0.05) # Necessary delay to prevent loss of data as page is rendered
     socketio.emit('after_connect', {'data':status}, room=request.sid)
     socketio.emit('update_cards', {'data':sys.define()})
+    print(sys.cmds)
     socketio.emit('update_cmd_list', {'data':sys.cmds})
 
 @socketio.on('get-user')

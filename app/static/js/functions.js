@@ -116,21 +116,28 @@ jQuery(function() {
             cmd = data[entry][0][0];
             if(cmd.indexOf("Wait") >= 0){
                 holdType = "global";
-                holdValue = "0";
+                holdValue = data[entry][1];
             }
             else{
                 holdType = "cmd";
                 if(data[entry][1] != null){
                     
-                    holdValue = data[entry][1].join(", ");
+                    holdValue = data[entry][1].join(',');
                 }
                 else{
-                    holdValue = " ";
+                    holdValue = "";
                 }
             }
+            if(href.includes('/auto')){
+                $("#cmd-list").append(Cmd(order, data[entry][0][1], holdType, holdValue));
+            }
+            else if(href.includes('/monitor')){
+                $("#cmd-history").append(Cmd(order, data[entry][0][1], holdType, holdValue));
+                $("div.cmd-remove").remove();
+            }
+            else{}
             
-            $("#cmd-list").append(Cmd(order, data[entry][0][1], holdType, holdValue));
-            
+            $("#hold-"+(order)).val(holdValue);
               
             order++;
         }
@@ -329,6 +336,16 @@ jQuery(function() {
         if(href.includes('/monitor')){
             $("#tempPlot").attr("src", filepath);
         }
+    });
+
+    socket.on('update-history', function(msg){
+        if(href.includes('/monitor')){
+            $("div.cmd-entry").remove();
+            data = msg.data;
+            stepNo = 1;
+            generateCmdList(data);
+        }
+        
     });
 
     /* UI interactions */
