@@ -660,6 +660,12 @@ jQuery(function() {
     };
 
     var Valve = function(id, type) {
+        if(href.includes('/auto')){
+            buttonText = 'Add Valve Step';
+        }
+        else{
+            buttonText = 'Set Valve';
+        }
         content = `
         <div class="input-box">
             <span class="select-label">Select an output</span>
@@ -675,12 +681,18 @@ jQuery(function() {
         </div>
         
         <div class="optns">
-            <button class="ui-btn single-btn apply-action" value="set">Set Valve</button>
+            <button class="ui-btn single-btn apply-action" value="set">${buttonText}</button>
         </div>`;
         return Card(id, type, content);
     };
 
     var PeristalticPump = function(id, type) {
+        if(href.includes('/auto')){
+            buttonText = 'Add Pump Step';
+        }
+        else{
+            buttonText = 'Start Pump';
+        }
         content = `
         <div class="input-box">
             <input id="pump-vol" type="number" inputmode="decimal" value=0 required="required">
@@ -688,12 +700,18 @@ jQuery(function() {
         </div>
         
         <div class="optns">
-            <button class="ui-btn single-btn apply-action" value="pump">Start Pump</button>
+            <button class="ui-btn single-btn apply-action" value="pump">${buttonText}</button>
         </div>`;
         return Card(id, type, content);
     };
 
     var SyringePump = function(id, type){
+        if(href.includes('/auto')){
+            buttonText = 'Add Pump Step';
+        }
+        else{
+            buttonText = 'Start Pump';
+        }
         content = `
         <div class="input-box">
             <span class="select-label">Select a syringe</span>
@@ -712,12 +730,20 @@ jQuery(function() {
         </div>
 
         <div class="optns">
-            <button class="ui-btn single-btn apply-action" value="pump">Start Pump</button>
+            <button class="ui-btn single-btn apply-action" value="pump">${buttonText}</button>
         </div>`;
         return Card(id, type, content);
     };
 
     var MixerShutter = function(id, type) {
+        if(href.includes('/auto')){
+            buttonText1 = 'Add Mixer Step';
+            buttonText2 = 'Add Shutter Step';
+        }
+        else{
+            buttonText1 = 'Set Mixer Speed';
+            buttonText2 = 'Set Shutter Position';
+        }
         content = `
         <div class="input-box">
             <span class="select-label">Select a speed</span>
@@ -742,7 +768,7 @@ jQuery(function() {
         </div>
 
         <div class="optns">
-            <button class="ui-btn single-btn apply-action" value="mix">Set Mixer Speed</button>
+            <button class="ui-btn single-btn apply-action" value="mix">${buttonText1}</button>
         </div>
         
         <div class="input-box">
@@ -757,12 +783,20 @@ jQuery(function() {
         </div>
         
         <div class="optns">
-            <button class="ui-btn single-btn apply-action" value="set">Set Shutter Position</button>
+            <button class="ui-btn single-btn apply-action" value="set">${buttonText2}</button>
         </div>`;
         return Card(id, type, content);
     }
 
     var Extractor = function(id, type) {
+        if(href.includes('/auto')){
+            buttonText1 = 'Add Extractor Select Step';
+            buttonText2 = 'Add Extractor Pump Step';
+        }
+        else{
+            buttonText1 = 'Set Extractor Slot';
+            buttonText2 = 'Extract Volume';
+        }
         content = `
         <div class="input-box">
             <span class="select-label">Select a slot</span>
@@ -778,7 +812,7 @@ jQuery(function() {
         </div>
 
         <div class="optns">
-            <button class="ui-btn single-btn apply-action" value="set">Set Extractor Slot</button>
+            <button class="ui-btn single-btn apply-action" value="set">${buttonText1}</button>
         </div>
 
         <div class="input-box">
@@ -787,12 +821,18 @@ jQuery(function() {
         </div>
 
         <div class="optns">
-            <button class="ui-btn single-btn apply-action" value="pump">Extract Volume</button>
+            <button class="ui-btn single-btn apply-action" value="pump">${buttonText2}</button>
         </div>`;
         return Card(id, type, content);
     };
 
     var Sensor = function(id, type) {
+        if(href.includes('/auto')){
+            buttonText = 'Add Spectrometer Reading';
+        }
+        else{
+            buttonText = 'Take Spectrometer Reading';
+        }
         content = `
         <div class="input-box">
             <span class="select-label">Select a camera</span>
@@ -805,7 +845,7 @@ jQuery(function() {
         </div>
 
         <div class="optns">
-            <button class="ui-btn single-btn apply-action" value="spect">Take Spectrometer Reading</button>
+            <button class="ui-btn single-btn apply-action" value="spect">${buttonText}</button>
         </div>`;
         return Card(id, type, content);
     };
