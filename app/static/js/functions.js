@@ -33,7 +33,7 @@ jQuery(function() {
                         columnID = "#column1";
                     }
                     else{
-                        columnID = "#column2";
+                        columnID = "#column1";
                     }
                     if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
                         break;
@@ -45,7 +45,7 @@ jQuery(function() {
                         columnID = "#column1";
                     }
                     else{
-                        columnID = "#column2";
+                        columnID = "#column1";
                     }
                     if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
                         break;
@@ -56,7 +56,12 @@ jQuery(function() {
                     if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
                         break;
                     }
-                    columnID = "#column2";
+                    if(numCol != 2){
+                        columnID = "#column2";
+                    }
+                    else{
+                        columnID = "#column1";
+                    }
                     $(columnID).append(MixerShutter(data[entry][0], type));
                     break;
                 case 'extraction':
@@ -64,7 +69,7 @@ jQuery(function() {
                         columnID = "#column3";
                     }
                     else{
-                        columnID = "#column2";
+                        columnID = "#column1";
                     }
                     if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
                         break;
@@ -76,7 +81,7 @@ jQuery(function() {
                         columnID = "#column3";
                     }
                     else{
-                        columnID = "#column2";
+                        columnID = "#column1";
                     }
                     if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
                         break;
@@ -88,7 +93,7 @@ jQuery(function() {
                         columnID = "#column2";
                     }
                     else{
-                        columnID = "#column2";
+                        columnID = "#column1";
                     }
                     if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
                         break;
@@ -102,7 +107,7 @@ jQuery(function() {
                     if((href.includes('/home'))||(href.includes('/profile'))||(href.includes('/monitor'))){
                         break;
                     }
-                    columnID = "#column2";
+                    columnID = "#column1";
                     $(columnID).append(Card("0000", "Invalid Module", ""));
                     break;
             }
