@@ -9,7 +9,7 @@ defaultCalibration = ((355,532),(577,650))
 
 class LiveVideo:
     def __init__(self):
-        self.liveFeed = cv2.VideoCapture(1)
+        self.liveFeed = cv2.VideoCapture(0)
 
     def videoStream(self):
         while True:
@@ -38,19 +38,18 @@ class SpectrometerVideo:
         self.height = self.spectrometerFeed.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
     def spectFrameBW(self):
-        while True:
-            ret, frame = self.spectrometerFeed.read()
-            if not ret:
-                return (ret, None)
-            else:
-                blackwhite = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                cv2.imwrite("frame%s.jpg" % ret, frame) 
-                cv2.imwrite("frame%s.jpg" % ret, blackwhite) 
-                return blackwhite
+        ret, frame = self.spectrometerFeed.read()
+        if not ret:
+            return (ret, None)
+        else:
+            print("SAMPLE TAKEN")
+            return (ret, frame)
 
     def getSampleSet(self):
         frames = []
-        for i in range(1):
-            frames.append(self.spectFrameBW())
+        for i in range(50):
+            ret, frame = self.spectFrameBW()
+            if ret:
+                frames.append(frame)
         return frames
 

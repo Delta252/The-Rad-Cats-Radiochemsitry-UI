@@ -333,11 +333,11 @@ class System:
             if self.cmds[laggingIndex][2] == 'done':
                 laggingIndex += 1 # Make one step forward in the main record; IMPORTANT! This allows for loop termination
                 continue # Next tic with updated lagging index
-            for device in self.devices:
-                if (device.type == 'sensor') and (device.status != 'active'):
-                    if ((time.time()-self.lastReadingTime) > 1): # Request temperature reading from all sensor modules that are not currently awaiting response
-                        device.status = 'active'
-                        self.q.put(device.takeTempReading())
+#            for device in self.devices:
+#                if (device.type == 'sensor') and (device.status != 'active'):
+#                    if ((time.time()-self.lastReadingTime) > 1): # Request temperature reading from all sensor modules that are not currently awaiting response
+#                        device.status = 'active'
+#                        self.q.put(device.takeTempReading())
             # If lagging index is hung up on a wait (critical point), then execute wait
             if (self.cmds[laggingIndex][0][0] == 'Wait') and (self.cmds[laggingIndex][2] != 'done'):
                 if (self.cmds[laggingIndex][2] == 'active') and (time.time()-waitStart < waitTime):
@@ -383,6 +383,7 @@ class System:
                 # Check if the current cmd has been completed; wait if not
                 elif device.status == 'pending': # Current device is waiting
                     # Check for incomplete prior global wait
+                    print('trying to proceed component')
                     proceed = True
                     for index in range(0, device.currentIndex):
                         if (self.cmds[index][0][0] == 'Wait') and (self.cmds[index][2] != 'done'):
@@ -397,6 +398,7 @@ class System:
                                 proceed = False
                     if not proceed:
                         continue # Counterintuitive, but this jumps to the next loop iteration rather than finishing current one
+                    print('proceeding')
                     device.status = 'active'
                     print(f'Added command at {time.time()}')
                     self.cmds[device.currentIndex][2] = 'active'
@@ -756,11 +758,11 @@ class Spectrometer(Component):
 
     def takeSpectReading(self): # To be completed
         try:
-            frames = self.source.getSampleSet()
-            Analysis.generateSpectGraph(frames)  
-            self.setStatus('done')
-            return 'filename'
+            frames = SpectrometerVideo().getSampleSet()
+            print("Processing spectrometer data...")
+            analysis = Analysis()
+            analysis.findmean(frames)
         except Exception as e:
-            print(f'Unfortunately, Spectrometer process has failed. Please try again.')
+            print('Unfortunately, Spectrometer process has failed. Please try again.')
             print(e)
             pass
