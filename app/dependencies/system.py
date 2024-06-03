@@ -196,7 +196,7 @@ class System:
                 entry = f'\n[{stepNum}] Global Wait'
             else:
                 receiver = int(re.findall(r'rID(\d+) ', packet)[0])
-                if result := re.search('set|pump|mix', transcript): # Edit as classes of actions are introduced
+                if result := re.search('set|pump|mix|spectrometer', transcript): # Edit as classes of actions are introduced
                     action = transcript[result.start():result.end()]
                     print(transcript)
                     setValue = transcript.split()[-1]
@@ -733,9 +733,8 @@ class Sensor(Component):
     def parseCommand(self, data):
         action = data[0]
         info = data[1]
-        if action == 'spect':  
-            result = self.takeSpectReading()
-            return result
+        if _:  # Placeholder
+            return
         else:
             raise KeyError
         return
@@ -753,7 +752,7 @@ class Spectrometer(Component):
     def parseCommand(self, data):
         action = data[0]
         info = data[1]
-        if action == 'spect':  
+        if action == 'spectrometer':  
             result = self.takeSpectReading()
             return result
         else:
