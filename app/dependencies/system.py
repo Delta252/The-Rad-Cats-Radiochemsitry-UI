@@ -152,7 +152,8 @@ class System:
         # Test No1 : if hold listed waits for a previous step
         for index, step in enumerate(self.cmds):
             packet = step[0][0]
-            if (packet == 'Wait') and ((step[1] ==  '') or (int(step[1][0]) < 0)):
+            print(packet)
+            if (packet == 'Wait') and ((step[1] == '') or (int(step[1][0]) < 0)):
                 msg = f'Wait time invalid for step {index + 1}'
                 return [success, msg]
             elif (packet != 'Wait') and (step[1] != None):
@@ -161,7 +162,7 @@ class System:
                     if (index-int(hold)<0):
                         msg = f'Hold request invalid for step {index + 1}'
                         return [success, msg]
-        # Test No2 : if all commands use components listed in system delcaration 
+        # Test No2 : if all commands use components listed in system delcaration
         for step in self.cmds:
             packet = step[0][0]
             if (packet == 'Wait') or (packet == 'Spectrometer Reading'):
@@ -680,7 +681,10 @@ class Extraction(Component):
     
     def pumpVolume(self, info):
         self.packets.append(f'P') # Extractor pump module number (static)
-        volume = int(info[4])
+        if type(info[3]) == str:
+            volume = int(re.findall(r'\d+', info[3])[0])
+        else:
+            volume = int(info[3])
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(info[0], info[1], info[2]) # Cmd2
         self.transcript += f' pump {volume}mL' # Add to transcript
