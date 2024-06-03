@@ -404,6 +404,9 @@ jQuery(function() {
             case "profile":
                 window.location.href = "/profile";
                 break;
+            case "monitor":
+                window.location.href = "/monitor";
+                break;
             case _:
                 break;
         }
