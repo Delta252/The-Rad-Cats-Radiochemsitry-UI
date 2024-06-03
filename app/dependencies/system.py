@@ -152,7 +152,7 @@ class System:
         # Test No1 : if hold listed waits for a previous step
         for index, step in enumerate(self.cmds):
             packet = step[0][0]
-            if (packet == 'Wait') and ((step[1] == '') or (int(step[1]) < 0)):
+            if (packet == 'Wait') and ((step[1][0] == '') or (int(step[1][0]) < 0)):
                 msg = f'Wait time invalid for step {index + 1}'
                 return [success, msg]
             elif (packet != 'Wait') and (step[1] != None):
@@ -194,6 +194,9 @@ class System:
             transcript = step[0][1]
             if packet == 'Wait':
                 entry = f'\n[{stepNum}] Global Wait'
+            elif packet == 'Spectrometer Reading':
+                receiver = int(re.findall('\((\d+)\)', transcript)[1])
+                entry = f'\n[{stepNum}] {receiver} spectrometer reading '
             else:
                 receiver = int(re.findall(r'rID(\d+) ', packet)[0])
                 if result := re.search('set|pump|mix|spectrometer', transcript): # Edit as classes of actions are introduced
@@ -212,7 +215,7 @@ class System:
                 entry = f'\n[{stepNum}] {receiver}{syringeType} {action} {setValue} {direction} ' # Individual steps
             if step[1] !=  None:
                 if packet == 'Wait':
-                    entry += f' {step[1]}s'
+                    entry += f' {",".join(step[1])}s'
                 else:
                     entry += f'HOLD ({",".join(step[1])})' # Hold condition (yes/no)
             stepNum += 1
@@ -271,9 +274,15 @@ class System:
                         self.addToDB(moduleID, module)
                     elif section[0] == 'experiment':
                         if 'Global Wait' in content[line]:
-                            value = (re.search('Global Wait \[\'(\S+?)\'\](s\s*$)', content[line])).group(1).strip()
-                            print(self.generateCommand(['wait', value]))
+                            value = (re.search('Global Wait (\S+?)(s\s*$)', content[line])).group(1).strip()
                             self.generateCommand(['wait', value])
+                        elif 'spectrometer reading' in content[line]:
+                            if 'HOLD' in content[line]:
+                                lineElements = content[line].split()
+                                holdValue = lineElements[-1]
+                            else:
+                                holdValue = ''
+                            self.generateCommand(['spectrometer', [], holdValue])
                         else:
                             lineElements = content[line].split()
                             destinationID = int(lineElements[1]) # Find action keyword
@@ -442,8 +451,14 @@ class System:
                 holdVal = int(data[1])
             self.cmds.append([result, holdVal, 'pending']) 
         elif data[0] == "spectrometer":
-            result = [("Spectrometer Reading", "Server (1000) requests Spectrometer (1011) take spectrometer reading"), None, "pending"] # THIS IS A FUDGE TO GET THE SPECTROMETER WORKING !!!
-            self.cmds.append(result)
+            hold = data[2]
+            if (hold == None) or (hold == 'None'): # Depending on source of cmd generation call
+                holdVal = None
+            else:
+                values = re.search('\(([^)]+)', hold).group(1)
+                holdVal = [int(x) for x in values.split(',')]
+            result = ("Spectrometer Reading", "Server (1000) requests Spectrometer (1011) take spectrometer reading") # THIS IS A FUDGE TO GET THE SPECTROMETER WORKING !!!
+            self.cmds.append([result, holdVal, 'pending'])
         else:
             id = int(data[1][2])
             result = 'No Valid Command'
