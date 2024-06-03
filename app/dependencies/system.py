@@ -779,7 +779,8 @@ class Spectrometer(Component):
             frames = SpectrometerVideo().getSampleSet()
             print("Processing spectrometer data...")
             analysis = Analysis()
-            analysis.findmean(frames)
+            filename = analysis.findmean(frames)
+            self.socket.emit('spectPlot', {'data':filename})
         except Exception as e:
             print('Unfortunately, Spectrometer process has failed. Please try again.')
             print(e)
