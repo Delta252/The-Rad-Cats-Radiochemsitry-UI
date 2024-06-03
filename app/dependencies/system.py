@@ -152,8 +152,7 @@ class System:
         # Test No1 : if hold listed waits for a previous step
         for index, step in enumerate(self.cmds):
             packet = step[0][0]
-            print(packet)
-            if (packet == 'Wait') and ((step[1] == '') or (int(step[1][0]) < 0)):
+            if (packet == 'Wait') and ((step[1] == '') or (int(step[1]) < 0)):
                 msg = f'Wait time invalid for step {index + 1}'
                 return [success, msg]
             elif (packet != 'Wait') and (step[1] != None):
@@ -273,6 +272,7 @@ class System:
                     elif section[0] == 'experiment':
                         if 'Global Wait' in content[line]:
                             value = (re.search('Global Wait \[\'(\S+?)\'\](s\s*$)', content[line])).group(1).strip()
+                            print(self.generateCommand(['wait', value]))
                             self.generateCommand(['wait', value])
                         else:
                             lineElements = content[line].split()
