@@ -2,7 +2,8 @@
 # This file handles the visualization of results gathered from the sensors
 # and spectrometer for the user to view
 
-import os, time, csv
+import os, time, csv, matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import peakutils, cv2
 from scipy.signal import savgol_filter

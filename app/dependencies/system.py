@@ -718,10 +718,11 @@ class Extraction(Component):
     
     def pumpVolume(self, info):
         self.packets.append(f'P') # Extractor pump module number (static)
-        if type(info[3]) == str:
-            volume = int(re.findall(r'\d+', info[4])[0])
+        print(info)
+        if 'mL' in info[3]:
+            volume = int(re.findall(r'\d+', info[3])[0])
         else:
-            volume = int(info[3])
+            volume = int(info[4])
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(info[0], info[1], info[2]) # Cmd2
         self.transcript += f' pump {volume}mL' # Add to transcript
