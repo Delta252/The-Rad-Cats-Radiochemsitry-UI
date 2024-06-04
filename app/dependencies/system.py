@@ -226,9 +226,13 @@ class System:
                 entry = f'\n[{stepNum}] {receiver}{syringeType} {action} {setValue} {direction} ' # Individual steps
             if step[1] !=  None:
                 if packet == 'Wait':
-                    entry += f' {",".join(step[1])}s'
+                    waitValue = int(step[1][0])
+                    entry += f' ({waitValue})s'
                 else:
-                    entry += f'HOLD ({",".join(step[1])})' # Hold condition (yes/no)
+                    holdValues = []
+                    for value in step[1]:
+                        holdValues.append(str(value))
+                    entry += f'HOLD ({",".join(holdValues)})' # Hold condition (yes/no)
             stepNum += 1
             script.write(entry)
         script.write('\n>>ENDSECTION\n')
@@ -285,7 +289,7 @@ class System:
                         self.addToDB(moduleID, module)
                     elif section[0] == 'experiment':
                         if 'Global Wait' in content[line]:
-                            value = (re.search('Global Wait \[\'(\S+?)\'\](s\s*$)', content[line])).group(1).strip()
+                            value = (re.search('Global Wait \((\S+?)\)(s\s*$)', content[line])).group(1).strip()
                             self.generateCommand(['wait', value])
                         elif 'spectrometer reading' in content[line]:
                             if 'HOLD' in content[line]:
