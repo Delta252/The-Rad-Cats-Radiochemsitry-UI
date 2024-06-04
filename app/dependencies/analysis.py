@@ -135,6 +135,7 @@ class Analysis:
         plt.plot(wavelengtharray, logRatioValues, marker='*', linestyle='-', color='blue')
         plt.title('Log10 of Mean Intensity Ratio vs. Wavelength')
         plt.xlabel('Wavelength (nm)')
+        plot.xlim(425, 675)
         plt.ylabel('-Log10(Mean Intensity Ratio)')
         plt.grid(True)
         plotDir = 'app/static/img'
