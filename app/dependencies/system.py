@@ -152,15 +152,26 @@ class System:
         # Test No1 : if hold listed waits for a previous step
         for index, step in enumerate(self.cmds):
             packet = step[0][0]
-            if (packet == 'Wait') and ((step[1][0] == '') or (int(step[1][0]) < 0)):
-                msg = f'Wait time invalid for step {index + 1}'
-                return [success, msg]
-            elif (packet != 'Wait') and (step[1] != None):
-                print(f'packet: {packet}, step: {step}')
-                for hold in step[1]:
-                    if (index-int(hold)<0):
-                        msg = f'Hold request invalid for step {index + 1}'
-                        return [success, msg]
+            if (type(step[1]) is list):
+                if (packet == 'Wait') and ((step[1] == '') or (int(step[1][0]) < 0)):
+                    msg = f'Wait time invalid for step {index + 1}'
+                    return [success, msg]
+                elif (packet != 'Wait') and (step[1] != None):
+                    print(f'packet: {packet}, step: {step}')
+                    for hold in step[1]:
+                        if (index - int(hold) < 0):
+                            msg = f'Hold request invalid for step {index + 1}'
+                            return [success, msg]
+            else:
+                if (packet == 'Wait') and ((step[1] == '') or (int(step[1]) < 0)):
+                    msg = f'Wait time invalid for step {index + 1}'
+                    return [success, msg]
+                elif (packet != 'Wait') and (step[1] != None):
+                    print(f'packet: {packet}, step: {step}')
+                    for hold in step[1]:
+                        if (index - int(hold) < 0):
+                            msg = f'Hold request invalid for step {index + 1}'
+                            return [success, msg]
         # Test No2 : if all commands use components listed in system delcaration
         for step in self.cmds:
             packet = step[0][0]
@@ -274,7 +285,7 @@ class System:
                         self.addToDB(moduleID, module)
                     elif section[0] == 'experiment':
                         if 'Global Wait' in content[line]:
-                            value = (re.search('Global Wait (\S+?)(s\s*$)', content[line])).group(1).strip()
+                            value = (re.search('Global Wait \[\'(\S+?)\'\](s\s*$)', content[line])).group(1).strip()
                             self.generateCommand(['wait', value])
                         elif 'spectrometer reading' in content[line]:
                             if 'HOLD' in content[line]:
@@ -343,18 +354,21 @@ class System:
             if self.cmds[laggingIndex][2] == 'done':
                 laggingIndex += 1 # Make one step forward in the main record; IMPORTANT! This allows for loop termination
                 continue # Next tic with updated lagging index
-#            for device in self.devices:
-#                if (device.type == 'sensor') and (device.status != 'active'):
-#                    if ((time.time()-self.lastReadingTime) > 1): # Request temperature reading from all sensor modules that are not currently awaiting response
-#                        device.status = 'active'
-#                        self.q.put(device.takeTempReading())
+            for device in self.devices:
+                if (device.type == 'sensor') and (device.status != 'active'):
+                   if ((time.time()-self.lastReadingTime) > 1): # Request temperature reading from all sensor modules that are not currently awaiting response
+                       device.status = 'active'
+                       self.q.put(device.takeTempReading())
             # If lagging index is hung up on a wait (critical point), then execute wait
             if (self.cmds[laggingIndex][0][0] == 'Wait') and (self.cmds[laggingIndex][2] != 'done'):
                 if (self.cmds[laggingIndex][2] == 'active') and (time.time()-waitStart < waitTime):
                     continue
                 elif (self.cmds[laggingIndex][2] == 'pending'):
                     self.cmds[laggingIndex][2] = 'active'
-                    waitTime = int(self.cmds[laggingIndex][1][0])
+                    if (type(self.cmds[laggingIndex][1]) is list):
+                        waitTime = int(self.cmds[laggingIndex][1][0])
+                    else:
+                        waitTime = int(self.cmds[laggingIndex][1])
                     self.socket.emit('system_msg', {'data':f'Executing global wait ({waitTime}s)'})
                     waitStart = time.time()
                     continue
@@ -413,7 +427,9 @@ class System:
                     print(f'Added command at {time.time()}')
                     self.cmds[device.currentIndex][2] = 'active'
                     if device.currentCommand[0] == 'Spectrometer Reading':
-                        device.takeSpectReading() # THIS IS A TEMPORARY FIX FOR THE SPECTROMETER OPERATION!!!
+                        filename = device.takeSpectReading() # THIS IS A TEMPORARY FIX FOR THE SPECTROMETER OPERATION!!!
+                        self.socket.emit('spectPlot', {'data': filename})
+                        device.status = 'done'
                     else:
                         self.q.put(device.currentCommand)
                 else:
@@ -490,10 +506,12 @@ class System:
             if ' T' in msg: # Is a temperature sensor
                 value = float((re.search('T(.) S(.*)]', msg)).group(2))
                 self.tempReadings.append(value)
+
                 deviceID = int((re.search('sID(.*) rID', msg)).group(1))
                 self.setDeviceStatus(deviceID, 'done')
                 self.lastReadingTime = time.time()
-                filename = self.analysis.generateTempGraph(self.tempReadings)
+                #Plot last 30 readings
+                filename = self.analysis.generateTempGraph(self.tempReadings[-30:])
                 print(f'forwarding {filename}')
                 self.socket.emit('tempPlot', {'data':filename})
         else:
@@ -780,7 +798,7 @@ class Spectrometer(Component):
             print("Processing spectrometer data...")
             analysis = Analysis()
             filename = analysis.findmean(frames)
-            self.socket.emit('spectPlot', {'data':filename})
+            return filename
         except Exception as e:
             print('Unfortunately, Spectrometer process has failed. Please try again.')
             print(e)

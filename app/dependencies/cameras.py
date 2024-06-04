@@ -37,6 +37,8 @@ class SpectrometerVideo:
         self.width = self.spectrometerFeed.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.spectrometerFeed.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
+        print(self.width, self.height)
+
     def spectFrameBW(self):
         ret, frame = self.spectrometerFeed.read()
         if not ret:
@@ -47,7 +49,7 @@ class SpectrometerVideo:
 
     def getSampleSet(self):
         frames = []
-        for i in range(50):
+        for i in range(100):
             ret, frame = self.spectFrameBW()
             if ret:
                 frames.append(frame)

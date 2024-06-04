@@ -4,13 +4,15 @@
 
 import os, time, csv
 import matplotlib.pyplot as plt
-import numpy, peakutils, pandas, cv2
+import peakutils, cv2
 from scipy.signal import savgol_filter
+import pandas as pd
+import numpy as np
 
 class Analysis:
     def __init__(self):
         self.destinationFolder = os.path.abspath('app/data')
-        self.status = 'offline' # Should be replaced with enums
+        self.status = 'offline'  # Should be replaced with enums
 
     def exportToFile(self, data, filename):
         with open(f'{self.destinationFolder}/{filename}.csv',"w") as f:
@@ -19,21 +21,19 @@ class Analysis:
 
     def generateTempGraph(self, data):
         plotDir = 'app/static/img'
+        plt.clf()
         for fname in os.listdir(plotDir):
             if fname.startswith("tempGraph"):
                 os.remove(os.path.join(plotDir, fname))
-        plotData = data[-30:]
-        plt.plot(plotData)
+        plt.plot(data)
         filename = f'tempGraph_{round(time.time())}.png'
         plt.savefig(os.path.join(plotDir, filename), bbox_inches='tight')
         return filename
-    
-    # The following is modified from the pocket spectroscope project
-    # The original code can be found here:
     def generateSpectGraph(self, frame):
-        print("Generating Spectrogram")
+        count = 1
+        print(f'Generating Spectrogram {count}')
+        count+=1
         # Constants for further operation
-        fileName = f'spectMeas_{round(time.time())}.csv'
         spectCal = ((355, 532), (577, 650))
         mindist = 50
         thresh = 20
@@ -41,7 +41,7 @@ class Analysis:
         intensity = [0] * 636
         holdPeaks = False
         wavelengthdata = []
-        
+
         # Core processing
         bwimage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         rows, cols = bwimage.shape
@@ -49,7 +49,7 @@ class Analysis:
         graph.fill(255)
 
         pxrange = abs(spectCal[0][0] - spectCal[1][0])
-        nmrange = abs(spectCal[0][1] - spectCal[1][1])        
+        nmrange = abs(spectCal[0][1] - spectCal[1][1])
         pxpernm = pxrange / nmrange
         nmperpx = nmrange / pxrange
         zero = spectCal[0][1] - (spectCal[0][0] / pxpernm)
@@ -101,35 +101,36 @@ class Analysis:
             height = intensity[i]
             height = 245 - height
             wavelength = int(scalezero + (i / pxpernm))
-            cv2.rectangle(graph, ((i - textoffset) - 2, height + 3), ((i - textoffset) + 45, height - 11), (255, 255, 0), -1)
+            cv2.rectangle(graph, ((i - textoffset) - 2, height + 3), ((i - textoffset) + 45, height - 11),
+                          (255, 255, 0), -1)
             cv2.rectangle(graph, ((i - textoffset) - 2, height + 3), ((i - textoffset) + 45, height - 11), (0, 0, 0), 1)
             cv2.putText(graph, str(wavelength) + 'nm', (i - textoffset, height), font, 0.4, (0, 0, 0), 1, cv2.LINE_AA)
 
-        axisWavelengths = wavelengthdata
         intensityData = intensity
-        pd.DataFrame({'Wavelength': axisWavelengths, 'Intensity': intensityData}).to_csv('graphdata.csv', index=False)
+        #   pd.DataFrame({'Wavelength': axisWavelengths, 'Intensity': intensityData}).to_csv('graphdata.csv', index=False)
         return intensityData
-            
+
     def findmean(self, frames):
-        referenceIntensity = pd.read_csv('ReferenceIntensity.csv')['Intensity'].values
-        wavelengtharray = pd.read_csv('ReferenceIntensity.csv')['Wavelength'].values
+        referenceIntensity = pd.read_csv('./app/dependencies/ReferenceIntensity.csv')['Intensity'].values
+        wavelengtharray = pd.read_csv('./app/dependencies/ReferenceIntensity.csv')['Wavelength'].values
         intensities = np.zeros((100, 636))
         print("Processing frames")
         for i in range(100):
+            print(i)
             intensities[i] = self.generateSpectGraph(frames[i])
 
         means = np.mean(intensities, axis=0)
         ratioValues = np.divide(means, referenceIntensity)
         ratioValues = np.maximum(ratioValues, np.finfo(float).eps)
         logRatioValues = -np.log10(ratioValues)
-    
-        csv_filename = f"log10_ratio_{round(time.time())}.csv"
+
+        csv_filename = "SpectrometerResult.csv"
         with open(csv_filename, 'w') as f:
-            f.write('Wavelength,Log10MeanIntensityRatio\r\n')
+            f.write('Wavelength,Log10MeanIntensityRatio\n')
             for wavelength, logRatioValue in zip(wavelengtharray, logRatioValues):
-                f.write(f"{wavelength},{logRatioValue}\r\n")
-        print("Log10 of mean intensity ratio data saved to:", csv_filename)
-    
+                f.write(f"{wavelength},{logRatioValue}\n")
+        print("SpectrometerResult", csv_filename)
+
         plt.figure(figsize=(10, 6))
         plt.plot(wavelengtharray, logRatioValues, marker='*', linestyle='-', color='blue')
         plt.title('Log10 of Mean Intensity Ratio vs. Wavelength')
@@ -140,9 +141,9 @@ class Analysis:
         for fname in os.listdir(plotDir):
             if fname.startswith("spectGraph"):
                 os.remove(os.path.join(plotDir, fname))
-        plotData = data[-30:]
-        plt.plot(plotData)
+        # plotData = data[-30:]
+        # plt.plot(plotData)
         filename = f'spectGraph_{round(time.time())}.png'
         plt.savefig(os.path.join(plotDir, filename), bbox_inches='tight')
+        plt.savefig('plotttttt.png')
         return filename
-

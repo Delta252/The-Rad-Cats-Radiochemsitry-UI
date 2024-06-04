@@ -105,16 +105,15 @@ def generate_command(data):
     command = sys.generateCommand(data)
     sys.cmds = []
     print(f'added command {command}')
-    if command[0][0] == 'Spectrometer Reading':
+    if command[0] == 'Spectrometer Reading':
         for device in sys.devices:
-            if device.type == 'sensor':
+            if device.type == 'spectrometer':
                 socketio.emit('log_command', {'data':command[0]})
                 filename = device.takeSpectReading()
                 socketio.emit('spectPlot', {'data':filename})
                 
     else:
-        pass
-        #sys.q.put(command)
+        sys.q.put(command)
 
 @socketio.on('add-cmd-list')
 def add_cmds(data):
