@@ -472,7 +472,11 @@ jQuery(function() {
     });
 
     $("#add-wait").on("click", function(){
-        socket.emit('add-cmd-list', ["wait", 0])
+        socket.emit('add-cmd-list', ["wait", 0]);
+    });
+
+    $("#add-wash").on("click", function(){
+        socket.emit('add-wash');
     });
 
     $("#verify-script").on("click", function(){

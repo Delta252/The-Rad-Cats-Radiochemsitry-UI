@@ -117,8 +117,25 @@ def generate_command(data):
 
 @socketio.on('add-cmd-list')
 def add_cmds(data):
+    print(data)
     command = sys.generateCommand(data)
     socketio.emit('update_cmd_list', {'data':sys.cmds})
+    print(sys.cmds)
+
+@socketio.on('add-wash')
+def add_wash():
+    cmdList = [
+        ["wait", 0],
+        ['pump', ['server', '1000', '1002', '30'], 'None'],
+        ['set', ['server', '1000', '1005', '1'], 'None'],
+        ['pump', ['server', '1000', '1005', '30'], 'None'],
+        ['set', ['server', '1000', '1007', '2', '0'], 'None'],
+        ['pump', ['server', '1000', '1007', '30'], 'None'],
+        ["wait", 0]
+    ]
+    for entry in cmdList:
+        command = sys.generateCommand(entry)
+        socketio.emit('update_cmd_list', {'data':sys.cmds})
     print(sys.cmds)
 
 @socketio.on('remove-cmd-number')
