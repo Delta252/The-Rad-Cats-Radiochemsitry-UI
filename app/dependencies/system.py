@@ -719,7 +719,7 @@ class Extraction(Component):
     def pumpVolume(self, info):
         self.packets.append(f'P') # Extractor pump module number (static)
         if type(info[3]) == str:
-            volume = int(re.findall(r'\d+', info[3])[0])
+            volume = int(re.findall(r'\d+', info[4])[0])
         else:
             volume = int(info[3])
         self.packets.append(f'm{volume}') # Pump volume

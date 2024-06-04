@@ -130,7 +130,7 @@ def add_wash():
         ['set', ['server', '1000', '1005', '1'], 'None'],
         ['pump', ['server', '1000', '1005', '30'], 'None'],
         ['set', ['server', '1000', '1007', '2', '0'], 'None'],
-        ['pump', ['server', '1000', '1007', '30'], 'None'],
+        ['pump', ['server', '1000', '1007', '2', '30'], 'None'],
         ["wait", 0]
     ]
     for entry in cmdList:
