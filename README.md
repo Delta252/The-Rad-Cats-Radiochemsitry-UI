@@ -12,6 +12,9 @@ The user interface has a number of key dependencies required to make it run, as 
 - `Argon2` >> Argon 2 is installed as `argon2-cffi` and is used for password encryption. It is installed as part of `requirements.txt` but can also be added manually.
 - `PySerial` >> This is the underlying package for serial communications, and it ensures that the custom serial library implemented as part of this project is functioning. It is likewise installed as part of `requirements.txt`.
 - `Flask Socket.IO` >> This package handles the server of socket connections. This is essential to preventing constant page regenerations when interacting with user input. This is installed as the `flask-socketio` package as part of `requirements.txt`. A webpage equivalent file, which handles the other half of a socket connection, is stored under a `JavaScript` file in the project `dependencies/static/js/socket.io.js` file.
+- `MatPlotLib`, `SciPy`, `peakutils` >> This collection of dependencies is used for spectrometer graph generation and data collection within `analysis.py`.
+- `OpenCV` >> This package handles camera inputs for both the spectrometer and in-chamber webcam within `cameras.py`.
+- `Pandas` >> This package is responsible for editing, interpreting, and handling `.csv` files generated from experiments.
 
 This list of dependencies contains the critical packages, but is not exhaustive. It is set to be expanded as the project continues to be developed.
 
@@ -44,3 +47,23 @@ User information is currently stored in the `dependencies/userdata.db` file. Alt
 It should be noted that, in the case of SSL encryption, enabling an encrypted connection will result in most browsers warning the user of an insecure connection. This is due to self-signed security certificates, which are characteristic of a locally-hosted web application without access to the Internet and corresponding security authorities; however, SSL encryption will still be active as can be noted by the `https` label in the address bar, and the user can safely continue using the system.
 
 It should likewise be noted that the security keys for running the SSL connection are no longer being publically shared as a part of this repository. Self-signed security certificates and their keys can be generated as part of the `pyopenssl` package, or handled through an external security certifier (which is recommended to avoid warning screens, but also requires an active connection to the Internet). These files should be named `server.crt` and `server.key` for the certificate and key respectfully and stored in the included `dependencies/ssl` subdirectory to minimize code edits when implementing SSL.
+
+## Deploying to Production
+
+This project currently does not include the required framework for a production environment, even though the additional layers have been tested and proven to work.
+
+In order to establish a production-ready webserver, it is necessary to combine the single standalone Flask application with more refined server architectures. For this project, it is recommended to use `gunicorn` as the WGSI server. This can be started by running `gunicorn -b X.X.X.X:XXXX 'app:app'`, where `-b` represents the IP address that the server is bound to. Typically, the port is chosen based on security levels required: `433` for HTTPS and `80` for HTTP.
+
+Additionally, it is recommended to couple the WGSI server with a reverse proxy and load balancer in order to both protect the system input data path and handle multiple users simultaneously without crashing the system. For this project, `Caddy` was tested, although further work is required. Of particular note is the difficulty of handling Socket.IO traffic through the additional layers, as this traffic must be routed seperately from typical HTTP requests. Further work is necessary to properly integrate this project into a production environment.
+
+## Future Work
+
+This project has a loosely-defined roadmap for future development. 
+
+One potential project is to expand upon the functionality of `analysis.py`, where much of the data handling is contained. Additional functionality would include more complex data analysis, alerts for users should sensor readings exceed thresholds, and system control in extreme cases.
+
+Any form of iterative control based on spectrometer readings should be routed through an optimization algorithm to deliver intended yields. This closed-experiment-loop control is not currently implemented.
+
+The spectrometer and sensor module cards are, in large part, bolt-on features of the UI. These should be flushed out and consolidated into fully standalone modules. The command structure within the `executeScript()` function should be reviewed to ensure robustness of operation.
+
+The cameras are currently hard-coded ID's that must be updated every time that the system starts. This should be addressed and automated as much as possible, as it is currently impossible to correctly have the system choose a camera without manual trial and error.
