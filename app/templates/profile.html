@@ -21,15 +21,15 @@
         </div>
 
         <div class="profile">
-            <div class="card">
+            <div class="profile-card">
                 <h1>Profile Information</h1>
 
                 {% include 'includes/_messages.html' %}
 
                 <form class="profile-form" method="POST" action="">
-                    <div class="input-box">
-                        <input id="username" type="text" name="username" inputmode="text" required="required" readonly>
-                        <span class="profile-span">Username</span>
+                    <div class="input-box username-dropdown">
+                        <select id="username-select"></select>
+                        <span class="username-span">Username</span>
                     </div>
 
                     <div class="input-box">
@@ -37,8 +37,15 @@
                         <span class="profile-span">New Username</span>
                     </div>
 
+                    <div class="input-box">
+                        <div class="admin-checkbox">
+                            <input type="checkbox" id="admin-check"/>
+                            <label for="admin-check">Admin Privileges</label>
+                        </div>
+                    </div>
+
                     <div class="optns">
-                        <button id="update-user" class="ui-btn single-btn">Update Username</button>
+                        <button id="update-user" type="button" class="ui-btn single-btn">Update Username</button>
                     </div>
                 
                     <div class="input-box">
@@ -70,74 +77,6 @@
 </div>
 
 <script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
-<script>
-jQuery(function() {
-    var socket = io.connect('http://127.0.0.1:5000');
-    var comms = false;
-    socket.emit('get-comms-status');
-    socket.emit('get-user');
-
-    socket.on('set_comms', (data) => {
-        success = data;
-        if (success){
-            comms=true;
-            $("#comms-status").text("Enabled");
-            $("#comms-status").css("color", "var(--green)");
-            $("#toggle-comms").text("Disable Comms");
-            $("#connect-beacon").css("background-color", "var(--green)");
-        }
-        else {
-            comms=false;
-            $("#comms-status").text("Disabled");
-            $("#comms-status").css("color", "var(--red)");
-            $("#toggle-comms").text("Enable Comms");
-            $("#connect-beacon").css("background-color", "var(--red)");
-        }
-        $("#toggle-comms").prop("disabled",false);
-    });
-
-    socket.on('set_user', function(msg) {
-        username = msg.data;
-        $("#username").val(username);
-        $("#new-username").val('');
-    });
-
-    $("#connect-beacon").click(function(){
-        if(comms) {
-            $("#comms-status").text("Enabled");
-            $("#comms-status").css("color", "var(--green)");
-            $("#toggle-comms").text("Disable Comms");
-        }
-        else {
-            $("#comms-status").text("Disabled");
-            $("#comms-status").css("color", "var(--red)");
-            $("#toggle-comms").text("Enable Comms");
-        }
-        $("#comms-popup").toggle();
-    });
-
-    $("#close-comms").click(function(){
-        $("#comms-popup").toggle();
-    });
-
-    $("#toggle-comms").click(function(){
-        $(this).prop("disabled",true);
-        socket.emit('comms-status');
-        socket.emit('toggle-comms');
-    });
-
-    $("#update-user").click(function(){
-        oldUsername = $("#username").val();
-        newUsername = $("#new-username").val();
-        socket.emit('update-username', [oldUsername, newUsername]);
-    });
-
-    $("#log-off").click(function(){
-        username = $("#username").val();
-        socket.emit('log-off', username);
-        location.href = "/login";
-    });
-});
-</script>
+<script src="{{url_for('static', filename='js/functions.js')}}"></script>
 
 {% endblock %}

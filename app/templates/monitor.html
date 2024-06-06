@@ -1,0 +1,96 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<div class="body" onload="load_fctn()">
+    {% set active_page = 'nav-testing' %}
+    {% include 'includes/_messages.html' %}
+    <div class="content">
+        <div id="comms-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Comms Status</h1>
+                <a id="close-comms" href="#"><i class="icon icon-close"></i></a>
+                <div class="popup-message">
+                    <h4>The system comms to the chamber are currently</h4> 
+                    <h2 id="comms-status" class="status"></h2>
+                    <h4 id="status-update">Please click below to toggle this value.</h4>
+                </div>
+                <div>
+                    <button id="toggle-comms" class="comms-btn single-btn">Enable Comms</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="msg-popup" class="overlay">
+            <div class="popup">
+                <h1 id="msg-type" class="popup-title"></h1>
+                <a id="close-msg" href="#"><i class="icon icon-close"></i></a>
+                <div class="popup-message"></div>
+                <div class="popup-ops">
+                    <button id="reject-op" class="ui-btn single-btn">Reject</button>
+                    <button id="approve-op" class="ui-btn single-btn">Accept</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="file-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Upload File</h1>
+                <a id="close-file" href="#"><i class="icon icon-close"></i></a>
+                <div id="dropbox">
+                    <p id="dropbox-text">Drag file here or click to <b>Upload File</b></p>
+                    <input id="file-input" type="file" name="file" accept=".txt" style="display:none;"/>
+                </div>
+                <div class="popup-ops">
+                    <button id="clear-file" class="ui-btn single-btn">Clear File</button>
+                    <button id="upload-file" class="ui-btn single-btn">Upload File</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="column1" class="column-container half-screen">
+            <div class="script-gen">
+                <div>
+                    <h1>Command Backlog Progress</h1>
+                </div>
+                
+                <div id="cmd-history"></div>
+            </div>
+        </div>
+
+        <div id="column2" class="column-container half-screen">
+            <div class="info-container webcam">
+                <h1>Camera</h1>
+
+                <div id="camera-box">
+                    <img id="camera" src="{{url_for('core.video_feed')}}">
+                </div>
+            </div>
+
+            <div class="info-container webcam">
+                <h1>Sensor readings</h1>
+
+                <div class="sensor-plot">
+                    <h3>Temperature Readings</h3>
+                    <img id="tempPlot" src="{{url_for('static', filename='img/tempPlot.png')}}" alt="Running Temperature Plot">
+                </div>
+
+                <div class="sensor-plot">
+                    <h3>Latest Spectrometer Reading</h3>
+                    <img id="spectPlot" src="{{url_for('static', filename='img/tempPlot.png')}}" alt="Latest Spectrometer Reading">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="console">
+        <textarea id="console" readonly></textarea>
+    </div>
+
+</div>
+
+
+<script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+<script src="{{url_for('static', filename='js/functions.js')}}"></script>
+
+{% endblock %}

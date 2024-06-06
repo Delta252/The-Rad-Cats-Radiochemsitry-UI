@@ -1,12 +1,19 @@
-import os, re, time
+import os, re, time, sys
 import sqlite3
 import warnings
 from queue import *
+from .analysis import Analysis
+from .cameras import SpectrometerVideo
 
 class System:
     def __init__(self, socket):
-        self.systemdataFilepath = os.path.abspath('dependencies/systemdata.db')
-        self.connect = sqlite3.connect(self.systemdataFilepath, check_same_thread=False)
+        databaseFilepath = 'systemdata.db'
+        if getattr(sys, 'frozen', False):
+            applicationPath = os.path.dirname(sys.executable)
+        elif __file__:
+            applicationPath = os.path.dirname(__file__)
+        systemdataFilepath = os.path.join(applicationPath, databaseFilepath)
+        self.connect = sqlite3.connect(systemdataFilepath, check_same_thread=False)
         cursor = self.connect.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS systemdata (
@@ -27,13 +34,19 @@ class System:
         self.cmds = []
         self.q = Queue(-1)
         self.socket = socket
+        self.tempReadings = [] # This should be consolidated elsewhere (within a sensor module)
+        self.lastReadingTime = 0
+        self.analysis = Analysis()
+        self.updateFromDB()
 
     def updateFromDB(self):
         self.devices = []
-        self.cursor = self.connect.cursor()
-        found = self.cursor.execute("""
+        cursor = self.connect.cursor()
+        found = cursor.execute("""
             SELECT * FROM systemdata                            
             """).fetchall()
+
+        print(found)
 
         for i in found:
             match i[1]:
@@ -49,55 +62,59 @@ class System:
                     dev = Extraction(i[0], i[1])
                 case 'valve':
                     dev = Valve(i[0], i[1])
+                case 'sensor':
+                    dev = Sensor(i[0], i[1])
+                case 'spectrometer':
+                    dev = Spectrometer(i[0], i[1])
                 case _:
                     warnings.warn('Unrecognized device in database.')
-
+            print(dev)
             self.devices.append(dev)
         
-        self.cursor.close()
+        cursor.close()
 
     def addToDB(self, id, descriptor):
         # Inserts new element or updates an existing one  !!WARNING
-        self.cursor = self.connect.cursor()
-        self.cursor.execute("""
+        cursor = self.connect.cursor()
+        cursor.execute("""
             INSERT INTO systemdata(id, device) VALUES(?, ?)
             """, (id, descriptor))
         
         self.connect.commit()
-        self.cursor.close()
+        cursor.close()
         self.updateFromDB()
 
     def removeFromDB(self, id):
         # Removes a known entry based on device ID
-        self.cursor = self.connect.cursor()
-        self.cursor.execute(f"""
+        cursor = self.connect.cursor()
+        cursor.execute(f"""
             DELETE FROM systemdata WHERE id={id}
             """)
         
         self.connect.commit()
-        self.cursor.close()
+        cursor.close()
         self.updateFromDB()
 
     def updateID(self, oldID, newID):
         # Updates record of device without adding/removing listing
-        self.cursor = self.connect.cursor()
-        self.cursor.execute(f"""
+        cursor = self.connect.cursor()
+        cursor.execute(f"""
             UPDATE systemdata SET id = REPLACE(id, {oldID}, {newID})
             """)
 
         self.connect.commit()
-        self.cursor.close()
+        cursor.close()
         self.updateFromDB()
 
     def updateServerID(self, newID):
         # Updates server id specifically without need for old id
-        self.cursor = self.connect.cursor()
-        self.cursor.execute(f"""
+        cursor = self.connect.cursor()
+        cursor.execute(f"""
             UPDATE systemdata SET id ='{newID}' WHERE device='server'
             """)
 
         self.connect.commit()
-        self.cursor.close()
+        cursor.close()
         self.updateFromDB()
 
     def listDevices(self):
@@ -135,16 +152,30 @@ class System:
         # Test No1 : if hold listed waits for a previous step
         for index, step in enumerate(self.cmds):
             packet = step[0][0]
-            if (packet == 'Wait') and ((step[1] ==  '') or (int(step[1]) < 0)):
-                msg = f'Wait time invalid for step {index + 1}'
-                return [success, msg]
-            elif (packet != 'Wait') and (step[1] != None) and (index-int(step[1])<0):
-                msg = f'Hold request invalid for step {index + 1}'
-                return [success, msg]
-        # Test No2 : if all commands use components listed in system delcaration 
+            if (type(step[1]) is list):
+                if (packet == 'Wait') and ((step[1] == '') or (int(step[1][0]) < 0)):
+                    msg = f'Wait time invalid for step {index + 1}'
+                    return [success, msg]
+                elif (packet != 'Wait') and (step[1] != None):
+                    print(f'packet: {packet}, step: {step}')
+                    for hold in step[1]:
+                        if (index - int(hold) < 0):
+                            msg = f'Hold request invalid for step {index + 1}'
+                            return [success, msg]
+            else:
+                if (packet == 'Wait') and ((step[1] == '') or (int(step[1]) < 0)):
+                    msg = f'Wait time invalid for step {index + 1}'
+                    return [success, msg]
+                elif (packet != 'Wait') and (step[1] != None):
+                    print(f'packet: {packet}, step: {step}')
+                    for hold in step[1]:
+                        if (index - int(hold) < 0):
+                            msg = f'Hold request invalid for step {index + 1}'
+                            return [success, msg]
+        # Test No2 : if all commands use components listed in system delcaration
         for step in self.cmds:
             packet = step[0][0]
-            if packet == 'Wait':
+            if (packet == 'Wait') or (packet == 'Spectrometer Reading'):
                 continue
             sender = int(re.findall(r'sID(\d+) ', packet)[0])
             receiver = int(re.findall(r'rID(\d+) ', packet)[0])
@@ -159,9 +190,10 @@ class System:
         return [success, msg]
 
     def compileScript(self, user):
-        fileName = f'./download/script_{user}.txt' # Create user-specific file
+        fileName = f'/download/script_{user}.txt' # Create user-specific file
         stepNum = 1
-        script = open(fileName, 'w') # User file is overwritten every time if the name is the same
+        scriptLoc = f'app/{fileName}'
+        script = open(scriptLoc, 'w') # User file is overwritten every time if the name is the same
         script.write('>>START\n')
         script.write('\n>>SYSTEM')
         for device in self.devices:
@@ -173,17 +205,34 @@ class System:
             transcript = step[0][1]
             if packet == 'Wait':
                 entry = f'\n[{stepNum}] Global Wait'
+            elif packet == 'Spectrometer Reading':
+                receiver = int(re.findall('\((\d+)\)', transcript)[1])
+                entry = f'\n[{stepNum}] {receiver} spectrometer reading '
             else:
                 receiver = int(re.findall(r'rID(\d+) ', packet)[0])
-                if result := re.search('set|pump', transcript): # Edit as classes of actions are introduced
+                if result := re.search('set|pump|mix|spectrometer', transcript): # Edit as classes of actions are introduced
                     action = transcript[result.start():result.end()]
+                    print(transcript)
                     setValue = transcript.split()[-1]
-                entry = f'\n[{stepNum}] {receiver} {action} {setValue}' # Individual steps
+                    if 'mix' in transcript:
+                        direction = (re.search('mix (.*) ', transcript)).group(1).strip()
+                    else:
+                        direction = ""
+                    if 'Pump-syringe' in transcript:
+                        syringeID = (re.search('\[S(.*)\]', transcript)).group(1).strip()
+                        syringeType = f' type {syringeID}'
+                    else:
+                        syringeType = ""
+                entry = f'\n[{stepNum}] {receiver}{syringeType} {action} {setValue} {direction} ' # Individual steps
             if step[1] !=  None:
                 if packet == 'Wait':
-                    entry += f' {step[1]}s'
+                    waitValue = int(step[1])
+                    entry += f' ({waitValue})s'
                 else:
-                    entry += f' HOLD ({step[1]})' # Hold condition (yes/no)
+                    holdValues = []
+                    for value in step[1]:
+                        holdValues.append(str(value))
+                    entry += f'HOLD ({",".join(holdValues)})' # Hold condition (yes/no)
             stepNum += 1
             script.write(entry)
         script.write('\n>>ENDSECTION\n')
@@ -240,17 +289,28 @@ class System:
                         self.addToDB(moduleID, module)
                     elif section[0] == 'experiment':
                         if 'Global Wait' in content[line]:
-                            value = (re.search('Global Wait (\S+?)(s\s*$)', content[line])).group(1).strip()
+                            value = (re.search('Global Wait \((\S+?)\)(s\s*$)', content[line])).group(1).strip()
                             self.generateCommand(['wait', value])
+                        elif 'spectrometer reading' in content[line]:
+                            if 'HOLD' in content[line]:
+                                lineElements = content[line].split()
+                                holdValue = lineElements[-1]
+                            else:
+                                holdValue = ''
+                            self.generateCommand(['spectrometer', [], holdValue])
                         else:
                             lineElements = content[line].split()
                             destinationID = int(lineElements[1]) # Find action keyword
                             action = lineElements[2]
+                            if action == 'type':
+                                action = lineElements[4]
                             values = []
                             for element in lineElements[3:None]:
                                 if element == 'HOLD':
                                     holdValue = lineElements[-1]
                                     break
+                                if element == 'type':
+                                    continue
                                 else:
                                     values.append(element)
                                     holdValue = None
@@ -279,7 +339,10 @@ class System:
             packet = cmd[0]
             if packet[0] == 'Wait':
                 continue
-            receiver = int(re.findall(r'rID(\d+) ', packet[0])[0]) # Extract cmd destination device id
+            elif packet[0] == 'Spectrometer Reading':
+                receiver = 1011 # THIS IS A TEMPORARY FIX FOR THE SPECTROMETER OPERATION!!!
+            else:
+                receiver = int(re.findall(r'rID(\d+) ', packet[0])[0]) # Extract cmd destination device id
             for device in self.devices:
                 if device.id == receiver:
                     device.backlog.append(packet)
@@ -290,24 +353,38 @@ class System:
         laggingIndex = 0 # This is an index of the "slowest" cmd that is currently not done
         while laggingIndex < len(self.cmds):
             time.sleep(0.05) # 50ms tic time
+            self.socket.emit('update-history', {'data':self.cmds})
             # Check if lagging index has become done and find the next incomplete command if not
             if self.cmds[laggingIndex][2] == 'done':
                 laggingIndex += 1 # Make one step forward in the main record; IMPORTANT! This allows for loop termination
                 continue # Next tic with updated lagging index
+            for device in self.devices:
+                if (device.type == 'sensor') and (device.status != 'active'):
+                   if ((time.time()-self.lastReadingTime) > 1): # Request temperature reading from all sensor modules that are not currently awaiting response
+                       device.status = 'active'
+                       self.q.put(device.takeTempReading())
             # If lagging index is hung up on a wait (critical point), then execute wait
             if (self.cmds[laggingIndex][0][0] == 'Wait') and (self.cmds[laggingIndex][2] != 'done'):
-                waitTime = int(self.cmds[laggingIndex][1])
-                self.socket.emit('system_msg', {'data':f'Executing global wait ({waitTime}s)'})
-                waitStart = time.time()
-                time.sleep(waitTime)
-                waitEnd = time.time()
-                self.socket.emit('system_msg', {'data':f'Actual wait time: ({round((waitEnd - waitStart),2)}s)'})
-                self.cmds[laggingIndex][2] = 'done'
-                laggingIndex += 1
-                continue
+                if (self.cmds[laggingIndex][2] == 'active') and (time.time()-waitStart < waitTime):
+                    continue
+                elif (self.cmds[laggingIndex][2] == 'pending'):
+                    self.cmds[laggingIndex][2] = 'active'
+                    if (type(self.cmds[laggingIndex][1]) is list):
+                        waitTime = int(self.cmds[laggingIndex][1][0])
+                    else:
+                        waitTime = int(self.cmds[laggingIndex][1])
+                    self.socket.emit('system_msg', {'data':f'Executing global wait ({waitTime}s)'})
+                    waitStart = time.time()
+                    continue
+                else:
+                    self.cmds[laggingIndex][2] = 'done'
+                    waitEnd = time.time()
+                    self.socket.emit('system_msg', {'data':f'Actual wait time: ({round((waitEnd - waitStart),2)}s)'})
+                    laggingIndex += 1
+                    continue
             # Check next cmd candidate for each device against main cmd record
             for device in self.devices:
-                if device.status == 'free':
+                if (device.status == 'free') or (device.type == 'sensor'):
                     continue # Ignore devices that have no backlog and are not executing
                 if (device.currentCommand == None):
                     print(f'adding command for {device.type} ({device.status}) and {device.id}')
@@ -334,6 +411,7 @@ class System:
                 # Check if the current cmd has been completed; wait if not
                 elif device.status == 'pending': # Current device is waiting
                     # Check for incomplete prior global wait
+                    print('trying to proceed component')
                     proceed = True
                     for index in range(0, device.currentIndex):
                         if (self.cmds[index][0][0] == 'Wait') and (self.cmds[index][2] != 'done'):
@@ -341,21 +419,27 @@ class System:
                             break
                     # Check for a prerequisite step and completion
                     if self.cmds[device.currentIndex][1] != None:
-                        previousIndex = self.cmds[device.currentIndex][1]
-                        if isinstance(previousIndex, str):
-                            previousIndex = int(previousIndex)
-                        previousStatus = self.cmds[previousIndex-1][2]
-                        if previousStatus != 'done':
-                            proceed = False
+                        previousIndeces = [ int(x) for x in self.cmds[device.currentIndex][1]]
+                        for index in previousIndeces:
+                            previousStatus = self.cmds[index-1][2]
+                            if previousStatus != 'done':
+                                proceed = False
                     if not proceed:
                         continue # Counterintuitive, but this jumps to the next loop iteration rather than finishing current one
+                    print('proceeding')
                     device.status = 'active'
                     print(f'Added command at {time.time()}')
-                    self.cmds[device.currentIndex][2] = 'in progress'
-                    self.q.put(device.currentCommand) 
+                    self.cmds[device.currentIndex][2] = 'active'
+                    if device.currentCommand[0] == 'Spectrometer Reading':
+                        filename = device.takeSpectReading() # THIS IS A TEMPORARY FIX FOR THE SPECTROMETER OPERATION!!!
+                        self.socket.emit('spectPlot', {'data': filename})
+                        device.status = 'done'
+                    else:
+                        self.q.put(device.currentCommand)
                 else:
                     continue
         endTime = time.time()
+        self.socket.emit('update-history', {'data':self.cmds})
         self.socket.emit('system_msg', {'data':'Cleaning up...'})
         # Cleanup
         for device in self.devices:
@@ -367,14 +451,17 @@ class System:
                 self.socket.emit('system_msg', {'data':'Failed to properly execute all commands'})
                 print(self.cmds)
                 return False
-                # Reset cmds statuses
+        # Export data
+        filename = f'TestRun{round(time.time())}'
+        self.analysis.exportToFile(self.tempReadings, filename)
+        # Reset cmds statuses
         for cmd in self.cmds:
             cmd[2] = 'pending'
         self.socket.emit('system_msg', {'data':f'Script successfully completed (Execution time = {round((endTime - startTime),2)}s)'})
         return True
 
     def generateCommand(self, data):
-        # Expected data format: [set/pump/wait, [input1, input2, input3], holdVal]
+        # Expected data format: [set/pump/mix/wait/spectrometer, [input1, input2, input3], holdVal]
         # Main cmd list format: [(cmd, transcript), holdValue, status]
         if data[0] == "wait":
             result = self.addWait()
@@ -383,6 +470,15 @@ class System:
             else:
                 holdVal = int(data[1])
             self.cmds.append([result, holdVal, 'pending']) 
+        elif data[0] == "spectrometer":
+            hold = data[2]
+            if (hold == None) or (hold == 'None'): # Depending on source of cmd generation call
+                holdVal = None
+            else:
+                values = re.search('\(([^)]+)', hold).group(1)
+                holdVal = [int(x) for x in values.split(',')]
+            result = ("Spectrometer Reading", "Server (1000) requests Spectrometer (1011) take spectrometer reading") # THIS IS A FUDGE TO GET THE SPECTROMETER WORKING !!!
+            self.cmds.append([result, holdVal, 'pending'])
         else:
             id = int(data[1][2])
             result = 'No Valid Command'
@@ -390,7 +486,8 @@ class System:
             if (hold == None) or (hold == 'None'): # Depending on source of cmd generation call
                 holdVal = None
             else:
-                holdVal = int(hold)
+                values = re.search('\(([^)]+)', hold).group(1)
+                holdVal = [int(x) for x in values.split(',')]
             for device in self.devices:
                 if id == device.id:
                     try:
@@ -399,20 +496,28 @@ class System:
                         break
                     except KeyError:
                         print('Invalid action key submitted.')
-            else:
-                warnings.warn('Unrecognized device request.')
-        return 
-    
-    def runCommand(self): # REQUIRES FIX
-        for device in self.devices:
-            device.status = 'active'
-            device.executeCmds()
+                else:
+                    warnings.warn('Unrecognized device request.')
+        return result
 
     def handleResponse(self, msg):
+        print(msg)
         if 'FREE' in msg:
             deviceID = int((re.search('sID(.*) rID', msg)).group(1))
             self.setDeviceStatus(deviceID, 'done')
             print(f'Updated device {deviceID} status at {time.time()}')
+        elif 'SEN' in msg:
+            if ' T' in msg: # Is a temperature sensor
+                value = float((re.search('T(.) S(.*)]', msg)).group(2))
+                self.tempReadings.append(value)
+
+                deviceID = int((re.search('sID(.*) rID', msg)).group(1))
+                self.setDeviceStatus(deviceID, 'done')
+                self.lastReadingTime = time.time()
+                #Plot last 30 readings
+                filename = self.analysis.generateTempGraph(self.tempReadings[-30:])
+                print(f'forwarding {filename}')
+                self.socket.emit('tempPlot', {'data':filename})
         else:
              pass
 
@@ -477,16 +582,17 @@ class SyringePump(Component):
             raise KeyError
     
     def pumpVolume(self, info):
+        print(info)
         self.packets.append(f'Y') # Pump module number
         syringeType = info[3]
-        # self.packets.append(f'S{syringeType}')
-        if type(info[4]) == str:
-            volume = int(re.findall(r'\d+', info[4])[0])
+        self.packets.append(f'S{syringeType}')
+        if info[4] == 'pump':
+            volume = int(re.findall(r'\d+', info[5])[0])
         else:
             volume = int(info[4])
-        self.packets.append(f'S{volume}') # Pump volume
+        self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
-        self.transcript += f' pump {volume}mL'
+        self.transcript += f' [S{syringeType}] pump {volume}mL'
         return self.assembleCmd()
 
 class PeristalticPump(Component):
@@ -522,7 +628,6 @@ class MixerShutter(Component):
         # [sID rID PK3 M S{speed} D{direction}]
         action = data[0]
         info = data[1]
-        print(data)
         if action == 'mix':  
             result = self.setMixer(info)
             return result
@@ -557,7 +662,7 @@ class MixerShutter(Component):
         self.packets.append(f'S{speed}') # Mixer speed
         self.packets.append(f'D{dirVal}')
         self.setCmdBase(info[0], info[1], info[2]) # Cmd1
-        self.transcript += f' set to {direction} {mode}' # Add to transcript
+        self.transcript += f' mix {direction} {mode}' # Add to transcript
         return self.assembleCmd()
 
     def setShutter(self, info):
@@ -613,7 +718,11 @@ class Extraction(Component):
     
     def pumpVolume(self, info):
         self.packets.append(f'P') # Extractor pump module number (static)
-        volume = int(info[4])
+        print(info)
+        if 'mL' in info[3]:
+            volume = int(re.findall(r'\d+', info[3])[0])
+        else:
+            volume = int(info[4])
         self.packets.append(f'm{volume}') # Pump volume
         self.setCmdBase(info[0], info[1], info[2]) # Cmd2
         self.transcript += f' pump {volume}mL' # Add to transcript
@@ -655,9 +764,47 @@ class Valve(Component):
             self.packets.append(f'S{output}')      
         return self.assembleCmd()
 
+class Sensor(Component):
+    def __init__(self, id, descriptor):
+        super().__init__(id, descriptor)
+            
+    def parseCommand(self, data):
+        action = data[0]
+        info = data[1]
+        if _:  # Placeholder
+            return
+        else:
+            raise KeyError
+        return
+
+    def takeTempReading(self):
+        self.setCmdBase('server', '1000', self.id)
+        self.packets.append(f'R') # Ping for temperature reading
+        self.transcript += f' take temperature reading'
+        return self.assembleCmd()
+    
 class Spectrometer(Component):
     def __init__(self, id, descriptor):
         super().__init__(id, descriptor)
     
     def parseCommand(self, data):
+        action = data[0]
+        info = data[1]
+        if action == 'spectrometer':  
+            result = self.takeSpectReading()
+            return result
+        else:
+            raise KeyError
         return
+
+    def takeSpectReading(self): # To be completed
+        try:
+            frames = SpectrometerVideo().getSampleSet()
+            print("Processing spectrometer data...")
+            analysis = Analysis()
+            filename = analysis.findmean(frames)
+            return filename
+        except Exception as e:
+            print('Unfortunately, Spectrometer process has failed. Please try again.')
+            print(e)
+            pass

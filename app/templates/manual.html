@@ -1,0 +1,92 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<div class="body" onload="load_fctn()">
+    {% set active_page = 'nav-testing' %}
+    {% include 'includes/_messages.html' %}
+    <div class="content">
+        <div id="comms-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Comms Status</h1>
+                <a id="close-comms" href="#"><i class="icon icon-close"></i></a>
+                <div class="popup-message">
+                    <h4>The system comms to the chamber are currently</h4> 
+                    <h2 id="comms-status" class="status"></h2>
+                    <h4 id="status-update">Please click below to toggle this value.</h4>
+                </div>
+                <div>
+                    <button id="toggle-comms" class="comms-btn single-btn">Enable Comms</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="column1" class="column-container half-screen"></div>
+
+        <div id="column2" class="column-container half-screen">
+            <div class="info-container log">
+                <h1>Command Log</h1>
+
+                <div class="log-box scrollable">
+                    <textarea id="log-text" readonly></textarea>
+                </div>
+            </div>
+
+            <div class="info-container webcam">
+                <h1>Camera</h1>
+
+                <div id="camera-box">
+                    <img id="camera" src="{{url_for('core.video_feed')}}">
+                </div>
+            </div>
+        </div>
+
+        <a href="#" id="plus-device" class="float-add">
+        <div class="add-devices"><h2>+</h2></div>
+        </a>
+
+        <div id="device-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Add A Device</h1>
+
+                <a id="close-device-popup" href="#"><i class="icon icon-close"></i></a>
+
+                <h3 id="device-message"></h3>
+
+                <div class="popup-select select">
+                    <select name="device-type" id="new-device-type">
+                        <option selected disabled value="">Select Module Type</option>
+                        <option value="pump-peristaltic">Peristaltic Pump</option>
+                        <option value="pump-syringe">Syringe Pump</option>
+                        <option value="mixer-shutter">Mixer-Shutter</option>
+                        <option value="extraction">Extraction</option>
+                        <option value="valve">Valve</option>
+                        <option value="sensor">Sensor</option>
+                        <option value="spectrometer">Spectrometer</option>
+                    </select>
+                </div>
+
+                <div class="input-box">
+                    <input id="new-device-id" type="number" inputmode="integer">
+                    <span id="device-id">Device ID</span>
+                </div>
+
+                <div>
+                    <button id="add-device" type="submit" class="device-btn single-btn">Add Device</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="console">
+        <textarea id="console" readonly></textarea>
+    </div>
+
+</div>
+
+
+<script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+<script src="{{url_for('static', filename='js/functions.js')}}"></script>
+
+{% endblock %}

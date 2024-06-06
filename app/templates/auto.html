@@ -1,0 +1,124 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<div class="body" onload="load_fctn()">
+    {% set active_page = 'nav-testing' %}
+    {% include 'includes/_messages.html' %}
+    <div class="content">
+        <div id="comms-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Comms Status</h1>
+                <a id="close-comms" href="#"><i class="icon icon-close"></i></a>
+                <div class="popup-message"></div>
+                <div>
+                    <button id="toggle-comms" class="comms-btn single-btn">Enable Comms</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="msg-popup" class="overlay">
+            <div class="popup">
+                <h1 id="msg-type" class="popup-title"></h1>
+                <a id="close-msg" href="#"><i class="icon icon-close"></i></a>
+                <div class="popup-message"></div>
+                <div class="popup-ops">
+                    <button id="reject-op" class="ui-btn single-btn">Reject</button>
+                    <button id="approve-op" class="ui-btn single-btn">Accept</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="file-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Upload File</h1>
+                <a id="close-file" href="#"><i class="icon icon-close"></i></a>
+                <div id="dropbox">
+                    <p id="dropbox-text">Drag file here or click to <b>Upload File</b></p>
+                    <input id="file-input" type="file" name="file" accept=".txt" style="display:none;"/>
+                </div>
+                <div class="popup-ops">
+                    <button id="clear-file" class="ui-btn single-btn">Clear File</button>
+                    <button id="upload-file" class="ui-btn single-btn">Upload File</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="column1" class="column-container half-screen"></div>
+
+        <div id="column2" class="column-container half-screen">
+            <div class="script-gen">
+                <div>
+                    <h1>Command List</h1>
+                    <div id="script-ops">
+                        <div>
+                            <button id="verify-script" class="ui-btn script-btn">Verify</button>
+                        </div>
+                        <div>
+                            <button id="upload-script" class="ui-btn script-btn">Upload Script</button>
+                        </div>
+                        <div>
+                            <button id="add-wait" class="ui-btn script-btn">Add Global Wait</button>
+                        </div>
+                        <div>
+                            <button id="add-wash" class="ui-btn script-btn">Add Wash Cycle</button>
+                        </div>
+                        <div>
+                            <button id="execute-script" class="ui-btn script-btn">Execute Script</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="cmd-list"></div>
+            </div>
+        </div>
+
+        <a href="#" id="plus-device" class="float-add">
+        <div class="add-devices"><h2>+</h2></div>
+        </a>
+
+        <div id="device-popup" class="overlay">
+            <div class="popup">
+                <h1 class="popup-title">Add A Device</h1>
+
+                <a id="close-device-popup" href="#"><i class="icon icon-close"></i></a>
+
+                <h3 id="device-message"></h3>
+
+                <div class="popup-select select">
+                    <select name="device-type" id="new-device-type">
+                        <option selected disabled value="">Select Module Type</option>
+                        <option value="pump-peristaltic">Peristaltic Pump</option>
+                        <option value="pump-syringe">Syringe Pump</option>
+                        <option value="mixer-shutter">Mixer-Shutter</option>
+                        <option value="extraction">Extraction</option>
+                        <option value="valve">Valve</option>
+                        <option value="sensor">Sensor</option>
+                        <option value="spectrometer">Spectrometer</option>
+                    </select>
+                </div>
+
+                <div class="input-box">
+                    <input id="new-device-id" type="number" inputmode="integer">
+                    <span id="device-id">Device ID</span>
+                </div>
+
+                <div>
+                    <button id="add-device" type="submit" class="device-btn single-btn">Add Device</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="console">
+        <textarea id="console" readonly></textarea>
+    </div>
+
+</div>
+
+
+<script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+<script src="{{url_for('static', filename='js/functions.js')}}"></script>
+
+{% endblock %}

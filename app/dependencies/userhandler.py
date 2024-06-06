@@ -1,6 +1,6 @@
 # Interactions with user database
 
-import os
+import os, sys
 import sqlite3
 from argon2 import PasswordHasher
 
@@ -9,7 +9,12 @@ class UserHandler:
 
     def __init__(self):
         # Config user database handling
-        userdataFilepath = os.path.abspath('dependencies/userdata.db')
+        databaseFilepath = 'userdata.db'
+        if getattr(sys, 'frozen', False):
+            applicationPath = os.path.dirname(sys.executable)
+        elif __file__:
+            applicationPath = os.path.dirname(__file__)
+        userdataFilepath = os.path.join(applicationPath, databaseFilepath)
         self.connect = sqlite3.connect(userdataFilepath, check_same_thread=False)
 
         cursor= self.connect.cursor()
@@ -21,7 +26,8 @@ class UserHandler:
                 username VARCHAR(255) NOT NULL,
                 password VARCHAR(255) NOT NULL,
                 status VARCHAR(7) NOT NULL,
-                theme VARCHAR(7) NOT NULL, 
+                theme VARCHAR(7) NOT NULL,
+                admin BOOLEAN, 
                 UNIQUE(username, password)
                 )
             """)
@@ -94,8 +100,8 @@ class UserHandler:
 
         # User/password combination only inserted if both are unique to the existing table
         cursor.execute("""
-            INSERT OR IGNORE INTO userdata(username, password, status, theme) VALUES(?, ?, ?, ?)
-            """, (userCandidate, pswdHash, 'offline', 'theme1'))
+            INSERT OR IGNORE INTO userdata(username, password, status, theme, admin) VALUES(?, ?, ?, ?, ?)
+            """, (userCandidate, pswdHash, 'offline', 'theme1', 'False'))
         
         self.connect.commit()
 
@@ -115,6 +121,22 @@ class UserHandler:
 
         return found
     
+    def getAllUsers(self):
+        cursor = self.connect.cursor()
+        allUsers = []
+
+        cursor.execute(f"""
+            SELECT * FROM userdata
+        """)
+
+        found = cursor.fetchall()
+        for row in found:
+            allUsers.append([row[0], row[4]])
+
+        cursor.close()
+
+        return allUsers
+
     def updateUsername(self, oldUsername, newUsername):
         cursor = self.connect.cursor()
 
@@ -123,6 +145,18 @@ class UserHandler:
             UPDATE userdata SET username='{newUsername}' WHERE username='{oldUsername}'
             """)
         
+        self.connect.commit()
+
+        cursor.close()
+
+    def updateAdmin(self, username, adminStatus):
+        cursor = self.connect.cursor()
+
+        # Update username to new value
+        cursor.execute(f"""
+            UPDATE userdata SET admin='{adminStatus}' WHERE username='{username}'
+            """)
+
         self.connect.commit()
 
         cursor.close()

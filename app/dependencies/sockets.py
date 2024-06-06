@@ -2,36 +2,55 @@
 # This file handles commands received from user input in the webpages and forwards 
 # required actions to corresponding destinations
 # The creation of the Socket.IO server-side object is handled in `app.py`
-from __main__ import socketio, comms, sys, uh, session, request
+from .. import socketio, comms, sys, uh
+from ..core.routes import session, request
+from .analysis import Analysis
 from pathlib import Path
-import os
+import os, time
 
 #SocketIO
 @socketio.on('connect')
 def handle_connect(ip):
     print('Connection established!')
-    status = uh.getStatus(session['username'])
-    sys.updateFromDB() 
+    status = uh.getStatus(session['username']) 
+    time.sleep(0.05) # Necessary delay to prevent loss of data as page is rendered
     socketio.emit('after_connect', {'data':status}, room=request.sid)
     socketio.emit('update_cards', {'data':sys.define()})
+    print(sys.cmds)
     socketio.emit('update_cmd_list', {'data':sys.cmds})
 
 @socketio.on('get-user')
 def get_user():
     username = session['username']
-    socketio.emit('set_user', {'data':username}, room=request.sid)
+    allUsers = uh.getAllUsers()
+    results = [username, allUsers]
+    socketio.emit('set_user', {'data':results}, room=request.sid)
 
 @socketio.on('update-username')
 def update_user(data):
+    currentUser = session['username']
     oldUsername = data[0]
     newUsername = data[1]
     uh.updateUsername(oldUsername, newUsername)
-    username = uh.getUsername()
-    socketio.emit('set_user', {'data':username}, room=request.sid)
+    allUsers = uh.getAllUsers()
+    results = [currentUser, allUsers]
+    socketio.emit('set_user', {'data':results}, room=request.sid)
+
+@socketio.on('set-admin-status')
+def set_admin_status(data):
+    currentUser = session['username']
+    username = data[0]
+    adminStatus = data[1]
+    print(adminStatus)
+    uh.updateAdmin(username, adminStatus)
+    allUsers = uh.getAllUsers()
+    results = [currentUser, allUsers]
+    print(results)
+    socketio.emit('set_user', {'data':results}, room=request.sid)
 
 @socketio.on('log-off')
 def log_off(data):
-    username = data[0]
+    username = data
     uh.logOff(username)
 
 @socketio.on('get-theme')
@@ -83,13 +102,41 @@ def update_server(data):
 
 @socketio.on('generate-run-command') # Necessary to protect order of operations for manual control
 def generate_command(data):
-    sys.generateCommand(data)
-    sys.runCommand() # REQUIRES FIX
+    command = sys.generateCommand(data)
+    sys.cmds = []
+    print(f'added command {command}')
+    if command[0] == 'Spectrometer Reading':
+        for device in sys.devices:
+            if device.type == 'spectrometer':
+                socketio.emit('log_command', {'data':command[0]})
+                filename = device.takeSpectReading()
+                socketio.emit('spectPlot', {'data':filename})
+                
+    else:
+        sys.q.put(command)
 
 @socketio.on('add-cmd-list')
 def add_cmds(data):
-    sys.generateCommand(data)
+    print(data)
+    command = sys.generateCommand(data)
     socketio.emit('update_cmd_list', {'data':sys.cmds})
+    print(sys.cmds)
+
+@socketio.on('add-wash')
+def add_wash():
+    cmdList = [
+        ["wait", 0],
+        ['pump', ['server', '1000', '1002', '30'], 'None'],
+        ['set', ['server', '1000', '1005', '1'], 'None'],
+        ['pump', ['server', '1000', '1005', '30'], 'None'],
+        ['set', ['server', '1000', '1007', '2', '0'], 'None'],
+        ['pump', ['server', '1000', '1007', '2', '30'], 'None'],
+        ["wait", 0]
+    ]
+    for entry in cmdList:
+        command = sys.generateCommand(entry)
+        socketio.emit('update_cmd_list', {'data':sys.cmds})
+    print(sys.cmds)
 
 @socketio.on('remove-cmd-number')
 def remove_command(number):
@@ -100,7 +147,8 @@ def remove_command(number):
 def update_hold(data):
     index = data[0]-1
     newHold = data[1]
-    sys.cmds[index][1] = newHold
+    holdArray = newHold.split(",")
+    sys.cmds[index][1] = holdArray
 
 @socketio.on('verify-script')
 def verify_script(data):
@@ -109,7 +157,7 @@ def verify_script(data):
     if data:
         username = session['username']
         scriptFilename = sys.compileScript(username)
-        socketio.emit('send_script',{'data':scriptFilename},room=request.sid)
+        socketio.emit('send_script',{'data':'/download/script_Arcadius.txt'},room=request.sid)
 
 @socketio.on('execute-script')
 def execute_script():
