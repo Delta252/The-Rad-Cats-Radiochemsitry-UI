@@ -226,7 +226,7 @@ class System:
                 entry = f'\n[{stepNum}] {receiver}{syringeType} {action} {setValue} {direction} ' # Individual steps
             if step[1] !=  None:
                 if packet == 'Wait':
-                    waitValue = int(step[1][0])
+                    waitValue = int(step[1])
                     entry += f' ({waitValue})s'
                 else:
                     holdValues = []

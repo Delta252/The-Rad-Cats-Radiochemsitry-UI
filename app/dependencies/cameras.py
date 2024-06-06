@@ -9,7 +9,7 @@ defaultCalibration = ((355,532),(577,650))
 
 class LiveVideo:
     def __init__(self):
-        self.liveFeed = cv2.VideoCapture(0)
+        self.liveFeed = cv2.VideoCapture(1)
 
     def videoStream(self):
         while True:
@@ -25,7 +25,7 @@ class LiveVideo:
 # The original code can be found here: 
 class SpectrometerVideo:
     def __init__(self):
-        self.spectrometerFeed = cv2.VideoCapture(1)
+        self.spectrometerFeed = cv2.VideoCapture(2)
 
         # Spectrometer-specific video feed setup.
         self.spectrometerFeed.set(cv2.CAP_PROP_FRAME_WIDTH, 640)

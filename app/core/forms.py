@@ -6,7 +6,7 @@ def PasswordNotExists(self, field):
     if getattr(sys, 'frozen', False):
             filePath = 'app/dependencies/100k-pswd.txt'
     elif __file__:
-        filePath = 'dependencies/100k-pswd.txt'
+        filePath = 'app/dependencies/100k-pswd.txt'
         with open(filePath, encoding='utf-8') as myfile:
             if field.data in myfile.read():
                     raise validators.ValidationError('Password is too common.')

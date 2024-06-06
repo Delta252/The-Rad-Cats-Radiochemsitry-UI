@@ -27,6 +27,8 @@ class Analysis:
             if fname.startswith("tempGraph"):
                 os.remove(os.path.join(plotDir, fname))
         plt.plot(data)
+        plt.xlabel('Sample Number')
+        plt.ylabel('Temperature (C)')
         filename = f'tempGraph_{round(time.time())}.png'
         plt.savefig(os.path.join(plotDir, filename), bbox_inches='tight')
         return filename
@@ -134,9 +136,9 @@ class Analysis:
 
         plt.figure(figsize=(10, 6))
         plt.plot(wavelengtharray, logRatioValues, marker='*', linestyle='-', color='blue')
-        plt.title('Log10 of Mean Intensity Ratio vs. Wavelength')
+        #plt.title('Log10 of Mean Intensity Ratio vs. Wavelength')
         plt.xlabel('Wavelength (nm)')
-        plot.xlim(425, 675)
+        plt.xlim(425, 675)
         plt.ylabel('-Log10(Mean Intensity Ratio)')
         plt.grid(True)
         plotDir = 'app/static/img'
